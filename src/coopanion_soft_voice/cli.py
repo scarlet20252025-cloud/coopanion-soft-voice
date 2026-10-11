@@ -2,7 +2,10 @@ import argparse,json,sys,time,traceback
 from pathlib import Path
 from .config import MODEL_REPO,MODEL_REVISION,profile,reference,validate_model
 
-def doctor(runtime):
+def doctor(runtime,mode='gpu'):
+    if mode=='cache':
+        from .cache_worker import doctor as cache_doctor
+        return cache_doctor()
     validate_model(runtime);reference()
     import torch
     if not torch.cuda.is_available():raise RuntimeError('NVIDIA CUDA GPU is required for this tested profile.')
@@ -21,7 +24,10 @@ def load(runtime):
     from .playback import speak
     return model
 
-def worker(runtime):
+def worker(runtime,mode='gpu'):
+    if mode=='cache':
+        from .cache_worker import worker as cache_worker
+        return cache_worker()
     protocol=sys.stdout;sys.stdout=sys.stderr
     def emit(obj):print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
     def stage(name,detail,**extra):emit(dict(type='status',stage=name,detail=detail,**extra))
@@ -52,7 +58,9 @@ def main(argv=None):
     parser=argparse.ArgumentParser()
     parser.add_argument('--runtime',default='.runtime')
     sub=parser.add_subparsers(dest='command',required=True)
-    sub.add_parser('download');sub.add_parser('doctor');sub.add_parser('worker')
+    sub.add_parser('download')
+    for name in ('doctor','worker'):
+        sub.add_parser(name).add_argument('--mode',choices=['gpu','cache'],default='gpu')
     sample=sub.add_parser('speak');sample.add_argument('text');sample.add_argument('--volume',type=float,default=65)
     render=sub.add_parser('render');render.add_argument('text');render.add_argument('--output',required=True)
     args=parser.parse_args(argv);runtime=Path(args.runtime).resolve()
@@ -60,8 +68,8 @@ def main(argv=None):
         from huggingface_hub import snapshot_download
         snapshot_download(MODEL_REPO,revision=MODEL_REVISION,local_dir=str(runtime/'clone-model'))
         validate_model(runtime,hashes=True);print('Model downloaded and verified.');return
-    if args.command=='doctor':print(json.dumps(doctor(runtime),ensure_ascii=False));return
-    if args.command=='worker':worker(runtime);return
+    if args.command=='doctor':print(json.dumps(doctor(runtime,args.mode),ensure_ascii=False));return
+    if args.command=='worker':worker(runtime,args.mode);return
     model=load(runtime)
     if args.command=='speak':
         if not 0<=args.volume<=100:raise ValueError('Volume must be between 0 and 100')

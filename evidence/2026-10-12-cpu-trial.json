@@ -1,0 +1,8 @@
+{
+  "backend": "pytorch-cpu-dynamic-int8",
+  "threads": 2,
+  "available_ram_gib": 5.47,
+  "minimum_free_ram_gib": 7,
+  "gpu_enabled": false,
+  "status": "blocked_insufficient_free_ram"
+}

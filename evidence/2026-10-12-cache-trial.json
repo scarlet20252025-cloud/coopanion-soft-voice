@@ -1,0 +1,8 @@
+{
+  "lookup_ms": 1.88,
+  "playback_call_seconds": 4.713,
+  "bytes": 211244,
+  "torch_loaded": false,
+  "gpu_inference": false,
+  "note": "Playback call succeeded; no acoustic latency or subjective quality measurement"
+}

@@ -1,0 +1,17 @@
+{
+  "reference_sha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+  "phrases": {
+    "我们先学二十分钟，再一起休息一下吧。": {
+      "file": "phrase-0.wav",
+      "sha256": "12f7dbd5a5ee8f07e87c8c4c6f872c1b9e8c9872ea0749d699efcd5727723c44"
+    },
+    "今天也辛苦啦，先休息一小会儿，我会乖乖等你。": {
+      "file": "phrase-3.wav",
+      "sha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20"
+    },
+    "你在吗？我来陪你啦，我们慢慢来，好不好？": {
+      "file": "phrase-2.wav",
+      "sha256": "8a7e5db0bea0c16f0de725c81a6261752a1a22dc5800e053aa38b5f3fae89472"
+    }
+  }
+}

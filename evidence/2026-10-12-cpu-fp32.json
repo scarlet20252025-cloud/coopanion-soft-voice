@@ -1,0 +1,12 @@
+{
+  "backend": "pytorch-cpu-fp32",
+  "threads": 2,
+  "available_ram_gib": 6.17,
+  "minimum_free_ram_gib": 6,
+  "gpu_enabled": false,
+  "load_seconds": 7.391,
+  "status": "generated_not_voice_approved",
+  "generation_seconds": 22.73,
+  "audio_seconds": 1.6000416666666666,
+  "rtf": 14.20613242363493
+}

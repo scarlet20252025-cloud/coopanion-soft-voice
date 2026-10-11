@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "coopanion-soft-voice"
-version = "0.1.0"
+version = "0.2.0"
 description = "Fixed-reference Qwen3-TTS speech with continuous PCM playback for Coopanion"
 readme = "README.md"
 requires-python = ">=3.10,<3.11"
@@ -18,4 +18,4 @@ soft-voice = "coopanion_soft_voice.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-coopanion_soft_voice = ["assets/*.wav", "licenses/*.txt", "model-manifest.json"]
+coopanion_soft_voice = ["assets/*.wav", "assets/phrase-cache/*.wav", "assets/phrase-cache/*.json", "licenses/*.txt", "model-manifest.json"]

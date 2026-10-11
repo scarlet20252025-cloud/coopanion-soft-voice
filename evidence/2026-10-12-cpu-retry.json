@@ -1,0 +1,12 @@
+{
+  "backend": "pytorch-cpu-dynamic-int8",
+  "threads": 2,
+  "available_ram_gib": 7.23,
+  "minimum_free_ram_gib": 7,
+  "gpu_enabled": false,
+  "load_seconds": 13.662,
+  "status": "generated_not_voice_approved",
+  "generation_seconds": 42.412,
+  "audio_seconds": 7.12,
+  "rtf": 5.956703047752781
+}

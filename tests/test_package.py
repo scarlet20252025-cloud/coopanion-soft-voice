@@ -28,6 +28,23 @@ class PackageTests(unittest.TestCase):
     def test_unknown_plugin_source_rejected(self):
         with self.assertRaises(ValueError):installer.patch_runtime('unexpected upstream version')
 
+    def test_cache_install_preserves_settings_and_stays_disabled(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'src').mkdir();(root/'runtime').mkdir();(root/'.cosyvoice-tts').mkdir()
+            (root/'package.json').write_text(json.dumps({'name':'cortico-world-cosyvoice-tts','version':'0.1.11'}))
+            (root/'src/runtime.js').write_text((ROOT/'tests/fixtures/runtime.js').read_text(encoding='utf-8'),encoding='utf-8')
+            settings=root/'.cosyvoice-tts/settings.json'
+            settings.write_text(json.dumps({'speechEnabled':False,'config':{'volume':27,'maxQueue':2}}))
+            with patch.object(installer.subprocess,'run'):
+                installer.install(root,root/'no-model','cache',False)
+            result=json.loads(settings.read_text(encoding='utf-8'))
+            self.assertFalse(result['speechEnabled'])
+            self.assertEqual(result['config']['volume'],27)
+            self.assertEqual(result['config']['maxQueue'],2)
+            self.assertNotIn('referenceAudio',result)
+            profile=json.loads((root/'.cosyvoice-tts/softvoice-profile.json').read_text())
+            self.assertEqual(profile['mode'],'cache')
+
     def test_install_and_restore_roundtrip(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);(root/'src').mkdir();(root/'runtime').mkdir();(root/'.cosyvoice-tts').mkdir()
@@ -42,7 +59,7 @@ class PackageTests(unittest.TestCase):
             changed=(root/'src/runtime.js').read_text(encoding='utf-8')
             self.assertEqual(installer.patch_runtime(changed),changed)
             cfg=json.loads((root/'.cosyvoice-tts/settings.json').read_text(encoding='utf-8'))
-            self.assertEqual(cfg['custom'],'preserve');self.assertEqual(cfg['speed'],1)
+            self.assertEqual(cfg['custom'],'preserve');self.assertEqual(cfg['config']['speed'],1)
             backup=next((root/'.cosyvoice-tts/softvoice-backups').iterdir())
             installer.restore(backup)
             for p,text in original.items():self.assertEqual((root/p).read_text(encoding='utf-8'),text)

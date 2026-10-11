@@ -1,0 +1,10 @@
+{
+  "expected": "我会乖乖等你。",
+  "asr": "我会乖乖等你",
+  "character_error_rate": 0.0,
+  "clipping_fraction": 0.0,
+  "seconds": 1.6000416666666666,
+  "content_check_passed": true,
+  "voice_quality_approved": false,
+  "asr_device": "cpu"
+}
