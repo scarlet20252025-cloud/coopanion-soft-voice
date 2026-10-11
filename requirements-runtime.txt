@@ -1,0 +1,17 @@
+# Python 3.10; torch/torchaudio installed separately from the CUDA 12.1 index.
+numpy==1.26.4
+transformers==4.57.3
+tokenizers==0.22.2
+accelerate==1.12.0
+huggingface-hub==0.36.2
+sounddevice==0.5.3
+soundfile==0.12.1
+librosa==0.10.2
+scipy==1.15.3
+numba==0.68.0
+cffi==2.1.1
+einops==0.8.0
+safetensors==0.8.0
+packaging==24.2
+onnxruntime==1.18.0
+sox==1.5.0

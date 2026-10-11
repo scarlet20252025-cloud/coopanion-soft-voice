@@ -1,0 +1,11 @@
+{
+  "type": "done",
+  "id": "s20",
+  "seconds": 3.44,
+  "totalSynthesisMs": 3297,
+  "firstChunkMs": 684,
+  "firstDeviceCallbackMs": 715,
+  "underrunMs": 0,
+  "deviceUnderflows": 0,
+  "playbackMode": "continuous_pcm"
+}

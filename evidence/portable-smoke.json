@@ -1,0 +1,26 @@
+{
+  "environment": "isolated Python environment and copied plugin adapter; silent playback",
+  "phase": "ready",
+  "cuda": true,
+  "modelReady": true,
+  "lastSpeech": {
+    "id": "s1",
+    "text": "我们先学二十分钟，再一起休息一下吧。",
+    "synthesisMs": 773,
+    "queueWaitMs": 0,
+    "startDelayMs": 781,
+    "seconds": 3.44,
+    "totalSynthesisMs": 3683
+  },
+  "metrics": {
+    "type": "done",
+    "id": "s1",
+    "seconds": 3.44,
+    "totalSynthesisMs": 3683,
+    "firstChunkMs": 773,
+    "firstDeviceCallbackMs": 814,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm"
+  }
+}
