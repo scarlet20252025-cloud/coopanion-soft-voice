@@ -1,0 +1,141 @@
+{
+  "engine": "51512f1 (2026-10-07)",
+  "threads": 4,
+  "backend": "Vulkan0",
+  "streaming": true,
+  "max_tokens": 240,
+  "vulkan_visible": 1,
+  "reference_sha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+  "load_seconds": 1.6417499000017415,
+  "runs": [
+    {
+      "text": "我会乖乖等你。",
+      "file": "native-1.wav",
+      "first_chunk_seconds": 0.6253370999984327,
+      "generation_seconds": 1.9490786000023945,
+      "audio_seconds": 1.84,
+      "rtf": 1.0592818478273882,
+      "continuous_start_seconds": 0.9225406000018119,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.6253370999984327,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.7545575000040117,
+          "seconds": 0.16
+        },
+        {
+          "at": 1.003342200005136,
+          "seconds": 0.32
+        },
+        {
+          "at": 1.482540600001812,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.9320522999987588,
+          "seconds": 0.64
+        }
+      ],
+      "voice_approved": false
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "file": "native-2.wav",
+      "first_chunk_seconds": 0.1587435000037658,
+      "generation_seconds": 7.603430600000138,
+      "audio_seconds": 10.56,
+      "rtf": 0.7200218371212251,
+      "continuous_start_seconds": 0.37192470000212774,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.1587435000037658,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.27189950000320096,
+          "seconds": 0.16
+        },
+        {
+          "at": 0.4861321999997017,
+          "seconds": 0.32
+        },
+        {
+          "at": 0.9319247000021278,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.3737184000056004,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.8052277000024333,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.246997599999304,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.6829037999996217,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.1742111000057776,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.6345851000005496,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.093850500001281,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.543001700003515,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.998433500004467,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.4689425000033225,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.9288004000045476,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.38508620000357,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.829255800003011,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.290360600003623,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.588145000001532,
+          "seconds": 0.32
+        },
+        {
+          "at": 7.6027522000003955,
+          "seconds": 0.08
+        }
+      ],
+      "voice_approved": false
+    }
+  ],
+  "reference_seconds": 0.8250330000009853,
+  "peak_working_set_mib": 3823.1875,
+  "working_set_mib": 33.12890625
+}

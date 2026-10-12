@@ -1,9 +1,11 @@
 include requirements-runtime.txt
 include requirements-runtime.lock
+include requirements-native.txt
 recursive-include scripts *.py *.ps1
 recursive-include scripts *.mjs
 recursive-include tests *.py
 recursive-include tests/fixtures *.js
 recursive-include docs *.md
 recursive-include evidence *.json
+recursive-include evidence *.patch
 include LICENSE THIRD_PARTY_NOTICES.md

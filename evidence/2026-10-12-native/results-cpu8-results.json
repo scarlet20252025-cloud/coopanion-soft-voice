@@ -1,0 +1,125 @@
+{
+  "engine": "51512f1 (2026-10-07)",
+  "threads": 8,
+  "backend": "CPU",
+  "reference_sha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+  "load_seconds": 1.5499125999995158,
+  "runs": [
+    {
+      "text": "我会乖乖等你。",
+      "file": "native-1.wav",
+      "first_chunk_seconds": 3.1568612000046414,
+      "generation_seconds": 5.342575400005444,
+      "audio_seconds": 1.36,
+      "rtf": 3.928364264709885,
+      "continuous_start_seconds": 4.48519430000073,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 3.1568612000046414,
+          "seconds": 0.08
+        },
+        {
+          "at": 3.42647090000537,
+          "seconds": 0.16
+        },
+        {
+          "at": 4.007132900005672,
+          "seconds": 0.32
+        },
+        {
+          "at": 5.04519430000073,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.341635000004317,
+          "seconds": 0.16
+        }
+      ],
+      "voice_approved": false
+    },
+    {
+      "text": "我们先学二十分钟，再一起休息一下吧。",
+      "file": "native-2.wav",
+      "first_chunk_seconds": 0.3970891000062693,
+      "generation_seconds": 5.344093700005033,
+      "audio_seconds": 3.12,
+      "rtf": 1.712850544873408,
+      "continuous_start_seconds": 2.8412685000034976,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.3970891000062693,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.7006131000016467,
+          "seconds": 0.16
+        },
+        {
+          "at": 1.2451429000066128,
+          "seconds": 0.32
+        },
+        {
+          "at": 2.300113000004785,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.290493200001947,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.27025240000512,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.321268500003498,
+          "seconds": 0.64
+        }
+      ],
+      "voice_approved": false
+    },
+    {
+      "text": "今天的天气很好，我们慢慢来。",
+      "file": "native-3.wav",
+      "first_chunk_seconds": 0.41587770000478486,
+      "generation_seconds": 5.803918000005069,
+      "audio_seconds": 3.12,
+      "rtf": 1.8602301282067528,
+      "continuous_start_seconds": 3.2895930999980187,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.41587770000478486,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.6620412000047509,
+          "seconds": 0.16
+        },
+        {
+          "at": 1.1413232000049902,
+          "seconds": 0.32
+        },
+        {
+          "at": 2.2184744000041974,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.3262469000037527,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.547452700004214,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.769593099998019,
+          "seconds": 0.64
+        }
+      ],
+      "voice_approved": false
+    }
+  ],
+  "reference_seconds": 0.9951102000050014
+}

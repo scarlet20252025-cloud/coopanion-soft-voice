@@ -15,7 +15,10 @@ def select_mode(plugin, mode=None):
     settings=json.loads((root/'settings.json').read_text(encoding='utf-8'))
     backup=None
     if mode is not None:
-        if mode not in ('gpu','cache'):raise ValueError('Unsupported mode')
+        if mode not in ('gpu','cache','igpu'):raise ValueError('Unsupported mode')
+        if mode=='igpu':
+            from coopanion_soft_voice.cli import doctor
+            doctor(profile['runtime'],'igpu')
         if mode=='gpu' and not (Path(profile['runtime'])/'clone-model/config.json').is_file():
             raise ValueError('GPU model files missing; mode not changed')
         if profile.get('mode','gpu')!=mode:
@@ -38,6 +41,6 @@ def select_mode(plugin, mode=None):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--plugin',required=True)
-    parser.add_argument('--mode',choices=['gpu','cache'])
+    parser.add_argument('--mode',choices=['gpu','cache','igpu'])
     args=parser.parse_args()
     print(json.dumps(select_mode(args.plugin,args.mode),ensure_ascii=False,indent=2))

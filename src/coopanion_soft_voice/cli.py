@@ -6,6 +6,13 @@ def doctor(runtime,mode='gpu'):
     if mode=='cache':
         from .cache_worker import doctor as cache_doctor
         return cache_doctor()
+    if mode=='igpu':
+        from .native_engine import settings
+        config=settings(runtime)
+        import sounddevice as sd
+        sd.check_output_settings(samplerate=24000,channels=1,dtype='float32')
+        return {'ok':True,'backend':'native-igpu','device':config['deviceName'],
+                'voice':'soft-child-design-2','sampleRate':24000,'experimental':True}
     validate_model(runtime);reference()
     import torch
     if not torch.cuda.is_available():raise RuntimeError('NVIDIA CUDA GPU is required for this tested profile.')
@@ -15,7 +22,15 @@ def doctor(runtime,mode='gpu'):
     return {'ok':True,'cuda':True,'device':torch.cuda.get_device_name(0),'torch':torch.__version__,
             'engine':'Qwen3-TTS 0.6B Base','voice':'soft-child-design-2','sampleRate':24000}
 
-def load(runtime):
+def load(runtime,mode='gpu'):
+    if mode=='igpu':
+        from .native_engine import NativeEngine
+        import atexit
+        model=NativeEngine(runtime)
+        try:model.synthesize_stream('准备好了。','accepted',lambda a,s:None)
+        except BaseException:model.close();raise
+        atexit.register(model.close)
+        return model
     from .stream_engine import StreamEngine
     model=StreamEngine(profile(runtime))
     model.add_zero_shot_spk('',str(model.reference),'accepted')
@@ -32,8 +47,8 @@ def worker(runtime,mode='gpu'):
     def emit(obj):print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
     def stage(name,detail,**extra):emit(dict(type='status',stage=name,detail=detail,**extra))
     stage('load_model','加载固定参考音色并预热')
-    model=load(runtime)
-    emit({'type':'ready','device':'软萌童声 / CUDA / streaming','sampleRate':24000})
+    model=load(runtime,mode)
+    emit({'type':'ready','device':('软萌童声 / AMD 核显 / 实验版' if mode=='igpu' else '软萌童声 / CUDA / streaming'),'sampleRate':24000})
     from .playback import speak
     import math
     for line in sys.stdin:
@@ -60,7 +75,7 @@ def main(argv=None):
     sub=parser.add_subparsers(dest='command',required=True)
     sub.add_parser('download')
     for name in ('doctor','worker'):
-        sub.add_parser(name).add_argument('--mode',choices=['gpu','cache'],default='gpu')
+        sub.add_parser(name).add_argument('--mode',choices=['gpu','cache','igpu'],default='gpu')
     sample=sub.add_parser('speak');sample.add_argument('text');sample.add_argument('--volume',type=float,default=65)
     render=sub.add_parser('render');render.add_argument('text');render.add_argument('--output',required=True)
     args=parser.parse_args(argv);runtime=Path(args.runtime).resolve()

@@ -1,0 +1,435 @@
+{
+  "engine": "51512f1 (2026-10-07)",
+  "threads": 4,
+  "backend": "Vulkan0",
+  "streaming": true,
+  "max_tokens": 240,
+  "vulkan_visible": 1,
+  "reference_sha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+  "load_seconds": 2.3381675999989966,
+  "runs": [
+    {
+      "text": "我会乖乖等你。",
+      "file": "native-1.wav",
+      "first_chunk_seconds": 1.6488766000038595,
+      "generation_seconds": 3.0881064999994123,
+      "audio_seconds": 1.84,
+      "rtf": 1.6783187499996806,
+      "continuous_start_seconds": 2.05557829999947,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 1.6488766000038595,
+          "seconds": 0.08
+        },
+        {
+          "at": 1.77340710000135,
+          "seconds": 0.16
+        },
+        {
+          "at": 2.0177065000025323,
+          "seconds": 0.32
+        },
+        {
+          "at": 2.61557829999947,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.072459600000002,
+          "seconds": 0.64
+        }
+      ],
+      "voice_approved": false,
+      "playback": {
+        "volume": 0,
+        "prebuffer_audio_seconds": 1.2,
+        "first_device_callback_seconds": 2.656860900002357,
+        "underrun_seconds": 0.0,
+        "device_underflows": 0
+      }
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "file": "native-2.wav",
+      "first_chunk_seconds": 0.17864379999809898,
+      "generation_seconds": 7.42457309999736,
+      "audio_seconds": 10.56,
+      "rtf": 0.7030845738633864,
+      "continuous_start_seconds": 0.4573783999998704,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.17864379999809898,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.29435669999656966,
+          "seconds": 0.16
+        },
+        {
+          "at": 0.5185611999986577,
+          "seconds": 0.32
+        },
+        {
+          "at": 1.0173783999998705,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.4539202000014484,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.8949912000025506,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.334889799996745,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.7896534000028623,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.2252023999972153,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.658338699999149,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.083321999998589,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.536443500001042,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.965088899996772,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.397431899997173,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.843197199996212,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.265033499999845,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.704383700001927,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.1339449000006425,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.410487900000589,
+          "seconds": 0.32
+        },
+        {
+          "at": 7.423926499999652,
+          "seconds": 0.08
+        }
+      ],
+      "voice_approved": false,
+      "playback": {
+        "volume": 0,
+        "prebuffer_audio_seconds": 1.2,
+        "first_device_callback_seconds": 1.050750299997162,
+        "underrun_seconds": 0.0,
+        "device_underflows": 0
+      }
+    },
+    {
+      "text": "我会乖乖等你。",
+      "file": "native-3.wav",
+      "first_chunk_seconds": 0.16276909999578493,
+      "generation_seconds": 1.4622040999965975,
+      "audio_seconds": 1.84,
+      "rtf": 0.7946761413024986,
+      "continuous_start_seconds": 0.45641269999527134,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.16276909999578493,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.27334899999550544,
+          "seconds": 0.16
+        },
+        {
+          "at": 0.48811629999545403,
+          "seconds": 0.32
+        },
+        {
+          "at": 1.0164126999952714,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.4465817999953288,
+          "seconds": 0.64
+        }
+      ],
+      "voice_approved": false,
+      "playback": {
+        "volume": 0,
+        "prebuffer_audio_seconds": 1.2,
+        "first_device_callback_seconds": 1.0543105999968247,
+        "underrun_seconds": 0.0,
+        "device_underflows": 0
+      }
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "file": "native-4.wav",
+      "first_chunk_seconds": 0.17086260000360198,
+      "generation_seconds": 7.383593500002462,
+      "audio_seconds": 10.56,
+      "rtf": 0.6992039299244756,
+      "continuous_start_seconds": 0.4217115000041667,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.17086260000360198,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.2806775999997626,
+          "seconds": 0.16
+        },
+        {
+          "at": 0.49073589999898104,
+          "seconds": 0.32
+        },
+        {
+          "at": 0.9817115000041667,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.4194357000014861,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.8710209999990184,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.314168000004429,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.745267500002228,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.172198100000969,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.610620100000233,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.042076199999428,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.4694875000059255,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.908461300001363,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.334782099998847,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.7749626000004355,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.211647100004484,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.643711299999268,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.084792400004517,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.370323400005873,
+          "seconds": 0.32
+        },
+        {
+          "at": 7.382705000003625,
+          "seconds": 0.08
+        }
+      ],
+      "voice_approved": false,
+      "playback": {
+        "volume": 0,
+        "prebuffer_audio_seconds": 1.2,
+        "first_device_callback_seconds": 1.0219087000004947,
+        "underrun_seconds": 0.0,
+        "device_underflows": 0
+      }
+    },
+    {
+      "text": "我会乖乖等你。",
+      "file": "native-5.wav",
+      "first_chunk_seconds": 0.16770089999772608,
+      "generation_seconds": 1.4362218999958714,
+      "audio_seconds": 1.84,
+      "rtf": 0.7805553804325387,
+      "continuous_start_seconds": 0.4170124999995459,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.16770089999772608,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.28365710000070976,
+          "seconds": 0.16
+        },
+        {
+          "at": 0.49718900000152644,
+          "seconds": 0.32
+        },
+        {
+          "at": 0.977012499999546,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.4217369999969378,
+          "seconds": 0.64
+        }
+      ],
+      "voice_approved": false,
+      "playback": {
+        "volume": 0,
+        "prebuffer_audio_seconds": 1.2,
+        "first_device_callback_seconds": 1.0150563999995939,
+        "underrun_seconds": 0.0,
+        "device_underflows": 0
+      }
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "file": "native-6.wav",
+      "first_chunk_seconds": 0.170899400000053,
+      "generation_seconds": 7.470151499997883,
+      "audio_seconds": 10.56,
+      "rtf": 0.7074007102270722,
+      "continuous_start_seconds": 0.43048179999954295,
+      "clipping_fraction": 0.0,
+      "events": [
+        {
+          "at": 0.170899400000053,
+          "seconds": 0.08
+        },
+        {
+          "at": 0.28777180000179214,
+          "seconds": 0.16
+        },
+        {
+          "at": 0.5097864999988815,
+          "seconds": 0.32
+        },
+        {
+          "at": 0.990481799999543,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.4360155999966082,
+          "seconds": 0.64
+        },
+        {
+          "at": 1.8686557999972138,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.300825199999963,
+          "seconds": 0.64
+        },
+        {
+          "at": 2.734800500002166,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.1861347000012756,
+          "seconds": 0.64
+        },
+        {
+          "at": 3.6175642000016524,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.056718500003626,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.489072099997429,
+          "seconds": 0.64
+        },
+        {
+          "at": 4.915128900000127,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.3547813999975915,
+          "seconds": 0.64
+        },
+        {
+          "at": 5.787904800003162,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.26483410000219,
+          "seconds": 0.64
+        },
+        {
+          "at": 6.721879700002319,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.169234100001631,
+          "seconds": 0.64
+        },
+        {
+          "at": 7.454447900003288,
+          "seconds": 0.32
+        },
+        {
+          "at": 7.469588400002976,
+          "seconds": 0.08
+        }
+      ],
+      "voice_approved": false,
+      "playback": {
+        "volume": 0,
+        "prebuffer_audio_seconds": 1.2,
+        "first_device_callback_seconds": 1.0237037999977474,
+        "underrun_seconds": 0.0,
+        "device_underflows": 0
+      }
+    }
+  ],
+  "reference_seconds": 0.8368047000039951,
+  "peak_working_set_mib": 3754.734375,
+  "working_set_mib": 123.37109375
+}

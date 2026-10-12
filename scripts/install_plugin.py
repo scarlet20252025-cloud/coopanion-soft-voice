@@ -27,12 +27,16 @@ def patch_runtime(source):
     if "游戏模式：仅播放原声缓存" not in source:
         source=source.replace("this.stage('ready', this.preflightResult?.backend === 'kokoro' ?",
             "this.stage('ready', this.preflightResult?.backend === 'cache-only' ? '游戏模式：仅播放原声缓存，其他回复仅文字' : this.preflightResult?.backend === 'kokoro' ?")
+    if 'AMD 核显实验语音' not in source:
+        source=source.replace("this.preflightResult?.backend === 'cache-only' ?",
+            "this.preflightResult?.backend === 'native-igpu' ? 'AMD 核显实验语音' : this.preflightResult?.backend === 'cache-only' ?")
+    source=source.replace("this.softVoiceProfile().mode === 'cache' ||", "['cache','igpu'].includes(this.softVoiceProfile().mode) ||")
     if 'softVoiceProfile() {' in source:return source
     replacements={
         "  python() { return join(this.root, 'venv', 'Scripts', 'python.exe'); }":
         "  softVoiceProfile() { const p=join(this.root,'softvoice-profile.json'); return existsSync(p) ? JSON.parse(readFileSync(p,'utf8')) : null; }\n  python() { return this.softVoiceProfile()?.python || join(this.root, 'venv', 'Scripts', 'python.exe'); }",
         '  modelDir() { ':"  modelDir() { const soft=this.softVoiceProfile(); if(soft) return join(soft.runtime,'clone-model'); ",
-        '  hasLocalFiles() {':"  hasLocalFiles() {\n    if(this.softVoiceProfile()) return existsSync(this.python()) && (this.softVoiceProfile().mode === 'cache' || existsSync(join(this.modelDir(),'config.json'))) && existsSync(this.softVoiceProfile().referenceAudio);",
+        '  hasLocalFiles() {':"  hasLocalFiles() {\n    if(this.softVoiceProfile()) return existsSync(this.python()) && (['cache','igpu'].includes(this.softVoiceProfile().mode) || existsSync(join(this.modelDir(),'config.json'))) && existsSync(this.softVoiceProfile().referenceAudio);",
         '  async prepareModel() {':"  async prepareModel() {\n    if(this.softVoiceProfile()) { await this.preflight(); return; }",
         '    const model = validateModel(this.modelDir());':"    const model = this.softVoiceProfile() ? {ok:this.preflightResult?.ok === true,missing:[]} : validateModel(this.modelDir());",
         "sourceReady: existsSync(join(this.sourceDir(), 'cosyvoice', 'cli', 'cosyvoice.py')),":"sourceReady: this.softVoiceProfile() ? this.preflightResult?.ok === true : existsSync(join(this.sourceDir(), 'cosyvoice', 'cli', 'cosyvoice.py')),",
@@ -48,7 +52,7 @@ def install(plugin,runtime,mode='gpu',enable=True):
     package=json.loads((plugin/'package.json').read_text(encoding='utf-8'))
     if package.get('name')!='cortico-world-cosyvoice-tts' or package.get('version')!='0.1.11':
         raise ValueError('Only cortico-world-cosyvoice-tts 0.1.11 is supported')
-    if mode not in ('gpu','cache'):raise ValueError('Unsupported mode')
+    if mode not in ('gpu','cache','igpu'):raise ValueError('Unsupported mode')
     subprocess.run([sys.executable,'-m','coopanion_soft_voice.cli','--runtime',str(runtime),'doctor','--mode',mode],check=True)
     source=patch_runtime((plugin/'src/runtime.js').read_text(encoding='utf-8'))
     root=plugin/'.cosyvoice-tts';root.mkdir(exist_ok=True)
@@ -90,7 +94,7 @@ def restore(backup):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--plugin');p.add_argument('--runtime',default='.runtime');p.add_argument('--restore')
-    p.add_argument('--mode',choices=['gpu','cache'],default='gpu');p.add_argument('--keep-disabled',action='store_true')
+    p.add_argument('--mode',choices=['gpu','cache','igpu'],default='gpu');p.add_argument('--keep-disabled',action='store_true')
     args=p.parse_args()
     if args.restore:restore(args.restore)
     elif args.plugin:install(args.plugin,args.runtime,args.mode,not args.keep_disabled)

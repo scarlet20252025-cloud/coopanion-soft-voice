@@ -1,0 +1,84 @@
+{
+  "exitCode": 0,
+  "events": [
+    {
+      "type": "status",
+      "stage": "load_model",
+      "detail": "加载固定参考音色并预热"
+    },
+    {
+      "type": "ready",
+      "device": "软萌童声 / AMD 核显 / 实验版",
+      "sampleRate": 24000
+    },
+    {
+      "type": "status",
+      "stage": "synthesizing",
+      "detail": "正在生成固定参考声线"
+    },
+    {
+      "type": "status",
+      "stage": "playing",
+      "detail": "流式连续播放",
+      "id": "short",
+      "synthesisMs": 1221
+    },
+    {
+      "type": "done",
+      "id": "short",
+      "seconds": 1.84,
+      "totalSynthesisMs": 1699,
+      "firstChunkMs": 1221,
+      "firstDeviceCallbackMs": 1258,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm"
+    },
+    {
+      "type": "status",
+      "stage": "synthesizing",
+      "detail": "正在生成固定参考声线"
+    },
+    {
+      "type": "status",
+      "stage": "playing",
+      "detail": "流式连续播放",
+      "id": "long",
+      "synthesisMs": 1068
+    },
+    {
+      "type": "done",
+      "id": "long",
+      "seconds": 10.56,
+      "totalSynthesisMs": 7727,
+      "firstChunkMs": 1068,
+      "firstDeviceCallbackMs": 1104,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm"
+    },
+    {
+      "type": "status",
+      "stage": "synthesizing",
+      "detail": "正在生成固定参考声线"
+    },
+    {
+      "type": "status",
+      "stage": "playing",
+      "detail": "流式连续播放",
+      "id": "multi-piece",
+      "synthesisMs": 1139
+    },
+    {
+      "type": "done",
+      "id": "multi-piece",
+      "seconds": 21.12,
+      "totalSynthesisMs": 14999,
+      "firstChunkMs": 1139,
+      "firstDeviceCallbackMs": 1175,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm"
+    }
+  ]
+}

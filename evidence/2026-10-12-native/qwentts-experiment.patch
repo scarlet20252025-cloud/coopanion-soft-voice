@@ -1,0 +1,94 @@
+diff --git a/src/backend.h b/src/backend.h
+index aa7adbe..f81e981 100644
+--- a/src/backend.h
++++ b/src/backend.h
+@@ -28,6 +28,11 @@ struct BackendPair {
+ // Used for GGML CPU thread count: GEMM shares SIMD units across hyperthreads,
+ // so one thread per physical core is optimal.
+ static int backend_cpu_n_threads(void) {
++    const char * requested = std::getenv("QWEN_CPU_THREADS");
++    if (requested) {
++        int value = std::atoi(requested);
++        if (value >= 1 && value <= 8) return value;
++    }
+     int n = (int) std::thread::hardware_concurrency() / 2;
+     return n > 0 ? n : 1;
+ }
+@@ -148,6 +153,10 @@ static BackendPair backend_init(const char * label) {
+         bp.cpu_backend = bp.backend;
+     } else {
+         bp.cpu_backend = cpu_backend_new(n_threads);
++        auto dev = ggml_backend_get_device(bp.backend);
++        auto reg = ggml_backend_dev_backend_reg(dev);
++        auto set_fn = (ggml_backend_set_n_threads_t) ggml_backend_reg_get_proc_address(reg, "ggml_backend_set_n_threads");
++        if (set_fn) set_fn(bp.backend, n_threads);
+     }
+     if (!bp.cpu_backend) {
+         qt_log(QT_LOG_ERROR, "[Load] failed to init CPU backend");
+@@ -156,7 +165,7 @@ static BackendPair backend_init(const char * label) {
+         }
+         return BackendPair{};
+     }
+-    bp.has_gpu = !best_is_cpu;
++    bp.has_gpu = !best_is_cpu && strcmp(ggml_backend_name(bp.backend), "BLAS") != 0;
+     qt_log(QT_LOG_INFO, "[Load] %s backend: %s (CPU threads: %d)", label, ggml_backend_name(bp.backend), n_threads);
+     return bp;
+ }
+@@ -195,3 +204,18 @@ static ggml_backend_sched_t backend_sched_new(BackendPair bp, int max_nodes) {
+     }
+     return sched;
+ }
++
++// Experimental CPU/BLAS routing for preallocated static graphs.
++static enum ggml_status backend_static_compute(ggml_backend_t backend, ggml_cgraph * graph) {
++    if (strcmp(ggml_backend_name(backend), "BLAS") != 0)
++        return ggml_backend_graph_compute(backend, graph);
++    auto cpu = cpu_backend_new(backend_cpu_n_threads());
++    if (!cpu) return GGML_STATUS_FAILED;
++    auto sched = backend_sched_new({backend, cpu, false}, 32768);
++    if (!sched) { ggml_backend_free(cpu); return GGML_STATUS_FAILED; }
++    auto status = ggml_backend_sched_graph_compute(sched, graph);
++    ggml_backend_sched_synchronize(sched);
++    ggml_backend_sched_free(sched);
++    ggml_backend_free(cpu);
++    return status;
++}
+diff --git a/src/code-predictor-forward.h b/src/code-predictor-forward.h
+index 67622e8..1d645af 100644
+--- a/src/code-predictor-forward.h
++++ b/src/code-predictor-forward.h
+@@ -444,7 +444,7 @@ static bool code_predictor_frame_step(const CodePredictorWeights * cw,
+     ggml_backend_tensor_set(sp->codes, c0, 0, (size_t) N * sizeof(int32_t));
+     sampler_inputs_upload(sp, slots, N);
+ 
+-    if (ggml_backend_graph_compute(backend, frame_graph->gf) != GGML_STATUS_SUCCESS) {
++    if (backend_static_compute(backend, frame_graph->gf) != GGML_STATUS_SUCCESS) {
+         qt_log(QT_LOG_ERROR, "[CodePredictor] FATAL: frame graph compute failed");
+         return false;
+     }
+diff --git a/src/pipeline-codec.cpp b/src/pipeline-codec.cpp
+index e40df66..0f7708d 100644
+--- a/src/pipeline-codec.cpp
++++ b/src/pipeline-codec.cpp
+@@ -654,7 +654,7 @@ static bool codec_stream_run(PipelineCodec *    pc,
+     tok_trans_build_stream_mask(pos0.data(), T, M, ring, pc->transformer.sliding_window, sg->mask_buf);
+     ggml_backend_tensor_set(sg->mask, sg->mask_buf.data(), 0, sg->mask_buf.size() * sizeof(float));
+ 
+-    enum ggml_status st = ggml_backend_graph_compute(pc->backend, sg->gf);
++    enum ggml_status st = backend_static_compute(pc->backend, sg->gf);
+     if (st != GGML_STATUS_SUCCESS) {
+         qt_log(QT_LOG_ERROR, "[Pipeline] stream graph_compute status=%d", (int) st);
+         return false;
+diff --git a/src/talker-forward.h b/src/talker-forward.h
+index 6d487a1..c630c11 100644
+--- a/src/talker-forward.h
++++ b/src/talker-forward.h
+@@ -791,7 +791,7 @@ static bool talker_forward_decode(const TalkerWeights *            tw,
+         ggml_backend_tensor_set(tg->mask_in, mask.data(), 0, mask.size() * sizeof(ggml_fp16_t));
+     }
+ 
+-    if (ggml_backend_graph_compute(backend, tg->gf) != GGML_STATUS_SUCCESS) {
++    if (backend_static_compute(backend, tg->gf) != GGML_STATUS_SUCCESS) {
+         qt_log(QT_LOG_ERROR, "[TalkerForward] FATAL: decode graph compute failed");
+         return false;
+     }
