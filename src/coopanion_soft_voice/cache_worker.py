@@ -8,6 +8,7 @@ import time
 import wave
 from pathlib import Path
 from .phrase_cache import lookup
+from .config import reference
 
 
 def cache_root():
@@ -50,6 +51,9 @@ def worker(input_stream=None, output_stream=None, player=play):
             request_id = str(message.get('id', ''))
             if not request_id:
                 raise ValueError('Missing request id')
+            supplied=message.get('referenceAudio')
+            if supplied and Path(supplied).resolve()!=reference():
+                raise ValueError('Reference voice is locked')
             volume = float(message.get('volume', 65))
             if not math.isfinite(volume) or not 0 <= volume <= 100:
                 raise ValueError('Invalid volume')

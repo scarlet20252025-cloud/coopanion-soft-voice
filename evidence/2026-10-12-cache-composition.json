@@ -1,0 +1,19 @@
+{
+  "backend": "cache",
+  "readyMs": 348,
+  "silent": true,
+  "lastSpeech": {
+    "id": "s1",
+    "text": "今天也辛苦啦，先休息一小会儿，我会乖乖等你。",
+    "synthesisMs": 0,
+    "queueWaitMs": 0,
+    "startDelayMs": 5,
+    "seconds": 4.4,
+    "totalSynthesisMs": 0
+  },
+  "combinedSeconds": 9,
+  "cacheMissSkipped": true,
+  "modelReady": true,
+  "lastError": null,
+  "note": "Real plugin IPC and zero-amplitude Windows playback; no perceptual or game stability test"
+}

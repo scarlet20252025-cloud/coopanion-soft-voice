@@ -2,11 +2,11 @@
 
 把已实际运行的 **soft-child-design-2** 声线与低延迟语音链路保存为可构建、可部署的独立项目。适用于 Windows 上的 Coopanion 桌宠，也可以独立朗读。
 
-当前版本为 **0.2.0 实验版**。保留用户确认的参考音频。GPU 模式使用 **Qwen3-TTS 0.6B Base / BF16 / SDPA / CUDA Graph**，每生成 8 个 codec 帧就开始连续播放。新增不加载模型的原声缓存模式。两种模式均不做变调。
+当前版本为 **0.2.1 实验版**。保留用户确认的参考音频。GPU 模式使用 **Qwen3-TTS 0.6B Base / BF16 / SDPA / CUDA Graph**，每生成 8 个 codec 帧就开始连续播放。新增不加载模型的原声缓存模式。两种模式均不做变调。
 
 ## 游戏模式：固定提示，不占推理显卡
 
-`cache` 模式只播放三条打包的原声录音，整句精确匹配；其他文本保持文字回复，不调用模型、不联网、不用其他声线顶替。它不是自由对话 TTS，也不会把任意回复换成固定台词。
+`cache` 模式只播放三条打包的原声录音，支持完整提示的精确匹配与组合播放，段间留 200 毫秒停顿；包含未缓存内容时整条保持文字回复，不调用模型、不联网、不用其他声线顶替。它不是自由对话 TTS，也不会把任意回复换成固定台词。
 
 - 我们先学二十分钟，再一起休息一下吧。
 - 今天也辛苦啦，先休息一小会儿，我会乖乖等你。
@@ -22,7 +22,16 @@
 
 安装器保存备份并打印路径。`--keep-disabled` 保持语音关闭；重新打开桌宠后可在 TTS 设置中启用。去掉该参数则安装时开启语音。切换回 GPU 模式用同一命令的 `--mode gpu --runtime .runtime`，会先检查 GPU 和模型；玩游戏时不建议开启 GPU 模式。回滚使用 `--restore` 和打印的备份路径。
 
-缓存模式本身只需 Windows、Python 3.10 和本包，不需要 PyTorch、模型文件或 CUDA。可用 `python -m pip install --no-deps dist/coopanion_soft_voice-0.2.0-py3-none-any.whl` 单独安装，然后用 `python -m coopanion_soft_voice.cli doctor --mode cache` 检查。下方完整环境安装流程是给 GPU 模式的。
+已安装后也可以用轻量工具查看或切换模式，不重装、不加载模型、不改变语音开关或音量：
+
+```powershell
+.venv\Scripts\python.exe scripts/voice_mode.py --plugin "D:\Coopanion\data\extensions\node_modules\cortico-world-cosyvoice-tts"
+.venv\Scripts\python.exe scripts/voice_mode.py --plugin "D:\Coopanion\data\extensions\node_modules\cortico-world-cosyvoice-tts" --mode cache
+```
+
+`--mode gpu` 选择原来的 GPU 模式；该轻量工具只检查模型配置文件存在，不替代 GPU 运行环境检查。切换后重启 Coopanion 才生效；工具会报告是否实际变更，并单独保存旧模式配置。组合播放最多 16 条、总请求最多 4000 字，不进行语义猜测或截取部分回复。
+
+缓存模式本身只需 Windows、Python 3.10 和本包，不需要 PyTorch、模型文件或 CUDA。可用 `python -m pip install --no-deps dist/coopanion_soft_voice-0.2.1-py3-none-any.whl` 单独安装，然后用 `python -m coopanion_soft_voice.cli doctor --mode cache` 检查。下方完整环境安装流程是给 GPU 模式的。
 
 实测 Coopanion 插件 IPC 到 Windows 零音量播放正常，缓存 worker 初始化约 392 ms、请求到播放状态约 3 ms。这些是软件时间点，不是扬声器首声测量；尚未进行游戏同时运行的长时稳定性测试。CPU 实时方案未通过：当前 INT8 内容错误，FP32 内容正确但短句合成约 22.7 秒，均未部署。详情见 [CPU 与缓存测试](docs/CPU_TRIAL.md)。
 
