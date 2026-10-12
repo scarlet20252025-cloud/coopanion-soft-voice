@@ -1,0 +1,342 @@
+{
+  "scenario": "CS2 Dust II offline practice with bots; stationary player, no FPS benchmark",
+  "silent": true,
+  "gamePid": 7268,
+  "gameAliveAfter": true,
+  "testExitCode": 0,
+  "samples": [
+    {
+      "atSeconds": 0.0,
+      "phase": "baseline",
+      "freeRamMiB": 5367,
+      "nvidia": "5106, 63",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 558.0
+    },
+    {
+      "atSeconds": 1.14,
+      "phase": "baseline",
+      "freeRamMiB": 5360,
+      "nvidia": "5106, 67",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 537.5
+    },
+    {
+      "atSeconds": 2.28,
+      "phase": "baseline",
+      "freeRamMiB": 5382,
+      "nvidia": "5109, 57",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 847,
+      "cs2CpuPercent": 456.9
+    },
+    {
+      "atSeconds": 3.44,
+      "phase": "baseline",
+      "freeRamMiB": 5378,
+      "nvidia": "5109, 71",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 464.2
+    },
+    {
+      "atSeconds": 4.58,
+      "phase": "baseline",
+      "freeRamMiB": 5374,
+      "nvidia": "5108, 71",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 847,
+      "cs2CpuPercent": 439.3
+    },
+    {
+      "atSeconds": 5.73,
+      "phase": "baseline",
+      "freeRamMiB": 5352,
+      "nvidia": "5106, 69",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 846,
+      "cs2CpuPercent": 531.9
+    },
+    {
+      "atSeconds": 6.89,
+      "phase": "baseline",
+      "freeRamMiB": 5300,
+      "nvidia": "5109, 66",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 499.7
+    },
+    {
+      "atSeconds": 8.01,
+      "phase": "baseline",
+      "freeRamMiB": 5300,
+      "nvidia": "5105, 63",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 847,
+      "cs2CpuPercent": 547.2
+    },
+    {
+      "atSeconds": 9.14,
+      "phase": "baseline",
+      "freeRamMiB": 5305,
+      "nvidia": "5104, 72",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 845,
+      "cs2CpuPercent": 529.2
+    },
+    {
+      "atSeconds": 10.26,
+      "phase": "voice",
+      "freeRamMiB": 5264,
+      "nvidia": "5102, 64",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 846,
+      "cs2CpuPercent": 477.4
+    },
+    {
+      "atSeconds": 11.48,
+      "phase": "voice",
+      "freeRamMiB": 5217,
+      "nvidia": "5105, 55",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 847,
+      "cs2CpuPercent": 405.3
+    },
+    {
+      "atSeconds": 12.64,
+      "phase": "voice",
+      "freeRamMiB": 5204,
+      "nvidia": "5104, 49",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 468.1
+    },
+    {
+      "atSeconds": 13.75,
+      "phase": "voice",
+      "freeRamMiB": 5172,
+      "nvidia": "5102, 53",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 456.9
+    },
+    {
+      "atSeconds": 14.88,
+      "phase": "voice",
+      "freeRamMiB": 5177,
+      "nvidia": "5105, 58",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 448.6
+    },
+    {
+      "atSeconds": 16.0,
+      "phase": "voice",
+      "freeRamMiB": 5172,
+      "nvidia": "5104, 58",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 463.9
+    },
+    {
+      "atSeconds": 17.12,
+      "phase": "voice",
+      "freeRamMiB": 4541,
+      "nvidia": "5103, 56",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 863,
+      "cs2CpuPercent": 439.6
+    },
+    {
+      "atSeconds": 18.59,
+      "phase": "voice",
+      "freeRamMiB": 3920,
+      "nvidia": "5106, 62",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 859,
+      "cs2CpuPercent": 515.6
+    },
+    {
+      "atSeconds": 19.78,
+      "phase": "voice",
+      "freeRamMiB": 3580,
+      "nvidia": "5103, 42",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 857,
+      "cs2CpuPercent": 368.5
+    },
+    {
+      "atSeconds": 21.01,
+      "phase": "voice",
+      "freeRamMiB": 3169,
+      "nvidia": "5106, 36",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 848,
+      "cs2CpuPercent": 369.7
+    },
+    {
+      "atSeconds": 22.17,
+      "phase": "voice",
+      "freeRamMiB": 3047,
+      "nvidia": "5105, 38",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 822,
+      "cs2CpuPercent": 448.2
+    },
+    {
+      "atSeconds": 23.31,
+      "phase": "voice",
+      "freeRamMiB": 3721,
+      "nvidia": "5103, 30",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 823,
+      "cs2CpuPercent": 337.3
+    },
+    {
+      "atSeconds": 24.59,
+      "phase": "voice",
+      "freeRamMiB": 3855,
+      "nvidia": "5106, 27",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 218,
+      "cs2CpuPercent": 364.3
+    },
+    {
+      "atSeconds": 25.75,
+      "phase": "voice",
+      "freeRamMiB": 4045,
+      "nvidia": "5105, 52",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 232,
+      "cs2CpuPercent": 456.0
+    },
+    {
+      "atSeconds": 26.89,
+      "phase": "voice",
+      "freeRamMiB": 4058,
+      "nvidia": "5103, 32",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 235,
+      "cs2CpuPercent": 345.1
+    },
+    {
+      "atSeconds": 28.09,
+      "phase": "voice",
+      "freeRamMiB": 4075,
+      "nvidia": "5103, 56",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 246,
+      "cs2CpuPercent": 381.3
+    },
+    {
+      "atSeconds": 29.28,
+      "phase": "voice",
+      "freeRamMiB": 4366,
+      "nvidia": "5106, 66",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 249,
+      "cs2CpuPercent": 478.0
+    },
+    {
+      "atSeconds": 30.48,
+      "phase": "voice",
+      "freeRamMiB": 4401,
+      "nvidia": "5105, 33",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 251,
+      "cs2CpuPercent": 307.1
+    },
+    {
+      "atSeconds": 31.76,
+      "phase": "voice",
+      "freeRamMiB": 4486,
+      "nvidia": "5103, 29",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 252,
+      "cs2CpuPercent": 333.8
+    },
+    {
+      "atSeconds": 32.95,
+      "phase": "voice",
+      "freeRamMiB": 4568,
+      "nvidia": "5103, 27",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 252,
+      "cs2CpuPercent": 363.5
+    },
+    {
+      "atSeconds": 34.25,
+      "phase": "voice",
+      "freeRamMiB": 4782,
+      "nvidia": "5106, 32",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 259,
+      "cs2CpuPercent": 376.7
+    },
+    {
+      "atSeconds": 35.45,
+      "phase": "voice",
+      "freeRamMiB": 4935,
+      "nvidia": "5105, 39",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 261,
+      "cs2CpuPercent": 296.3
+    },
+    {
+      "atSeconds": 36.69,
+      "phase": "voice",
+      "freeRamMiB": 4910,
+      "nvidia": "5103, 31",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 263,
+      "cs2CpuPercent": 313.8
+    },
+    {
+      "atSeconds": 37.91,
+      "phase": "voice",
+      "freeRamMiB": 4861,
+      "nvidia": "5103, 35",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 265,
+      "cs2CpuPercent": 401.5
+    },
+    {
+      "atSeconds": 39.01,
+      "phase": "voice",
+      "freeRamMiB": 4900,
+      "nvidia": "5105, 72",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 264,
+      "cs2CpuPercent": 467.0
+    },
+    {
+      "atSeconds": 40.16,
+      "phase": "voice",
+      "freeRamMiB": 4866,
+      "nvidia": "5105, 59",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 265,
+      "cs2CpuPercent": 456.9
+    },
+    {
+      "atSeconds": 41.28,
+      "phase": "voice",
+      "freeRamMiB": 6171,
+      "nvidia": "5105, 62",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 272,
+      "cs2CpuPercent": 470.4
+    },
+    {
+      "atSeconds": 42.44,
+      "phase": "voice",
+      "freeRamMiB": 7528,
+      "nvidia": "5105, 62",
+      "cs2Alive": true,
+      "cs2WorkingMiB": 274,
+      "cs2CpuPercent": 431.9
+    }
+  ]
+}

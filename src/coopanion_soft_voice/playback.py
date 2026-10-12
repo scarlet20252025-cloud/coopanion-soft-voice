@@ -12,6 +12,7 @@ def speak(model,text,key,volume,speed,request_id,stage,root):
             pieces.append(sentence[:60]);sentence=sentence[60:]
         current+=sentence
     if current:pieces.append(current)
+    pieces=[piece for piece in pieces if piece.strip()]
     started=time.perf_counter();first_ms=None
     def playing():
         nonlocal first_ms

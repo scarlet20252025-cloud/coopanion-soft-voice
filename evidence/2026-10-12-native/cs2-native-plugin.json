@@ -1,0 +1,31 @@
+{
+  "backend": "igpu",
+  "silent": true,
+  "readyMs": 13816,
+  "results": [
+    {
+      "type": "done",
+      "id": "s1",
+      "seconds": 1.84,
+      "totalSynthesisMs": 1901,
+      "firstChunkMs": 1382,
+      "firstDeviceCallbackMs": 1426,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm"
+    },
+    {
+      "type": "done",
+      "id": "s2",
+      "seconds": 10.56,
+      "totalSynthesisMs": 8554,
+      "firstChunkMs": 1146,
+      "firstDeviceCallbackMs": 1182,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm"
+    }
+  ],
+  "modelReady": true,
+  "lastError": null
+}

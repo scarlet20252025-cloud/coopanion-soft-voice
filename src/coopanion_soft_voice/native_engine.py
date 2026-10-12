@@ -140,15 +140,16 @@ class NativeEngine:
         p.seed = 44; p.max_new_tokens = 360
         p.temperature = .9; p.top_k = 50; p.top_p = 1; p.repetition_penalty = 1.05
         p.subtalker_temperature = .9; p.subtalker_top_k = 50; p.subtalker_top_p = 1
-        pending = []; count = 0; opened = False; errors = []; started = time.perf_counter()
+        pending = []; count = 0; total_samples = 0; opened = False; errors = []; started = time.perf_counter()
         @Cancel
         def cancel(user): return time.perf_counter()-started > 60
         @Chunk
         def chunk(samples, n, user):
-            nonlocal count, opened
+            nonlocal count, total_samples, opened
             try:
                 data = np.ctypeslib.as_array(samples, shape=(n,)).copy()
                 if not np.isfinite(data).all(): raise ValueError('Nonfinite audio')
+                total_samples += n
                 if opened:
                     receive(data, 24000)
                 else:
@@ -165,6 +166,12 @@ class NativeEngine:
             self.dll.qt_audio_free(C.byref(out))
         if status or errors:
             raise RuntimeError(str(errors[0]) if errors else self.dll.qt_last_error().decode())
+        # The native API reports success even when generation hits its frame cap.
+        # Do not label a potentially truncated utterance as complete.
+        if total_samples >= p.max_new_tokens * 1920:
+            raise RuntimeError('Speech reached the generation limit; output may be incomplete')
+        if not total_samples:
+            raise RuntimeError('Native engine returned no audio')
         if on_complete: on_complete()
         if pending: receive(np.concatenate(pending), 24000)
 
