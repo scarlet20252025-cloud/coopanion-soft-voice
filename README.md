@@ -1,110 +1,62 @@
 # 软萌桌宠语音 · Coopanion Soft Voice
 
-把已实际运行的 **soft-child-design-2** 声线与低延迟语音链路保存为可构建、可部署的独立项目。适用于 Windows 上的 Coopanion 桌宠，也可以独立朗读。
+为 Windows Coopanion 提供固定 `soft-child-design-2` 软萌声线与流式语音。**0.3.2** 提供从零构建的核显部署入口：工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
 
-当前版本为 **0.3.1 实验版**。保留用户确认的参考音频。GPU 模式使用 **Qwen3-TTS 0.6B Base / BF16 / SDPA / CUDA Graph**，每生成 8 个 codec 帧就开始连续播放。新增不加载模型的原声缓存模式。这些模式均不做变调。
+Q8 核显版音色已于 **2026-10-12** 通过用户试听并接入正式桌宠。使用 Qwen3-TTS 0.6B Base、固定参考音频和种子，不做变调；明确选择集成显卡，失败时不会改用 NVIDIA 独显或其他声音。不需要云端语音账号、付费服务、PyTorch 或 CUDA。
 
-## 核显实验后端（0.3.0）
+## 从零部署
 
-新增 `igpu` 可选模式，使用 Q8 原生引擎和原参考音频，通过明确选择的 AMD 核显生成自由对话。NVIDIA 独显不会作为失败回退。正式 worker 静音声卡测试：短句、长句和 21 秒跨分段回复首次设备回调约 **1.10–1.26 秒**，没有缓冲断流或设备欠载。该计时不含聊天模型等待；并非扬声器实测延迟。
-
-这是候选实现：已通过一次 CS2 离线练习共存测试，但尚未通过用户音色试听及长时间竞技对局验证，**不会自动替换已安装模式**。相同参考与种子不保证原生量化引擎的听感与原 CUDA 版本完全相同。需另外构建 DLL、配置 runtime 并校验 Q8 权重；wheel 不包含原生运行库。详见 [原生引擎测试与部署](docs/NATIVE_TRIAL.md)。
-
-## 游戏模式：固定提示，不占推理显卡
-
-`cache` 模式只播放三条打包的原声录音，支持完整提示的精确匹配与组合播放，段间留 200 毫秒停顿；包含未缓存内容时整条保持文字回复，不调用模型、不联网、不用其他声线顶替。它不是自由对话 TTS，也不会把任意回复换成固定台词。
-
-- 我们先学二十分钟，再一起休息一下吧。
-- 今天也辛苦啦，先休息一小会儿，我会乖乖等你。
-- 你在吗？我来陪你啦，我们慢慢来，好不好？
-
-休息提示使用原始 `soft-child-design-2.wav`；其他两条来自此前通过内容检查的原声克隆输出，缓存模式没有重新合成它们。只播放文件，不保证每条克隆与参考听感完全相同。
-
-已有项目环境时，关闭 Coopanion 后执行：
-
-```powershell
-.venv\Scripts\python.exe scripts/install_plugin.py --plugin "D:\Coopanion\data\extensions\node_modules\cortico-world-cosyvoice-tts" --mode cache --keep-disabled
-```
-
-安装器保存备份并打印路径。`--keep-disabled` 保持语音关闭；重新打开桌宠后可在 TTS 设置中启用。去掉该参数则安装时开启语音。切换回 GPU 模式用同一命令的 `--mode gpu --runtime .runtime`，会先检查 GPU 和模型；玩游戏时不建议开启 GPU 模式。回滚使用 `--restore` 和打印的备份路径。
-
-已安装后也可以用轻量工具查看或切换模式，不重装、不加载模型、不改变语音开关或音量：
-
-```powershell
-.venv\Scripts\python.exe scripts/voice_mode.py --plugin "D:\Coopanion\data\extensions\node_modules\cortico-world-cosyvoice-tts"
-.venv\Scripts\python.exe scripts/voice_mode.py --plugin "D:\Coopanion\data\extensions\node_modules\cortico-world-cosyvoice-tts" --mode cache
-```
-
-`--mode gpu` 选择原来的 GPU 模式；该轻量工具只检查模型配置文件存在，不替代 GPU 运行环境检查。切换后重启 Coopanion 才生效；工具会报告是否实际变更，并单独保存旧模式配置。组合播放最多 16 条、总请求最多 4000 字，不进行语义猜测或截取部分回复。
-
-缓存模式本身只需 Windows、Python 3.10 和本包，不需要 PyTorch、模型文件或 CUDA。可用 `python -m pip install --no-deps dist/coopanion_soft_voice-0.3.1-py3-none-any.whl` 单独安装，然后用 `python -m coopanion_soft_voice.cli doctor --mode cache` 检查。下方完整环境安装流程是给 GPU 模式的。
-
-实测 Coopanion 插件 IPC 到 Windows 零音量播放正常，缓存 worker 初始化约 392 ms、请求到播放状态约 3 ms。这些是软件时间点，不是扬声器首声测量；尚未进行游戏同时运行的长时稳定性测试。CPU 实时方案未通过：当前 INT8 内容错误，FP32 内容正确但短句合成约 22.7 秒，均未部署。详情见 [CPU 与缓存测试](docs/CPU_TRIAL.md)。
-
-> 这是语音组件项目，不是完整 Coopanion 分发包。桌宠程序、角色素材与聊天模型账号由用户自行配置。本仓库不包含 API 密钥、聊天记录、他人视频音源或多 GB 模型权重。
-
-## 已验证的效果与边界
-
-- 原环境：Windows、RTX 4050 Laptop 6GB、Python 3.10、Coopanion 0.1.21、社区 TTS 插件 0.1.11。
-- 原链路实测：收到朗读文本后约 **0.69～0.86 秒**进入播放，音频设备回调约 **0.72～0.88 秒**；短句测试没有缓冲断流。详见 [验证记录](docs/VALIDATION.md)。这些不是所有机器的保证，也不包含聊天模型思考或前一句排队。
-- **偶发声线变化尚未查明原因。** 固定参考音频不代表所有句子的音高、语气都完全相同；自动转写正确也不等于听感一致。流式模式与整句解码存在小幅数值差异。
-- 首次启动需要加载模型和预热；等待 `ready` 后才进入上述延迟范围。长文本仍按不超过 60 字分段，多个请求串行排队，GPU 忙碌可能增加延迟。
-
-## 安装与独立使用
-
-需要 Windows 10/11 x64、NVIDIA CUDA 可用显卡、Python **3.10**。测试显存为 6GB；建议至少预留 12GB 磁盘空间用于环境、缓存与模型。显卡驱动必须支持 CUDA 12.1。
+先安装 **Windows 10/11 x64、Python 3.10 x64、Git 和显卡厂商驱动（含 Vulkan）**，准备至少 **8 GB 可用磁盘**。核显实测平台为 Ryzen 7 7735H / AMD Radeon(TM) Graphics / 16 GB RAM；其他核显的性能和兼容性需自行验证。启动前要求至少 4 GiB 空闲内存，游戏仍与核显共享系统资源。
 
 ```powershell
 git clone https://github.com/scarlet20252025-cloud/coopanion-soft-voice.git
 cd coopanion-soft-voice
-powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-native.ps1
 ```
 
-脚本会建立独立 `.venv`，安装已固定的主要依赖，下载指定提交的模型并校验权重，再检查 GPU 和音频设备。不会设置开机自启，也不会修改系统音量。模型下载需要访问 Hugging Face。
+脚本创建独立 `.runtime-native/venv`，下载带 SHA256 校验的工具链和 Q8 模型，检出固定源码与子模块、应用仓库补丁、编译 DLL、生成本机配置并检查。需要访问 GitHub、PyPI、Google Storage、Hugging Face；下载失败会停止，不会换模型。它不会修改桌宠、注册开机自启或自动播放声音。
+
+**完整操作、设备名选择、试听、插件接入、回滚与故障排查：[核显部署指南](docs/DEPLOY_NATIVE.md)。**
 
 ```powershell
-# 检查环境
-.venv\Scripts\python.exe -m coopanion_soft_voice.cli --runtime .runtime doctor
-# 首次调用会预热；持续使用请通过 Coopanion 的常驻 worker
-.venv\Scripts\python.exe -m coopanion_soft_voice.cli --runtime .runtime speak "我们先学二十分钟，再一起休息一下吧。"
-# 生成文件，不自动播放；测试句子限制 60 字以内
-.venv\Scripts\python.exe -m coopanion_soft_voice.cli --runtime .runtime render "今天也辛苦啦。" --output demo.wav
+# 生成试听文件，不自动播放
+.runtime-native\venv\Scripts\python.exe scripts/preview_native.py --output preview.wav
 ```
 
-如果已下载模型，将完整文件放在 `.runtime/clone-model`，可用 `scripts/setup.ps1 -SkipModelDownload` 跳过下载。不要放入其他 Qwen 模型；模型文件清单和提交号已锁定。
+参考音频已包含在 [仓库资源](src/coopanion_soft_voice/assets/soft-child-design-2.wav) 和 wheel 中。它是合成音频，不是演员录音；其他人不需要从视频提取音源。不同驱动和硬件不保证逐采样一致，请先试听。
 
-## 接入 Coopanion
+## 接入桌宠
 
-1. 从 [Coopanion 官方项目](https://github.com/Pal-AI-Lab/Coopanion) 安装桌宠；已验证版本为 0.1.21。
-2. 在 Coopanion 的社区扩展界面安装 **`cortico-world-cosyvoice-tts@0.1.11`**。无需先下载 CosyVoice 模型；本项目安装完成后将使用独立 Qwen 环境。
-3. 退出 Coopanion，找到插件目录（其中应有 `package.json`、`src`、`runtime`），执行下列命令。把示例路径替换为自己的真实安装路径。
+安装 [Coopanion](https://github.com/Pal-AI-Lab/Coopanion) 和社区扩展 `cortico-world-cosyvoice-tts@0.1.11`。核显链路已验证 Coopanion **0.1.22**；插件安装器仅接受 **0.1.11**，不兼容版本会停止。无需初始化或下载插件原来的 CosyVoice 模型。
+
+退出 Coopanion，在 PowerShell 中运行（输入自己的插件目录）：
 
 ```powershell
-.venv\Scripts\python.exe scripts/install_plugin.py `
-  --plugin "D:\Coopanion\data\extensions\node_modules\cortico-world-cosyvoice-tts" `
-  --runtime .runtime
+$plugin = Read-Host '插件目录（应含 package.json、src、runtime）'
+.runtime-native\venv\Scripts\python.exe scripts/install_plugin.py --plugin "$plugin" --runtime .runtime-native --mode igpu
 ```
 
-4. 重启 Coopanion，等待语音状态为 `ready`。这一步需要重新加载 JavaScript，仅在界面关开语音不能替代应用重启。
+重启 Coopanion，等待核显语音就绪后聊天。安装器保留备份及原音量（无设置时默认 65%），锁定参考音频和语速 1.0。模型只在常驻 worker 启动时加载，首次预热比日常合成慢。重新打开聊天不会切换模式。
 
-安装器只支持插件 **0.1.11**，遇到版本或源码结构不匹配会停止。它保存安装前的备份，锁定参考音频、语速 1.0、音量 65%；不会修改聊天模型账户配置。不要移动安装后的项目或虚拟环境，否则需要重新安装接入配置。社区插件升级可能覆盖补丁，升级后需要重新检查兼容性。
+## 实测与限制
 
-```powershell
-# 回滚：使用安装器输出的真实备份目录，再重启 Coopanion
-.venv\Scripts\python.exe scripts/install_plugin.py --restore "D:\...\.cosyvoice-tts\softvoice-backups\时间戳"
-```
+CS2 Dust II 离线机器人练习中，暖机后首次音频设备回调约 **1.18–1.43 秒**，两句无断流或设备欠载，游戏未崩溃。冷启动及预热约 13.8 秒。计时不包含聊天模型回复、排队及扬声器延迟；这不是整场竞技稳定性或 FPS 保证。
+
+固定声线不保证任意句子的语气、音高完全一致。核显仍消耗内存、带宽和功耗；加载时内存不足会拒绝启动。长文本分段生成，帧数耗尽或空音频会报错，不把截断输出标为成功。
+
+- [核显、插件和 CS2 验证记录](docs/NATIVE_TRIAL.md)
+- [原 CUDA 后端安装](docs/CUDA.md)：使用独显，不适合游戏隔离目标。
+- [CPU 试验及缓存模式](docs/CPU_TRIAL.md)：CPU 实时方案未采用；`cache` 只读打包的固定短语，不支持自由对话。
 
 ## 构建与分享
 
 ```powershell
-.venv\Scripts\python.exe -m pip install build==1.2.2.post1
-powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Python .venv\Scripts\python.exe
+.runtime-native\venv\Scripts\python.exe -m pip install build==1.2.2.post1
+.runtime-native\venv\Scripts\python.exe -m build
 ```
 
-产物是 `dist/` 中的 wheel 和源码包。GitHub Actions 会运行无需 GPU 的测试、构建两种包并提供下载。完整部署建议分享仓库地址或源码包；wheel 只包含推理代码、固定音频、许可证和模型清单，GPU 依赖请按安装脚本安装。由于 CUDA 安装源特殊，本包不让 pip 自动选择 torch 版本。
+分享本仓库或源码包即可按指南重建。wheel 包含 Python 代码、参考声音、缓存和许可证；源码包额外包含安装脚本、固定下载清单、原生补丁及文档。**单个 wheel 不包含第三方 DLL 和 1.28 GB 权重**，不是完整离线安装包。
 
-主要推理依赖与本次验证环境的传递依赖版本分别固定在 `requirements-runtime.txt` 和 `requirements-runtime.lock`，并非逐字节锁定的系统镜像。模型固定到 HF 提交 `5d83992436eae1d760afd27aff78a71d676296fc`。音频 SHA-256 为 `4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20`，启动时校验。
+GitHub Actions 执行 Windows 测试、构建 wheel/源码包；原生安装脚本变化时，还会从干净 runner 下载工具并构建 DLL，也支持手动运行。无 GPU 的 CI 验证构建，不能代替核显推理和真人试听。
 
-## 来源与许可证
-
-项目代码采用 MIT；CUDA Graph 解码器保留上游 MIT 声明。固定参考 WAV 是 Qwen VoiceDesign 生成并由用户确认的合成音频，不是视频原声或钉宫理惠录音。模型、桌宠程序及外部角色资源遵循各自许可证。详见 [第三方说明](THIRD_PARTY_NOTICES.md)。
+这是语音组件，不是整个桌宠或聊天模型服务。角色素材、桌宠程序、聊天模型账号需自行配置。无密钥、聊天记录或作者本机路径依赖。代码 MIT；模型和第三方工具各遵循其许可证，详见 [第三方说明](THIRD_PARTY_NOTICES.md)。

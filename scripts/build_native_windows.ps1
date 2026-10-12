@@ -18,8 +18,11 @@ if ($LASTEXITCODE -ne 0 -or $ggmlRevision -ne '2eddaf94a8cdbbf1c30017d28313cd661
     throw 'Initialize the pinned ggml submodule before building.'
 }
 $patch = Join-Path $PSScriptRoot '../evidence/2026-10-12-native/qwentts-experiment.patch'
+$ErrorActionPreference = 'Continue'
 git -C $Source apply --reverse --check $patch 2>$null
-if ($LASTEXITCODE -ne 0) {
+$alreadyPatched = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $alreadyPatched) {
     git -C $Source apply --check $patch
     if ($LASTEXITCODE -ne 0) { throw 'Source does not match the experiment patch.' }
     git -C $Source apply $patch

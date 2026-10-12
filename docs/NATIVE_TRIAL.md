@@ -1,10 +1,10 @@
-# 原生推理试验（2026-10-12，未部署）
+# 原生推理验证记录（2026-10-12）
 
-目标是保留 `soft-child-design-2` 参考声线，支持任意聊天，降低等待时间，并避开游戏使用的 NVIDIA 显卡。这里记录隔离测试，不代表生产功能已经完成。
+目标是保留 `soft-child-design-2` 参考声线，支持任意聊天，降低等待时间，并避开游戏使用的 NVIDIA 显卡。这里保留各阶段隔离测试。Q8 核显候选现已通过用户试听并启用；从零部署见 [部署指南](DEPLOY_NATIVE.md)。
 
 ## CPU 结论
 
-采用 [qwentts.cpp](https://github.com/ServeurpersoCom/qwentts.cpp) 的完整 ICL 参考音频与文字接口。原始参考文件 SHA256、seed 44 保持不变；原生引擎与量化会改变采样结果，不能因此保证音色与原版相同。新样本全部待人工确认，没有播放、缓存或替换正式语音。
+采用 [qwentts.cpp](https://github.com/ServeurpersoCom/qwentts.cpp) 的完整 ICL 参考音频与文字接口。原始参考文件 SHA256、seed 44 保持不变；原生引擎与量化会改变采样结果，不能因此保证音色与原版相同。CPU/Q4 试验未采用；后续 Q8 核显样本已经用户确认。
 
 平台：Ryzen 7 7735H，16 GB RAM，Windows；BelowNormal 优先级。以下是单次测量，不是稳定性或游戏共存测试。
 
@@ -46,7 +46,7 @@ Q8 核显实测：两条暖机短句的连续起播缓冲约 0.46–0.53 秒；�
 
 最后在隔离的真实插件副本上运行 Node → `CosyRuntime` → Python worker → Windows 声卡：初始化与预热 8248 ms，ready 后两条请求首次设备回调 1301、1090 ms；均无断流、设备欠载或插件错误。证据 `native-plugin.json`。副本用当前安装插件源码升级，正式插件未改动。
 
-峰值进程工作集约 3.7 GB；这个数不等于核显共享内存加进程的全部开销。即使避开独显，仍会占用共享内存和整机功耗。**尚未经过用户音色试听，正式模式未切换。**
+峰值进程工作集约 3.7 GB；这个数不等于核显共享内存加进程的全部开销。即使避开独显，仍会占用共享内存和整机功耗。**后续用户确认“声音满意，可以采用”，2026-10-12 已将正式插件切换至核显模式并完成预热。**
 
 ### CS2 共存测试与 0.3.1 边界修复
 
@@ -67,17 +67,4 @@ Q8 核显实测：两条暖机短句的连续起播缓冲约 0.46–0.53 秒；�
 
 `scripts/build_native_windows.ps1` 接收固定源码、LLVM MinGW、CMake、Ninja、Vulkan Headers/import library、glslc 和已安装 SPIRV-Headers 路径，检查源码提交并应用试验补丁，构建 DLL。测试工具链为 llvm-mingw 20261006、CMake 4.4.4、Ninja 1.13.2；Vulkan Headers 1.4.328、SPIRV-Headers vulkan-sdk-1.4.328.1、Google shaderc 20261001 Windows VS2022 构建。DLL 未随 wheel 分发；跨机器需要构建，不要只复制 Python 包后声称部署完成。
 
-在 runtime 下创建 `native-runtime.json`（这里是字段示意，路径和散列需替换）：
-
-```json
-{
-  "dll": "C:/native/qwentts/build-vulkan/libqwen.dll",
-  "dllSha256": "构建所得 DLL 的 SHA256",
-  "model": "C:/native/models/qwen-talker-0.6b-base-Q8_0.gguf",
-  "codec": "C:/native/models/qwen-tokenizer-12hz-Q8_0.gguf",
-  "dllDirectories": ["C:/native/llvm-mingw/bin"],
-  "deviceName": "AMD Radeon(TM) Graphics"
-}
-```
-
-使用 `python -m coopanion_soft_voice.cli --runtime .runtime doctor --mode igpu` 检查；确认试听后才通过 `scripts/install_plugin.py --mode igpu --runtime .runtime --keep-disabled --plugin ...` 安装并重启桌宠。之后可在界面启用语音。安装器会备份原设置；在此之前可用 `scripts/native_trial.py` 生成候选 WAV，不自动播放。该核显后端需要 NumPy、soundfile、sounddevice，以及本机构建的 DLL 和对应运行库。
+自动下载工具链、编译引擎、下载模型和生成配置的完整入口现为 `scripts/setup-native.ps1`。请按 [部署指南](DEPLOY_NATIVE.md) 操作，无需复用作者机器上的 DLL、模型目录或任何本机文件。

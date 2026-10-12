@@ -9,3 +9,5 @@
 - `soft-child-design-2.wav`: synthetic Qwen VoiceDesign output selected by the user. Prompt: 中文普通话，稚嫩的小女孩声音，音色小巧、软糯、干净，像轻轻和好朋友说话。自然清晰地咬字，语调平缓柔和，句尾轻轻落下，轻松亲切。 Seed 44. Reference text is included in `config.py`. This is not a recording of a real actor.
 
 The project MIT license covers original glue code. It does not relicense upstream dependencies, model weights, or external desktop-pet character assets.
+
+The native setup script downloads build tools separately: [LLVM MinGW](https://github.com/mstorsjo/llvm-mingw), [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers), [SPIRV-Headers](https://github.com/KhronosGroup/SPIRV-Headers), and [shaderc](https://github.com/google/shaderc), plus CMake and Ninja from PyPI. Their license files remain in the extracted source/tool distributions. This repository does not bundle their binaries; retain each project's notices if sharing a compiled runtime.

@@ -1,5 +1,7 @@
 .venv/
 .runtime/
+.runtime-native/
+preview.wav
 dist/
 build/
 *.egg-info/
