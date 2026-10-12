@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-12",
+  "package_version": "0.3.2",
+  "platform": "Windows x64, Ryzen 7 7735H, AMD Radeon(TM) Graphics",
+  "isolation": "New source directory, new Python 3.10 venv, separately extracted toolchain, fresh Git source and native build; production plugin not modified",
+  "download_verification": "All six public archive/model URLs returned HTTP 200; cached archives and model bytes were reused only after SHA256 verification",
+  "pip_network": "PyPI transport failed in this environment; HTTPS Tsinghua mirror succeeded without disabling certificate verification",
+  "native_build": "passed",
+  "doctor": {"ok": true, "backend": "native-igpu", "voice": "soft-child-design-2"},
+  "preview": {
+    "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+    "seconds": 10.56,
+    "sample_rate": 24000,
+    "sha256": "ab584c5e8015ae4ca7432e4d560b583f305e3fe2a25a9b9ed2b972e9f667fd99",
+    "matches_user_approved_candidate_bytes": true,
+    "automatically_played": false
+  },
+  "unit_tests_passed": 24,
+  "wheel_and_sdist_build": "passed",
+  "sdist_native_deployment_contents": "passed",
+  "limits": "Same physical machine, not a separate hardware validation. Reproducible audio hash on this machine does not guarantee identical output on other devices. Large downloads used verified caches; the public CI native build independently exercises archive downloads."
+}

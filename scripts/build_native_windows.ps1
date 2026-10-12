@@ -48,7 +48,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Native configure failed.' }
     & $CMake --build $build --target qwen -j4
     if ($LASTEXITCODE -ne 0) { throw 'Native build failed.' }
-    Get-FileHash (Join-Path $build 'libqwen.dll') -Algorithm SHA256
+    # setup_native.py computes the hash; avoid PowerShell module-path dependencies.
+    Write-Output (Join-Path $build 'libqwen.dll')
 } finally {
     $env:Path = $oldPath
     $env:CC = $oldCC
