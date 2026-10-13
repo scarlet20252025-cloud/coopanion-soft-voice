@@ -25,3 +25,10 @@
 
 运行 Python 测试、Node 扩展测试及 npm pack 内容检查；本机再验证四个面板、ZIP 导入、选择/切回、正常发声与停用释放。
 CI 无核显不能替代本机推理。不会因 API 号相同就声称兼容所有未来版本。
+# 语音能力环境提示词
+
+本扩展通过官方 `World.console().promptDocs` 声明 `role: 'envPrompt'`，模板位于 `world/src/ENV_PROMPT.md`；`envPromptVars()` 提供 `softVoice.state`。Cortico 负责渲染并合入 Persona 系统前缀，不修改 Persona 人格或伪造用户消息。
+
+模板说明 `pet_say` 的成功输出由本扩展自动朗读，以及静音、停用、内存不足、加载和故障状态。状态是前缀重建时的快照；设置改变后可使用官方“重新加载系统提示词”更新当前会话。不会为状态变化主动制造聊天或播报。
+
+遵循官方模板覆盖顺序：扩展自带模板 → bot 包的 `worlds/soft-voice/ENV_PROMPT.md` → 部署目录同名文件。控制台编辑由 Cortico 保存为部署覆盖，升级不覆盖用户模板。参考 [官方 World 开发文档](https://github.com/Pal-AI-Lab/Cortico/blob/main/docs/worlds.md) 与 `src/core/prefix.ts`、`src/core/types.ts`。

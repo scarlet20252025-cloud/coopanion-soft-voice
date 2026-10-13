@@ -6,6 +6,7 @@ import { ToolCallTailer } from './tailer.js';
 import { SoftVoiceRuntime } from './runtime.js';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const LOADING_PHASES = new Set(['check_environment', 'installed', 'bootstrap_uv', 'bootstrap_python', 'create_venv',
   'bootstrap_source', 'bootstrap_matcha', 'install_torch', 'install_dependencies', 'preflight',
@@ -34,7 +35,17 @@ export class SoftVoiceWorld {
     this.togglePromise = null;
   }
 
-  envPromptVars() { return {}; }
+  envPromptVars() {
+    const phase = this.runtime?.status?.().phase;
+    let state = '语音正在准备，暂不能保证发声。';
+    if (!this.active || !this.speechEnabled) state = '语音已停用，目前只显示文字。';
+    else if (volumePercent(this.opts.cfg.volume) === 0) state = '音量为零，当前静音，只显示文字。';
+    else if (phase === 'waiting_memory') state = '可用内存不足，暂时只显示文字，等待恢复。';
+    else if (this.blocked || phase === 'error') state = '语音暂时发生故障，目前不能保证发声。';
+    else if (phase === 'waiting_user') state = '语音运行环境尚未配置完整，目前只显示文字。';
+    else if (this.accepting) state = '语音已启用且已就绪，你已经可以开口说话；pet_say 的可朗读文字会自动合成并播放。';
+    return { 'softVoice.state': state };
+  }
   tools() { return []; }
 
   console() {
@@ -42,6 +53,14 @@ export class SoftVoiceWorld {
     const lampState = st.phase === 'ready' ? 'online' : st.phase === 'error' ? 'error' : LOADING_PHASES.has(st.phase) ? 'loading' : 'offline';
     return {
       label: '本地语音助手',
+      promptDocs: [{
+        key: 'worlds.soft-voice.envPrompt',
+        title: '本地语音助手环境提示词',
+        description: '说明自动朗读能力与当前状态；由 Cortico 合入系统提示词。',
+        path: fileURLToPath(new URL('./ENV_PROMPT.md', import.meta.url)),
+        role: 'envPrompt',
+        vars: [{ name: 'softVoice.state', description: '当前语音能力、静音或异常状态' }],
+      }],
       lamps: [{ label: 'TTS', state: lampState, hint: st.detail ?? st.phase }],
       panels: [{ id: 'controls', title: '语音控制', description: '试听、静音、音量、释放内存和恢复。' }, { id: 'status', title: '运行状态', description: '引擎、音色、延迟和异常诊断。' },
         { id: 'config', title: '配置', description: '队列、过期丢弃和内存恢复。' },

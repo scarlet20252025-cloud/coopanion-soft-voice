@@ -11,6 +11,24 @@ function world() {
   w.speaking = true; return w;
 }
 const entry = seq => ({ tool: 'pet_say', mod: 'desktop-pet', run: 'r-test', seq, args: { script: '【开心】你好呀' } });
+
+test('official environment prompt declares template and reports real capability', async () => {
+  const { readFileSync } = await import('node:fs');
+  const w = world();
+  const doc = w.console().promptDocs[0];
+  assert.equal(doc.role, 'envPrompt');
+  assert.match(readFileSync(doc.path, 'utf8'), /\{\{softVoice.state\}\}/);
+  const state = () => w.envPromptVars()['softVoice.state'];
+  assert.match(state(), /已就绪/);
+  w.opts.cfg.volume = 0; assert.match(state(), /静音/);
+  w.opts.cfg.volume = 65; w.blocked = true; assert.match(state(), /故障/);
+  w.runtime = { status: () => ({ phase: 'waiting_memory' }) };
+  assert.match(state(), /内存不足/);
+  w.speechEnabled = false; assert.match(state(), /停用/);
+  w.speechEnabled = true; w.blocked = false; w.accepting = false;
+  w.runtime = { status: () => ({ phase: 'load_model' }) };
+  assert.match(state(), /正在准备/);
+});
 test('standalone identity and validated effective controls', () => {
   assert.equal(world().id, 'soft-voice');
   assert.equal(world().console().label, '本地语音助手');
