@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-13",
+  "application": "Coopanion 0.1.24",
+  "extensionVersion": "0.2.0",
+  "runtimePackageVersion": "0.4.0",
+  "displayName": "本地语音助手",
+  "officialContract": "Cortico World API 5; ConsolePanelContext and WorldContext.persist",
+  "pythonTests": 28,
+  "nodeTests": 8,
+  "panelsInspected": ["controls", "status", "config", "voices"],
+  "zipRoundTrip": {
+    "browserFileChooserAndImport": true,
+    "duplicateImportIdempotent": true,
+    "explicitSelectionAndWarmup": true,
+    "speechSucceeded": true,
+    "firstDeviceCallbackMs": 1041,
+    "returnedToBuiltin": true,
+    "testPack": "Same bundled reference and transcript, not a newly approved voice",
+    "testEntryArchivedOutsideSelectableCatalog": true
+  },
+  "builtinAfterReturn": {
+    "firstDeviceCallbackMs": [1112, 977],
+    "underrunMs": [0, 0],
+    "deviceUnderflows": [0, 0]
+  },
+  "memoryUi": {"minimumBeforeLoadGiB": 4, "autoRecoveryGiB": 4.5},
+  "limitations": [
+    "Timing excludes chat model latency and downstream speaker latency",
+    "Local smoke tests do not establish whole-game performance",
+    "ZIP validation cannot judge voice aesthetics or transcript accuracy",
+    "Future default voice is a disabled placeholder, not a second supplied voice"
+  ]
+}

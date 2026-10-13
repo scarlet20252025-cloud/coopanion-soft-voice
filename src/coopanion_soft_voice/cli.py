@@ -22,11 +22,11 @@ def doctor(runtime,mode='gpu'):
     return {'ok':True,'cuda':True,'device':torch.cuda.get_device_name(0),'torch':torch.__version__,
             'engine':'Qwen3-TTS 0.6B Base','voice':'soft-child-design-2','sampleRate':24000}
 
-def load(runtime,mode='gpu'):
+def load(runtime,mode='gpu',voice_pack=None):
     if mode=='igpu':
         from .native_engine import NativeEngine
         import atexit
-        model=NativeEngine(runtime)
+        model=NativeEngine(runtime,voice_pack=voice_pack)
         try:model.synthesize_stream('准备好了。','accepted',lambda a,s:None)
         except BaseException:model.close();raise
         atexit.register(model.close)
@@ -39,7 +39,7 @@ def load(runtime,mode='gpu'):
     from .playback import speak
     return model
 
-def worker(runtime,mode='gpu'):
+def worker(runtime,mode='gpu',voice_pack=None):
     if mode=='cache':
         from .cache_worker import worker as cache_worker
         return cache_worker()
@@ -47,8 +47,8 @@ def worker(runtime,mode='gpu'):
     def emit(obj):print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
     def stage(name,detail,**extra):emit(dict(type='status',stage=name,detail=detail,**extra))
     stage('load_model','加载固定参考音色并预热')
-    model=load(runtime,mode)
-    emit({'type':'ready','device':('软萌童声 / AMD 核显 / 实验版' if mode=='igpu' else '软萌童声 / CUDA / streaming'),'sampleRate':24000})
+    model=load(runtime,mode,voice_pack)
+    emit({'type':'ready','device':('本地语音 / 核显 / streaming' if mode=='igpu' else '本地语音 / CUDA / streaming'),'sampleRate':24000})
     from .playback import speak
     import math
     for line in sys.stdin:
@@ -75,7 +75,9 @@ def main(argv=None):
     sub=parser.add_subparsers(dest='command',required=True)
     sub.add_parser('download')
     for name in ('doctor','worker'):
-        sub.add_parser(name).add_argument('--mode',choices=['gpu','cache','igpu'],default='gpu')
+        part=sub.add_parser(name)
+        part.add_argument('--mode',choices=['gpu','cache','igpu'],default='gpu')
+        if name=='worker':part.add_argument('--voice-pack')
     sample=sub.add_parser('speak');sample.add_argument('text');sample.add_argument('--volume',type=float,default=65)
     render=sub.add_parser('render');render.add_argument('text');render.add_argument('--output',required=True)
     args=parser.parse_args(argv);runtime=Path(args.runtime).resolve()
@@ -84,7 +86,7 @@ def main(argv=None):
         snapshot_download(MODEL_REPO,revision=MODEL_REVISION,local_dir=str(runtime/'clone-model'))
         validate_model(runtime,hashes=True);print('Model downloaded and verified.');return
     if args.command=='doctor':print(json.dumps(doctor(runtime,args.mode),ensure_ascii=False));return
-    if args.command=='worker':worker(runtime,args.mode);return
+    if args.command=='worker':worker(runtime,args.mode,args.voice_pack);return
     model=load(runtime)
     if args.command=='speak':
         if not 0<=args.volume<=100:raise ValueError('Volume must be between 0 and 100')

@@ -1,0 +1,24 @@
+diff --git a/src/pipeline-tts.cpp b/src/pipeline-tts.cpp
+index 7e64d76..6f30aa2 100644
+--- a/src/pipeline-tts.cpp
++++ b/src/pipeline-tts.cpp
+@@ -249,12 +249,18 @@ bool pipeline_tts_load(PipelineTTS * pt,
+         return false;
+     }
+ 
++    // A bounded opt-in context for short desktop utterances; default stays upstream-compatible.
++    int talker_context = 4096;
++    if (const char * value = std::getenv("QWEN_TTS_KV_CONTEXT")) {
++        const int requested = std::atoi(value);
++        if (requested >= 1024 && requested <= 4096 && requested % 256 == 0) talker_context = requested;
++    }
+     // KV caches, one set per slot: the talker holds the LM context up
+     // to 4096 positions (the longest ICL prompt observed is ~250 +
+     // max_new_tokens ~ 1500, so 4096 has 60% headroom). Predictor holds
+     // one frame of 16 sub-steps per slot.
+     if (!kv_cache_init(&pt->talker_kv, pt->talker.num_hidden_layers, pt->talker.num_key_value_heads,
+-                       pt->talker.head_dim, 4096, pt->max_batch, pt->backend)) {
++                       pt->talker.head_dim, talker_context, pt->max_batch, pt->backend)) {
+         ggml_backend_sched_free(pt->sched);
+         pt->sched = NULL;
+         pipeline_codec_free(&pt->codec);

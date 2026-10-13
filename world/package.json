@@ -1,0 +1,32 @@
+{
+  "name": "cortico-world-soft-voice",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "本地语音助手：核显流式合成、性能监测与 ZIP 音色包",
+  "license": "MIT",
+  "keywords": [
+    "cortico-world",
+    "coopanion",
+    "tts"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./src/index.js",
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "cortico": {
+    "kind": "world",
+    "api": 5,
+    "displayName": "本地语音助手",
+    "consoleClient": "dist/console-v2.js",
+    "consoleStyle": "dist/console-0.2.0.css"
+  }
+}

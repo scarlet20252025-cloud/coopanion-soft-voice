@@ -1,0 +1,31 @@
+{
+  "livePrivateMiBAfter": 2674.0,
+  "shortSamples": 3,
+  "status": "deployed locally",
+  "kvContextBefore": 4096,
+  "limitations": [
+    "Private commit reduction is not equivalent to a fixed reduction in physical resident memory",
+    "Game coexistence under this reduced-cache build has not been separately retested",
+    "Q4 candidate rejected; no voice quantization changed"
+  ],
+  "reproduction": "Apply qwentts-experiment.patch and qwentts-kv-context.patch at pinned revision; scripts/setup_native.py writes kvContext=1024; engine sets QWEN_TTS_KV_CONTEXT before loading",
+  "testsPassed": 24,
+  "model": "unchanged Q8_0",
+  "shortSampleWavHashesIdentical": true,
+  "kvContextAfter": 1024,
+  "firstChunkSecondsAfter": [
+    0.916,
+    0.892,
+    0.89
+  ],
+  "firstChunkSecondsBefore": [
+    0.929,
+    0.807,
+    0.787
+  ],
+  "warmPrivateMiBBefore": 3346.5,
+  "repeatAudioHashesIdentical": true,
+  "date": "2026-10-12",
+  "warmPrivateMiBAfter": 2672.8,
+  "boundary60CharactersPassed": true
+}

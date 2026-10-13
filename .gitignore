@@ -11,3 +11,6 @@ __pycache__/
 local*.json
 *.log
 backups/
+!world/dist/
+!world/dist/*.js
+!world/dist/*.css

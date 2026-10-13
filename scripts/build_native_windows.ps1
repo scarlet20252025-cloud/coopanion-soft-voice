@@ -28,6 +28,17 @@ if (-not $alreadyPatched) {
     git -C $Source apply $patch
     if ($LASTEXITCODE -ne 0) { throw 'Cannot apply native experiment patch.' }
 }
+$contextPatch = Join-Path $PSScriptRoot '../evidence/2026-10-12-native/qwentts-kv-context.patch'
+$ErrorActionPreference = 'Continue'
+git -C $Source apply --reverse --check $contextPatch 2>$null
+$contextPatched = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $contextPatched) {
+    git -C $Source apply --check $contextPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Source does not match the bounded KV cache patch.' }
+    git -C $Source apply $contextPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot apply bounded KV cache patch.' }
+}
 $oldPath = $env:Path
 $oldCC = $env:CC
 $oldCXX = $env:CXX

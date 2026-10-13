@@ -1,0 +1,45 @@
+export const ID = 'soft-voice';
+const K = `worlds.${ID}`;
+
+export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true });
+export const CONFIG_GROUP = {
+  id: `world:${ID}`, owner: `world:${ID}`,
+  schema: { type: 'object', title: '本地语音助手', properties: {
+    [`${K}.volume`]: { type: 'integer', title: '音量（0 为静音，跳过合成）', minimum: 0, maximum: 100, 'x-hot': true },
+    [`${K}.maxQueue`]: { type: 'integer', title: '待说队列上限（满时丢弃最旧）', minimum: 1, maximum: 12, 'x-hot': true },
+    [`${K}.maxAgeSec`]: { type: 'integer', title: '排队超过多少秒不再朗读', minimum: 5, maximum: 180, 'x-hot': true },
+    [`${K}.autoRecover`]: { type: 'boolean', title: '内存恢复后自动重新加载', 'x-hot': true },
+    [`${K}.pollMs`]: { type: 'integer', title: '消息检查间隔（毫秒）', minimum: 80, maximum: 2000, 'x-hot': true }
+  }}
+};
+
+export function volumePercent(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULTS.volume;
+  return Math.round(Math.max(0, Math.min(100, value)));
+}
+
+export function configValues(cfg) {
+  return Object.fromEntries(Object.keys(CONFIG_GROUP.schema.properties).map(path => {
+    const key = path.slice(K.length + 1);
+    return [key, cfg[key] ?? DEFAULTS[key]];
+  }));
+}
+
+export function validateConfigPatch(values) {
+  if (!values || typeof values !== 'object' || Array.isArray(values)) throw new Error('配置必须是对象');
+  const patch = {};
+  for (const [key, value] of Object.entries(values)) {
+    const property = CONFIG_GROUP.schema.properties[`${K}.${key}`];
+    if (!property) throw new Error(`未知配置: ${key}`);
+    if ((property.type === 'integer' && (!Number.isInteger(value))) ||
+      (property.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value))) ||
+      (property.type === 'boolean' && typeof value !== 'boolean') ||
+      (property.type === 'string' && typeof value !== 'string')) throw new Error(`${property.title} 的值无效`);
+    if ((property.minimum != null && value < property.minimum) ||
+      (property.maximum != null && value > property.maximum)) throw new Error(`${property.title} 超出范围`);
+    if (property.multipleOf && Math.abs(value / property.multipleOf - Math.round(value / property.multipleOf)) > 1e-7)
+      throw new Error(`${property.title} 的步长必须是 ${property.multipleOf}`);
+    patch[key] = value;
+  }
+  return patch;
+}

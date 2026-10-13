@@ -1,6 +1,10 @@
-# 软萌桌宠语音 · Coopanion Soft Voice
+# 本地语音助手 · Coopanion Local Voice Assistant
 
-为 Windows Coopanion 提供固定 `soft-child-design-2` 软萌声线与流式语音。**0.3.2** 提供从零构建的核显部署入口：工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
+为 Windows Coopanion 提供核显流式语音。**0.4.0 / World 0.2.0** 提供独立的本地语音助手：四个独立面板、真实延迟图表、内存要求提示和 ZIP 音色包导入。默认保留已确认的 `soft-child-design-2`，新版默认音色标为“待更新”。工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
+
+- [独立扩展安装与控制](docs/STANDALONE_WORLD.md)
+- [音色制作、ZIP 打包和导入教程](docs/VOICE_PACKS.md)
+- [Cortico 官方接口依据与兼容边界](docs/CORTICO_COMPATIBILITY.md)
 
 Q8 核显版音色已于 **2026-10-12** 通过用户试听并接入正式桌宠。使用 Qwen3-TTS 0.6B Base、固定参考音频和种子，不做变调；明确选择集成显卡，失败时不会改用 NVIDIA 独显或其他声音。不需要云端语音账号、付费服务、PyTorch 或 CUDA。
 
@@ -27,16 +31,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-native.ps1
 
 ## 接入桌宠
 
-安装 [Coopanion](https://github.com/Pal-AI-Lab/Coopanion) 和社区扩展 `cortico-world-cosyvoice-tts@0.1.11`。核显链路已验证 Coopanion **0.1.22**；插件安装器仅接受 **0.1.11**，不兼容版本会停止。无需初始化或下载插件原来的 CosyVoice 模型。
-
-退出 Coopanion，在 PowerShell 中运行（输入自己的插件目录）：
-
-```powershell
-$plugin = Read-Host '插件目录（应含 package.json、src、runtime）'
-.runtime-native\venv\Scripts\python.exe scripts/install_plugin.py --plugin "$plugin" --runtime .runtime-native --mode igpu
-```
-
-重启 Coopanion，等待核显语音就绪后聊天。安装器保留备份及原音量（无设置时默认 65%），锁定参考音频和语速 1.0。模型只在常驻 worker 启动时加载，首次预热比日常合成慢。重新打开聊天不会切换模式。
+当前推荐独立的 **本地语音助手 World**（Coopanion 0.1.24 已验证），不需要旧 CosyVoice 扩展。完整安装、控制选项和回退见 [独立扩展指南](docs/STANDALONE_WORLD.md)。模型仍使用已确认的 Q8 核显声线。
 
 ## 实测与限制
 

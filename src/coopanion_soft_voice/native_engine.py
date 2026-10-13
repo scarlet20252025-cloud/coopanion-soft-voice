@@ -65,6 +65,10 @@ def settings(runtime):
         if digest.hexdigest() != expected:
             raise ValueError('Native runtime checksum mismatch: ' + key)
         config[key] = str(path)
+    context = config.get('kvContext', 4096)
+    if type(context) is not int or context < 1024 or context > 4096 or context % 256:
+        raise ValueError('kvContext must be a multiple of 256 between 1024 and 4096')
+    config['kvContext'] = context
     reference()
     config['deviceIndex'] = integrated_device(config['deviceName'])
     return config
@@ -73,8 +77,14 @@ def settings(runtime):
 class NativeEngine:
     sample_rate = 24000
 
-    def __init__(self, runtime):
+    def __init__(self, runtime, voice_pack=None):
         self.ctx = None; self.voice = Voice(); self.dirs = []
+        self.reference_path = reference()
+        self.reference_text = REFERENCE_TEXT
+        if voice_pack:
+            from .voice_pack import load
+            self.reference_path, pack = load(voice_pack)
+            self.reference_text = pack['referenceText']
         config = settings(runtime)
         class MemoryStatus(C.Structure):
             _fields_ = [('length', C.c_uint32), ('load', C.c_uint32)] + [
@@ -86,6 +96,7 @@ class NativeEngine:
         os.environ['GGML_BACKEND'] = 'Vulkan0'
         os.environ['GGML_VK_VISIBLE_DEVICES'] = str(config['deviceIndex'])
         os.environ['QWEN_CPU_THREADS'] = '4'
+        os.environ['QWEN_TTS_KV_CONTEXT'] = str(config['kvContext'])
         kernel = C.windll.kernel32
         kernel.GetCurrentProcess.restype = C.c_void_p
         kernel.SetPriorityClass.argtypes = [C.c_void_p, C.c_ulong]
@@ -118,7 +129,7 @@ class NativeEngine:
             if not self.ctx:
                 raise RuntimeError(self.dll.qt_last_error().decode())
             import soundfile as sf
-            ref, rate = sf.read(reference(), dtype='float32')
+            ref, rate = sf.read(self.reference_path, dtype='float32')
             if rate != 24000 or ref.ndim != 1:
                 raise ValueError('Invalid reference format')
             if self.dll.qt_extract_voice_ref(self.ctx, ref.ctypes.data_as(F32), len(ref), C.byref(self.voice)):
@@ -134,7 +145,7 @@ class NativeEngine:
         if not text.strip() or len(text) > 60:
             raise ValueError('Native synthesis requires 1-60 characters per piece')
         p = Params(); self.dll.qt_tts_default_params(C.byref(p))
-        p.text = text.encode(); p.lang = b'Chinese'; p.ref_text = REFERENCE_TEXT.encode()
+        p.text = text.encode(); p.lang = b'Chinese'; p.ref_text = self.reference_text.encode()
         p.ref_spk_emb = self.voice.ref_spk_emb; p.ref_spk_dim = self.voice.ref_spk_dim
         p.ref_codes = self.voice.ref_codes; p.ref_T = self.voice.ref_T
         p.seed = 44; p.max_new_tokens = 360

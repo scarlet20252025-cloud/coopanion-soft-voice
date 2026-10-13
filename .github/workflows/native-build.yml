@@ -7,6 +7,7 @@ on:
       - 'scripts/setup-native.ps1'
       - 'scripts/build_native_windows.ps1'
       - 'evidence/2026-10-12-native/qwentts-experiment.patch'
+      - 'evidence/2026-10-12-native/qwentts-kv-context.patch'
       - '.github/workflows/native-build.yml'
 permissions:
   contents: read

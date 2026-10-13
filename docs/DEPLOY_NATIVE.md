@@ -54,36 +54,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-native.ps1
 
 ## 4. 接入 Coopanion
 
-1. 安装 [Coopanion](https://github.com/Pal-AI-Lab/Coopanion)，完成桌宠及聊天模型配置。已验证 0.1.22，新版需验证兼容。
-2. 在扩展管理安装 `cortico-world-cosyvoice-tts@0.1.11`，无需初始化原来的 CosyVoice 环境。
-3. 退出 Coopanion。扩展页显示共享扩展目录，插件位于其 `node_modules/cortico-world-cosyvoice-tts`；pnpm 也可用 `.pnpm/cortico-world-cosyvoice-tts@0.1.11/node_modules/cortico-world-cosyvoice-tts`。选择含 package.json、src、runtime 的那一层。
-4. 在仓库根目录执行：
-
-```powershell
-$plugin = Read-Host '粘贴插件目录'
-.runtime-native\venv\Scripts\python.exe scripts/install_plugin.py --plugin "$plugin" --runtime .runtime-native --mode igpu
-```
-
-保留打印的备份目录。默认启用语音；只安装时加 `--keep-disabled`。重启 Coopanion 后等待 ready（加载预热数秒至十几秒），再聊天。
-
-检查配置，不加载模型、不改变开关：
-
-```powershell
-.runtime-native\venv\Scripts\python.exe scripts/voice_mode.py --plugin "$plugin"
-```
-
-应有 `mode: igpu`、`speechEnabled: true`。实际运行状态以桌宠语音面板为准。
+请按 [独立软萌语音 World 指南](STANDALONE_WORLD.md) 安装。无需旧 CosyVoice 插件，已验证 Coopanion 0.1.24。
 
 ## 5. 停用、回滚与升级
 
-在 TTS 配置页关闭语音可释放 worker，保留模型。回滚时退出桌宠：
-
-```powershell
-$backup = Read-Host '安装器打印的备份目录'
-.runtime-native\venv\Scripts\python.exe scripts/install_plugin.py --restore "$backup"
-```
-
-重启生效。升级本项目时退出桌宠，`git pull` 后重跑 setup-native.ps1 和插件安装命令。社区插件升级可能覆盖补丁；遇到不支持的版本不要绕过检查。不要把 venv 直接复制到另一台电脑，应重新运行安装。
+控制页可立即停止并释放模型。回退使用独立安装器生成的配置备份，详见上述指南。升级前退出桌宠，更新仓库并重新运行安装器。
 
 ## 排查
 

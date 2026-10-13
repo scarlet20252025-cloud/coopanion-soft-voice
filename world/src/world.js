@@ -1,0 +1,278 @@
+import { freemem, totalmem } from 'node:os';
+import { listVoices, voicePath, importVoice, TUTORIAL, BUILTIN } from './voices.js';
+import { CONFIG_GROUP, DEFAULTS, ID, volumePercent, configValues, validateConfigPatch } from './config.js';
+import { petSayFromEntry } from './parser.js';
+import { ToolCallTailer } from './tailer.js';
+import { SoftVoiceRuntime } from './runtime.js';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
+const LOADING_PHASES = new Set(['check_environment', 'installed', 'bootstrap_uv', 'bootstrap_python', 'create_venv',
+  'bootstrap_source', 'bootstrap_matcha', 'install_torch', 'install_dependencies', 'preflight',
+  'download_reference', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'synthesizing', 'playing']);
+
+export class SoftVoiceWorld {
+  constructor(opts) {
+    this.id = ID;
+    this.opts = { ...opts, cfg: { ...DEFAULTS, ...opts.cfg } };
+    this.settings = {};
+    this.host = null;
+    this.timer = null;
+    this.queue = [];
+    this.dropped = 0;
+    this.speaking = false;
+    this.lastSeen = {};
+    this.active = false;
+    this.blocked = false;
+    this.draining = null;
+    this.runtime = null;
+    this.tailer = null;
+    this.accepting = false;
+    this.initialization = null;
+    this.skippedBeforeReady = 0;
+    this.speechEnabled = false;
+    this.togglePromise = null;
+  }
+
+  envPromptVars() { return {}; }
+  tools() { return []; }
+
+  console() {
+    const st = this.runtime?.status?.() ?? { phase: 'idle', detail: '未启动' };
+    const lampState = st.phase === 'ready' ? 'online' : st.phase === 'error' ? 'error' : LOADING_PHASES.has(st.phase) ? 'loading' : 'offline';
+    return {
+      label: '本地语音助手',
+      lamps: [{ label: 'TTS', state: lampState, hint: st.detail ?? st.phase }],
+      panels: [{ id: 'controls', title: '语音控制', description: '试听、静音、音量、释放内存和恢复。' }, { id: 'status', title: '运行状态', description: '引擎、音色、延迟和异常诊断。' },
+        { id: 'config', title: '配置', description: '队列、过期丢弃和内存恢复。' },
+        { id: 'voices', title: '音色库', description: '选择音色、导入 ZIP 与制作教程。' }],
+      invoke: async (panel, method, args = []) => {
+        if (!['controls','status','config','voices'].includes(panel)) throw new Error('未知语音面板');
+        if (method === 'state') return { ...this.status(), values: configValues(this.opts.cfg),
+          memory: { freeGiB: freemem()/1024**3, totalGiB: totalmem()/1024**3, minimumGiB: 4, recoveryGiB: 4.5 },
+          voices: listVoices(this.runtime.root), selectedVoice: this.opts.cfg.voiceId || BUILTIN, tutorial: TUTORIAL };
+        if (panel === 'voices') {
+          if (method === 'import') return importVoice(this.runtime, args[0]);
+          if (method === 'select') return this.selectVoice(args[0]);
+        }
+        if (panel === 'config' && method === 'save') return this.saveConfig(args[0]);
+        if (panel === 'controls') {
+          if (method === 'save') return this.saveConfig(args[0]);
+          if (method === 'enable' || method === 'recover') { if (!this.speechEnabled) return this.setSpeechEnabled(true); void this.initialize(false).catch(err => this.host?.log.warn(err.message)); return this.status(); }
+          if (method === 'disable') return this.setSpeechEnabled(false);
+          if (method === 'stop') { await this.setSpeechEnabled(false); return this.status(); }
+          if (method === 'clearQueue') { this.queue.length = 0; return this.status(); }
+          if (method === 'test') {
+            if (!this.accepting || this.blocked || this.speaking || this.queue.length) throw new Error('请等语音就绪且当前播放结束后再试听');
+            this.speaking = true;
+            try { await this.runtime.speak('我在这里陪你呀，慢慢来，不着急。', { receivedAt: Date.now() }); }
+            finally { this.speaking = false; this.draining = this.drain(); }
+            return this.status();
+          }
+          throw new Error('未知语音控制操作');
+        }
+        throw new Error('未知语音面板');
+      },
+    };
+  }
+
+  async start(host) {
+    this.host = host;
+    this.active = true;
+    this.blocked = false;
+    this.accepting = false;
+    this.skippedBeforeReady = 0;
+    this.runtime = this.makeRuntime(host);
+    this.settingsFile = join(this.runtime.root, 'settings.json');
+    this.speechEnabled = false;
+    if (existsSync(this.settingsFile)) {
+      try {
+        const savedSettings = JSON.parse(readFileSync(this.settingsFile, 'utf8'));
+        if (!savedSettings || typeof savedSettings !== 'object' || Array.isArray(savedSettings)) throw new Error('配置文件格式无效');
+        const savedConfig = savedSettings.config ? validateConfigPatch(savedSettings.config) : {};
+        this.settings = savedSettings;
+        this.speechEnabled = savedSettings.speechEnabled === true;
+        Object.assign(this.opts.cfg, savedConfig);
+        this.opts.cfg.voiceId = savedSettings.selectedVoice || this.opts.cfg.voiceId || BUILTIN;
+      }
+      catch (err) { host.log.warn(`无法读取语音开关，保持停用: ${err.message}`); }
+    }
+    this.cursorFile = join(this.runtime.root, 'cache', 'toolcall-cursor.json');
+    let saved = null;
+    if (existsSync(this.cursorFile)) {
+      try { saved = JSON.parse(readFileSync(this.cursorFile, 'utf8')); this.lastSeen = saved.lastSeen || {}; }
+      catch (err) { host.log.warn(`无法读取 TTS 游标: ${err.message}`); }
+    }
+    this.tailer = new ToolCallTailer(this.opts.dataDir, entry => this.onToolCall(entry), host.log,
+      { checkpoint: cursor => this.saveCursor(cursor) });
+    this.tick = () => {
+      if (this.speechEnabled && this.active && !this.accepting && !this.initialization &&
+          this.opts.cfg.autoRecover && this.runtime?.state?.phase === 'waiting_memory' && freemem() >= 4.5*1024**3 &&
+          Date.now() - (this.lastMemoryRetry || 0) >= 60000) {
+        this.lastMemoryRetry = Date.now();
+        void this.initialize(false).catch(err => host.log.warn(`内存恢复后语音重试：${err.message}`));
+      }
+      try { this.tailer?.poll(); } catch (err) { host.log.warn(`本地语音助手 监听失败: ${err.message}`); }
+    };
+    this.tick();
+    this.timer = setInterval(this.tick, Math.max(80, Number(this.opts.cfg.pollMs) || 180));
+    // Activation never grants download permission, including legacy autoInstall=true.
+    if (!this.speechEnabled) this.runtime.stage('disabled', '语音已停用；安装完成不代表启用。');
+    else if (this.runtime.hasLocalFiles()) void this.initialize(false).catch(err => {
+      host.log.warn(`本地语音助手 本机环境启动失败: ${err.message}`);
+    });
+    else this.runtime.stage('waiting_user', '运行环境未配置，请按独立扩展安装指南安装。');
+  }
+
+  makeRuntime(host) { return new SoftVoiceRuntime({ cfg: this.opts.cfg, log: host.log, dataDir: this.opts.dataDir }); }
+
+  status() {
+    return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
+      volume: volumePercent(this.opts.cfg.volume),
+      speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
+      dropped: this.dropped, accepting: this.accepting, skippedBeforeReady: this.skippedBeforeReady };
+  }
+
+  writeSettings(settings) {
+    if (!this.settingsFile) throw new Error('本地语音助手 尚未启动');
+    mkdirSync(dirname(this.settingsFile), { recursive: true });
+    writeFileSync(this.settingsFile + '.tmp', JSON.stringify(settings), 'utf8');
+    renameSync(this.settingsFile + '.tmp', this.settingsFile);
+    this.settings = settings;
+  }
+
+  saveConfig(values) {
+    const patch = validateConfigPatch(values);
+    const next = { ...this.opts.cfg, ...patch };
+    this.opts.persist?.(patch);
+    this.writeSettings({ ...this.settings, speechEnabled: this.speechEnabled, config: configValues(next) });
+    Object.assign(this.opts.cfg, patch);
+    if ('pollMs' in patch && this.timer) {
+      clearInterval(this.timer);
+      this.timer = setInterval(this.tick, this.opts.cfg.pollMs);
+    }
+    return { values: configValues(this.opts.cfg) };
+  }
+
+  async selectVoice(key) {
+    if (this.switchingVoice || this.togglePromise || this.initialization || this.speaking) throw new Error('请等待当前语音操作完成后切换音色');
+    voicePath(this.runtime.root, key);
+    if ((this.opts.cfg.voiceId || BUILTIN) === key) return this.status();
+    this.switchingVoice = true;
+    const enabled = this.speechEnabled;
+    try {
+      await this.setSpeechEnabled(false);
+      this.opts.persist?.({ voiceId: key });
+      this.opts.cfg.voiceId = key;
+      this.runtime.history = []; this.runtime.lastSpeech = null;
+      this.writeSettings({ ...this.settings, selectedVoice: key });
+      if (enabled) await this.setSpeechEnabled(true);
+      return this.status();
+    } finally { this.switchingVoice = false; }
+  }
+
+  async setSpeechEnabled(enabled) {
+    if (this.togglePromise) return this.togglePromise;
+    this.togglePromise = (async () => {
+      this.writeSettings({ ...this.settings, speechEnabled: enabled, config: configValues(this.opts.cfg) });
+      this.speechEnabled = enabled;
+      if (!enabled) {
+        this.accepting = false;
+        this.blocked = true;
+        this.queue.length = 0;
+        await this.runtime.stop();
+        await this.draining;
+        await this.initialization?.catch(() => {});
+        this.runtime.stage('disabled', '语音已停用；模型与环境保留，worker 已停止。');
+      } else if (this.runtime.hasLocalFiles()) {
+        void this.initialize(false).catch(err => this.host?.log.warn(`本地语音助手 启用失败: ${err.message}`));
+      } else this.runtime.stage('waiting_user', '已开启语音，但本机环境未完整；请手动安装／修复。');
+    })().finally(() => { this.togglePromise = null; });
+    await this.togglePromise;
+    return this.status();
+  }
+
+  async initialize(allowInstall) {
+    if (this.initialization) return this.initialization;
+    const runtime = this.runtime;
+    this.initialization = (async () => {
+      if (allowInstall) await runtime.prepare();
+      if (!this.active || this.runtime !== runtime) return;
+      if (!this.speechEnabled) {
+        runtime.stage('disabled', '环境与模型已安装；语音保持停用，点击「启用语音」开始使用。');
+        return;
+      }
+      await runtime.ensure({ allowInstall: false });
+      if (!this.active || this.runtime !== runtime) return;
+      if (!this.speechEnabled) return;
+      if (!this.accepting) this.tailer?.skipHistory();
+      this.accepting = true;
+      this.blocked = false;
+      if (!this.speaking) { this.draining = this.drain(); await this.draining; }
+    })().catch(err => {
+      if (this.active && this.runtime === runtime) {
+        this.blocked = true;
+        if (/4 GiB free RAM|keeping text only/.test(err.message)) runtime.stage('waiting_memory', '内存不足，暂用文字；可用内存达到 4.5 GB 后自动恢复。也可在语音控制页重试。');
+      }
+      throw err;
+    }).finally(() => { this.initialization = null; });
+    return this.initialization;
+  }
+
+  async stop() {
+    this.active = false;
+    this.accepting = false;
+    this.blocked = true;
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.queue.length = 0;
+    await this.runtime?.stop();
+    await this.draining;
+    await this.initialization?.catch(() => {});
+    await this.togglePromise?.catch(() => {});
+    this.runtime = null;
+    this.host = null;
+  }
+
+  onToolCall(entry) {
+    const item = petSayFromEntry(entry);
+    if (!item || item.seq <= (this.lastSeen[item.run] || 0)) return true;
+    if (!this.speechEnabled || !this.accepting || this.opts.cfg.volume === 0) { ++this.skippedBeforeReady; return true; }
+    const max = Math.max(1, Number(this.opts.cfg.maxQueue) || 12);
+    if (this.blocked) return true;
+    if (this.queue.length >= max) { this.queue.shift(); ++this.dropped; }
+    this.lastSeen[item.run] = item.seq;
+    if (Object.keys(this.lastSeen).length > 16) delete this.lastSeen[Object.keys(this.lastSeen)[0]];
+    this.queue.push({ ...item, receivedAt: Date.now() });
+    if (!this.speaking) this.draining = this.drain();
+    return true;
+  }
+
+  async drain() {
+    if (this.speaking || !this.runtime || this.blocked || !this.active || !this.speechEnabled) return;
+    this.speaking = true;
+    try {
+      while (this.queue.length && this.runtime && this.active && this.speechEnabled && !this.blocked) {
+        const item = this.queue.shift();
+        if (this.opts.cfg.volume === 0 || Date.now() - item.receivedAt > this.opts.cfg.maxAgeSec * 1000) { ++this.dropped; continue; }
+        try {
+          this.host?.log.info(`本地语音助手: ${item.text}`);
+          await this.runtime.speak(item.text, { receivedAt: item.receivedAt });
+        } catch (err) {
+          this.host?.log.warn(`本地语音助手 朗读失败: ${err.message}`);
+          // Never repeat a partially spoken sentence automatically.
+          this.blocked = true; this.accepting = false;
+        }
+      }
+    } finally {
+      this.speaking = false;
+    }
+  }
+
+  saveCursor(cursor) {
+    if (!this.cursorFile || !this.active) return;
+    mkdirSync(dirname(this.cursorFile), { recursive: true });
+    writeFileSync(this.cursorFile + '.tmp', JSON.stringify({ ...cursor, lastSeen: this.lastSeen }), 'utf8');
+    renameSync(this.cursorFile + '.tmp', this.cursorFile);
+  }
+}

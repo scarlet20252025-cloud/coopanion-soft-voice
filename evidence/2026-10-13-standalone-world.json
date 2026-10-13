@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-13",
+  "coopanionVersion": "0.1.24",
+  "package": "cortico-world-soft-voice@0.1.0",
+  "worldId": "soft-voice",
+  "displayName": "软萌语音",
+  "legacyPackageRegistered": false,
+  "independentPythonBase": true,
+  "voice": "soft-child-design-2",
+  "engine": "Qwen3-TTS 0.6B Base Q8_0 Vulkan integrated GPU",
+  "checks": {
+    "nodeTestsPassed": 6,
+    "consoleRendered": true,
+    "npmPackDryRunIncludesConsole": true,
+    "disableRemovedWorkerTree": true,
+    "reenableReadyAndAccepting": true
+  },
+  "liveSpeech": {
+    "text": "我在这里陪你呀，慢慢来，不着急。",
+    "firstDeviceCallbackMs": 1068,
+    "synthesisMs": 1033,
+    "audioSeconds": 3.52,
+    "underrunMs": 0,
+    "deviceUnderflows": 0
+  },
+  "limits": "Single local smoke test, not a game-session performance guarantee. No new human voice approval claimed; model and reference unchanged."
+}

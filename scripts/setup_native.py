@@ -142,7 +142,7 @@ def setup(runtime, cache, device_name, build_only=False):
     for key, name in [('model', 'qwen-talker-0.6b-base-Q8_0.gguf'), ('codec', 'qwen-tokenizer-12hz-Q8_0.gguf')]:
         url = f"https://huggingface.co/{manifest['model_repo']}/resolve/{manifest['model_revision']}/{name}"
         paths[key] = str(download(url, runtime/'models'/name, manifest['files'][name]['sha256']))
-    config = dict(paths, dll=str(dll), dllSha256=sha256(dll), dllDirectories=[str(toolchain)], deviceName=device_name)
+    config = dict(paths, dll=str(dll), dllSha256=sha256(dll), dllDirectories=[str(toolchain)], deviceName=device_name, kvContext=1024)
     # Validate before replacing a previously working configuration.
     from coopanion_soft_voice.native_engine import integrated_device
     integrated_device(device_name)

@@ -43,7 +43,7 @@ class NativeValidationTests(unittest.TestCase):
 
     def test_capped_and_empty_outputs_fail_without_completing_then_recover(self):
         engine = native_engine.NativeEngine.__new__(native_engine.NativeEngine)
-        engine.ctx = 1; engine.voice = native_engine.Voice(); engine.dll = FakeNative()
+        engine.reference_text = native_engine.REFERENCE_TEXT; engine.ctx = 1; engine.voice = native_engine.Voice(); engine.dll = FakeNative()
         completed = Mock()
         for size, error in [(360*1920, 'generation limit'), (0, 'no audio')]:
             engine.dll.samples = size
@@ -58,7 +58,7 @@ class NativeValidationTests(unittest.TestCase):
 
     def test_callback_failure_is_propagated_without_completion(self):
         engine = native_engine.NativeEngine.__new__(native_engine.NativeEngine)
-        engine.ctx = 1; engine.voice = native_engine.Voice(); engine.dll = FakeNative()
+        engine.reference_text = native_engine.REFERENCE_TEXT; engine.ctx = 1; engine.voice = native_engine.Voice(); engine.dll = FakeNative()
         engine.dll.samples = 28800
         completed = Mock()
         with self.assertRaisesRegex(RuntimeError, 'device failed'):

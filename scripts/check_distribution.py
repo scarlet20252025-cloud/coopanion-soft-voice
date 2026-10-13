@@ -13,9 +13,13 @@ required = {
     'requirements-native.txt', 'docs/DEPLOY_NATIVE.md',
     'evidence/2026-10-12-native/manifest.json', 'evidence/2026-10-12-native/qwentts-experiment.patch',
     'src/coopanion_soft_voice/assets/soft-child-design-2.wav',
+    'scripts/install_world.py', 'docs/VOICE_PACKS.md', 'docs/CORTICO_COMPATIBILITY.md',
+    'world/package.json', 'world/src/world.js', 'world/dist/console-v2.js', 'world/dist/console-0.2.0.css',
+    'evidence/2026-10-12-native/qwentts-kv-context.patch',
 }
 assert required <= names, sorted(required - names)
 wheel = max((root/'dist').glob('*.whl'), key=lambda p: p.stat().st_mtime)
 with zipfile.ZipFile(wheel) as z:
     assert 'coopanion_soft_voice/assets/soft-child-design-2.wav' in z.namelist()
+    assert 'coopanion_soft_voice/voice_pack.py' in z.namelist()
 print('Native deployment sdist and wheel contents verified')
