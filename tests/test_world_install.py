@@ -16,7 +16,7 @@ class WorldInstallTests(unittest.TestCase):
                 (ext/'package.json').write_text('{"dependencies":{}}');(bot/'config.json').write_text('{"worlds":{}}')
                 (data/'settings.json').write_text(json.dumps({'speechEnabled':enabled,'config':{'syncBubbles':False,'volume':37}}))
                 with patch.object(installer.subprocess,'run'):installer.install(ext,bot,runtime)
-                saved=json.loads((data/'settings.json').read_text())
+                saved=json.loads((data/'settings.json').read_text(encoding='utf-8'))
                 self.assertEqual(saved['speechEnabled'],enabled);self.assertEqual(saved['config'],{'syncBubbles':False,'volume':37})
 
     def test_fresh_install_contains_model_profile_and_preserves_personal_config(self):
@@ -26,14 +26,14 @@ class WorldInstallTests(unittest.TestCase):
             (ext/'package.json').write_text(json.dumps({'dependencies':{'other-world':'1.0'}}))
             (bot/'config.json').write_text(json.dumps({'personal':'keep','worlds':{}}))
             with patch.object(installer.subprocess,'run'):installer.install(ext,bot,runtime,True)
-            meta=json.loads((ext/'node_modules'/installer.NAME/'package.json').read_text())
+            meta=json.loads((ext/'node_modules'/installer.NAME/'package.json').read_text(encoding='utf-8'))
             self.assertEqual(meta['version'],'0.3.10')
             self.assertTrue((ext/'node_modules'/installer.NAME/meta['cortico']['consoleClient']).is_file())
-            cfg=json.loads((bot/'config.json').read_text());self.assertEqual(cfg['personal'],'keep')
-            self.assertEqual(json.loads((ext/'package.json').read_text())['dependencies']['other-world'],'1.0')
-            profile=json.loads((bot/'data/soft-voice/runtime-profile.json').read_text())
+            cfg=json.loads((bot/'config.json').read_text(encoding='utf-8'));self.assertEqual(cfg['personal'],'keep')
+            self.assertEqual(json.loads((ext/'package.json').read_text(encoding='utf-8'))['dependencies']['other-world'],'1.0')
+            profile=json.loads((bot/'data/soft-voice/runtime-profile.json').read_text(encoding='utf-8'))
             self.assertEqual(Path(profile['runtime']),runtime.resolve())
-            self.assertTrue(json.loads((bot/'data/soft-voice/settings.json').read_text())['speechEnabled'])
+            self.assertTrue(json.loads((bot/'data/soft-voice/settings.json').read_text(encoding='utf-8'))['speechEnabled'])
 
     def test_package_replacement_breaks_hardlink_without_changing_old_store(self):
         with tempfile.TemporaryDirectory() as d:
@@ -42,8 +42,8 @@ class WorldInstallTests(unittest.TestCase):
             for name in ['package.json','LICENSE','README.md']:(source/name).write_text('new')
             store=root/'store.json';store.write_text('old');os.link(store,target/'package.json')
             installer.copy_package(source,target)
-            self.assertEqual((target/'package.json').read_text(),'new')
-            self.assertEqual(store.read_text(),'old')
+            self.assertEqual((target/'package.json').read_text(encoding='utf-8'),'new')
+            self.assertEqual(store.read_text(encoding='utf-8'),'old')
 
     def test_pnpm_alias_resolves_only_within_its_own_store(self):
         with tempfile.TemporaryDirectory() as d:
