@@ -3,6 +3,8 @@ import { listVoices, voicePath, importVoice, TUTORIAL, BUILTIN } from './voices.
 import { CONFIG_GROUP, DEFAULTS, ID, volumePercent, configValues, validateConfigPatch } from './config.js';
 import { petSayFromEntry } from './parser.js';
 import { rememberReply, restoreReplies, replyProgress } from './reply-receipts.js';
+import { BubbleSpeechSync } from './bubble-sync.js';
+import { installBubbleBridge } from './bubble-bridge.js';
 import { ToolCallTailer } from './tailer.js';
 import { SoftVoiceRuntime } from './runtime.js';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
@@ -37,6 +39,8 @@ export class SoftVoiceWorld {
     this.togglePromise = null;
     this.lastActivity = Date.now();
     this.sleepPromise = null;
+    this.bubbleSync = new BubbleSpeechSync(() => this.active && this.speechEnabled && this.accepting && !this.blocked && this.opts.cfg.volume > 0 && this.opts.cfg.syncBubbles);
+    this.removeBubbleBridge = null;
   }
 
   envPromptVars() {
@@ -89,7 +93,7 @@ export class SoftVoiceWorld {
           if (method === 'enable' || method === 'recover') { if (!this.speechEnabled) return this.setSpeechEnabled(true); void this.initialize(false).catch(err => this.host?.log.warn(err.message)); return this.status(); }
           if (method === 'disable') return this.setSpeechEnabled(false);
           if (method === 'stop') { await this.setSpeechEnabled(false); return this.status(); }
-          if (method === 'clearQueue') { this.queue.length = 0; return this.status(); }
+          if (method === 'clearQueue') { for(const item of this.queue)this.bubbleSync.finish(item.key,'cancelled');this.queue.length = 0; return this.status(); }
           if (method === 'test') {
             if (!this.accepting || this.blocked || this.speaking || this.queue.length) throw new Error('请等语音就绪且当前播放结束后再试听');
             this.speaking = true;
@@ -146,6 +150,8 @@ export class SoftVoiceWorld {
     };
     this.tick();
     this.timer = setInterval(this.tick, Math.max(80, Number(this.opts.cfg.pollMs) || 180));
+    try { this.removeBubbleBridge = await installBubbleBridge(this); }
+    catch(err) { host.log.warn(`气泡同步适配桥未启用: ${err.message}`); }
     // Activation never grants download permission, including legacy autoInstall=true.
     if (!this.speechEnabled) this.runtime.stage('disabled', '语音已停用；安装完成不代表启用。');
     else if (this.runtime.hasLocalFiles()) void this.initialize(false).catch(err => {
@@ -177,6 +183,7 @@ export class SoftVoiceWorld {
 
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
+      bubbleSync: { enabled: !!this.opts.cfg.syncBubbles, available: !!this.removeBubbleBridge },
       volume: volumePercent(this.opts.cfg.volume),
       speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
       dropped: this.dropped, accepting: this.accepting, skippedBeforeReady: this.skippedBeforeReady };
@@ -279,6 +286,8 @@ export class SoftVoiceWorld {
   }
 
   async stop() {
+    this.bubbleSync.cancelAll();
+    this.removeBubbleBridge?.();this.removeBubbleBridge=null;
     this.active = false;
     this.accepting = false;
     this.blocked = true;
@@ -302,10 +311,11 @@ export class SoftVoiceWorld {
     if (!this.speechEnabled || !this.accepting || this.opts.cfg.volume === 0) { ++this.skippedBeforeReady; return true; }
     const max = Math.max(1, Number(this.opts.cfg.maxQueue) || 12);
     if (this.blocked) return true;
-    if (this.queue.length >= max) { this.queue.shift(); ++this.dropped; }
+    if (this.queue.length >= max) { const old=this.queue.shift();this.bubbleSync.finish(old.key,'expired'); ++this.dropped; }
     this.lastSeen[item.run] = item.seq;
     if (Object.keys(this.lastSeen).length > 16) delete this.lastSeen[Object.keys(this.lastSeen)[0]];
     this.queue.push({ ...item, receivedAt: Date.now() });
+    this.bubbleSync.track(item);
     if (!this.speaking) this.draining = this.drain();
     return true;
   }
@@ -316,13 +326,19 @@ export class SoftVoiceWorld {
     try {
       while (this.queue.length && this.runtime && this.active && this.speechEnabled && !this.blocked) {
         const item = this.queue.shift();
-        if (this.opts.cfg.volume === 0 || Date.now() - item.receivedAt > this.opts.cfg.maxAgeSec * 1000) { ++this.dropped; continue; }
+        if (this.opts.cfg.volume === 0 || Date.now() - item.receivedAt > this.opts.cfg.maxAgeSec * 1000) { this.bubbleSync.finish(item.key,'skipped');++this.dropped; continue; }
         try {
           await this.sleepPromise;
           if (!this.active || !this.speechEnabled || this.blocked || !this.runtime) break;
+          if(this.removeBubbleBridge)await this.bubbleSync.waitUntilShown(item.key);
+          if(!this.active||!this.speechEnabled||this.blocked||!this.runtime){this.bubbleSync.finish(item.key,'cancelled');break;}
+          if(this.opts.cfg.volume===0){this.bubbleSync.finish(item.key,'skipped');continue;}
           this.host?.log.info(`本地语音助手: ${item.text}`);
           await this.runtime.speak(item.text, { receivedAt: item.receivedAt });
+          this.bubbleSync.finish(item.key);
         } catch (err) {
+          this.bubbleSync.finish(item.key,'failed');
+          for(const waiting of this.queue)this.bubbleSync.finish(waiting.key,'cancelled');
           this.host?.log.warn(`本地语音助手 朗读失败: ${err.message}`);
           // Never repeat a partially spoken sentence automatically.
           this.blocked = true; this.accepting = false;

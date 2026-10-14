@@ -9,4 +9,4 @@ recursive-include docs *.md
 recursive-include evidence *.json
 recursive-include evidence *.patch
 include LICENSE THIRD_PARTY_NOTICES.md
-recursive-include world *.js *.css *.json *.md LICENSE
+recursive-include world *.js *.py *.css *.json *.md LICENSE

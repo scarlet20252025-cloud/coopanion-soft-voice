@@ -2,6 +2,16 @@
 
 扩展保留最近 10 分钟内最多 3 条成功的 `pet_say` 文本输出回执，通过 Cortico 的 `envPromptVars` 与 `role: envPrompt` 合入系统提示词。上下文交接可能省略旧台词，这些回执用于说明哪些回复已输出，避免把旧问题重新回答。记录独立于音频队列，静音或停用语音时也有效；失败调用不计入，不据此宣称音频已播放或用户已听见。用户再次询问、纠正或要求更新时仍应正常回答。
 
+“语音控制”页新增“气泡同步”开关，默认开启。安装显示适配后，当前 `pet_say` 最后的文字气泡等待本段音频实际播放完成再关闭，下一段文字出现后才播放下一段音频。开关关闭、语音停用、静音、失败或待说过期时，解除等待；扩展缺席时恢复原版气泡计时。这里按整段音频同步，不提供逐字字幕或动作标记对应的分段音频。
+
+标准 Windows 部署的 `scripts/install_world.py` 自动安装气泡显示适配。其他目录布局可在退出桌宠后运行：
+
+```powershell
+python scripts/install_bubble_bridge.py --desktop-pet "你的Coopanion目录/resources/app/node_modules/cortico-world-desktop-pet"
+```
+
+当前适配验证于官方 `cortico-world-desktop-pet 0.1.4`，只加显示开始、结束和等待的几个接口；同步、排队和播放完成逻辑均在此扩展内。安装脚本保留原始页面，支持 `--restore` 撤销，遇到未知版本或页面结构变化时拒绝覆盖。官方更新替换页面后重新运行此命令，并重启桌宠。控制页显示“尚未接入显示适配桥”时，同步不会锁住气泡，也不会因此延迟音频 12 秒。
+
 独立的 Coopanion API 5 World 扩展。无需安装 CosyVoice 或其他语音扩展。
 依赖本仓库提供的 Qwen3-TTS 核显 Python 运行环境，保留固定 soft-child-design-2 音色。
 

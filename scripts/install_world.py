@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import importlib.util
 
 NAME = 'cortico-world-soft-voice'
 
@@ -51,6 +52,13 @@ def install(extensions, bot, runtime, enable=False):
     worlds.setdefault('soft-voice', {})['enabled'] = True
     ep.write_text(json.dumps(ext, ensure_ascii=False, indent=2), encoding='utf-8')
     bp.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8')
+    desktop = extensions.parent.parent / 'resources/app/node_modules/cortico-world-desktop-pet'
+    if desktop.is_dir():
+        spec = importlib.util.spec_from_file_location('voice_bubble_installer', Path(__file__).with_name('install_bubble_bridge.py'))
+        helper = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(helper)
+        try: helper.install_bridge(desktop)
+        except ValueError as error: print('Bubble bridge not applied:', error)
     print('Installed standalone soft-voice. Restart Coopanion. Backup:', backup)
 
 if __name__ == '__main__':

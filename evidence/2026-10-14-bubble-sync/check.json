@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-14T19:09:44+08:00",
+  "worldVersion": "0.3.8",
+  "officialDesktopPetVersion": "0.1.4",
+  "tests": {
+    "world": 29,
+    "installer": 2
+  },
+  "firstBubble": {
+    "closedAt": 1791976178872,
+    "audioStartedAt": 1791976163966,
+    "durationMs": 15000,
+    "displayedAt": 1791976163872,
+    "audioEndedAt": 1791976178666
+  },
+  "secondBubble": {
+    "closedAt": 1791976184474,
+    "audioStartedAt": 1791976178923,
+    "displayedAt": 1791976178892,
+    "audioEndedAt": 1791976184309
+  },
+  "assertions": {
+    "secondAudioAfterOwnBubble": true,
+    "firstClosedAfterAudio": true,
+    "secondShownAfterFirstAudio": true
+  },
+  "adapter": "Optional same-origin display bridge; official tools unchanged",
+  "disabledFallback": "Native text timing; no speech replay",
+  "distribution": "Installer included in World src and source package; standard installer applies bridge; version and anchor guards"
+}
