@@ -12,7 +12,7 @@ required = {
     'scripts/prepare_speech_profile.py', 'scripts/verify_deployment.py',
     'portable-release.json', 'docs/PORTABLE_INSTALL.md', 'scripts/deploy-source.ps1',
     'scripts/install-portable.ps1', 'scripts/activate_portable.py', 'scripts/build_portable.py',
-    'world/dist/console-0.3.10.js', 'world/dist/console-0.3.10.css', 'world/src/install_bubble_bridge.py',
+    'world/dist/console-0.3.11.js', 'world/dist/console-0.3.11.css', 'world/src/install_bubble_bridge.py',
     'evidence/2026-10-14-text-rows/qwentts-text-rows.patch',
     'src/coopanion_soft_voice/native_capabilities.py',
     'scripts/setup-native.ps1', 'scripts/setup_native.py', 'scripts/build_native_windows.ps1',

@@ -1,6 +1,6 @@
 # 轻量化本地语音引擎 · Coopanion
 
-作者：**Asryto** · Python **0.4.11** / World **0.3.10**
+作者：**Asryto** · Python **0.4.11** / World **0.3.11**
 
 Windows Coopanion 的独立核显语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，并提供 GitHub 安装入口。
 

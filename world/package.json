@@ -1,6 +1,6 @@
 {
   "name": "cortico-world-soft-voice",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "type": "module",
   "description": "轻量化本地语音引擎：核显流式合成、性能监测与 ZIP 音色包",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "kind": "world",
     "api": 5,
     "displayName": "轻量化本地语音引擎",
-    "consoleClient": "dist/console-0.3.10.js",
-    "consoleStyle": "dist/console-0.3.10.css"
+    "consoleClient": "dist/console-0.3.11.js",
+    "consoleStyle": "dist/console-0.3.11.css"
   }
 }
