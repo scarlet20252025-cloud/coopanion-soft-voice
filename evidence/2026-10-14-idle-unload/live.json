@@ -1,0 +1,103 @@
+{
+  "workerIds": [
+    11936,
+    34912,
+    36960
+  ],
+  "initialLoadMs": 4919,
+  "sleeping": {
+    "phase": "sleeping",
+    "stage": "sleeping",
+    "detail": "省内存待机：模型已卸载，下一句话自动加载；首句会增加加载和预热时间。",
+    "initializing": false,
+    "workerPid": null,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 914,
+        "queueWaitMs": 4007,
+        "startDelayMs": 5758,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2244,
+        "firstChunkMs": 914,
+        "firstDeviceCallbackMs": 955,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "at": 1791954491541,
+        "totalStartMs": 4962
+      }
+    ],
+    "loadMs": 4919,
+    "sampleRate": 24000,
+    "lastSpeech": null,
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  },
+  "remainingWorkerIds": [],
+  "wakeAndPlaybackMs": 9410,
+  "afterWake": {
+    "phase": "ready",
+    "stage": "ready",
+    "detail": "所选音色已就绪",
+    "initializing": false,
+    "workerPid": 44444,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 914,
+        "queueWaitMs": 4007,
+        "startDelayMs": 5758,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2244,
+        "firstChunkMs": 914,
+        "firstDeviceCallbackMs": 955,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "at": 1791954491541,
+        "totalStartMs": 4962
+      }
+    ],
+    "loadMs": 4007,
+    "sampleRate": 24000,
+    "lastSpeech": {
+      "id": "s1",
+      "synthesisMs": 914,
+      "queueWaitMs": 4007,
+      "startDelayMs": 5758,
+      "type": "done",
+      "seconds": 3.52,
+      "totalSynthesisMs": 2244,
+      "firstChunkMs": 914,
+      "firstDeviceCallbackMs": 955,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "at": 1791954491541,
+      "totalStartMs": 4962
+    },
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  }
+}

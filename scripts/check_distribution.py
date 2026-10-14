@@ -14,7 +14,7 @@ required = {
     'evidence/2026-10-12-native/manifest.json', 'evidence/2026-10-12-native/qwentts-experiment.patch',
     'src/coopanion_soft_voice/assets/soft-child-design-2.wav',
     'scripts/install_world.py', 'docs/VOICE_PACKS.md', 'docs/CORTICO_COMPATIBILITY.md',
-    'world/package.json', 'world/src/world.js', 'world/dist/console-v2.js', 'world/dist/console-0.2.0.css',
+    'world/package.json', 'world/src/world.js', 'world/dist/console-0.2.1.js', 'world/dist/console-0.2.0.css',
     'evidence/2026-10-12-native/qwentts-kv-context.patch',
 }
 assert required <= names, sorted(required - names)

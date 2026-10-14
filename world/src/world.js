@@ -33,6 +33,8 @@ export class SoftVoiceWorld {
     this.skippedBeforeReady = 0;
     this.speechEnabled = false;
     this.togglePromise = null;
+    this.lastActivity = Date.now();
+    this.sleepPromise = null;
   }
 
   envPromptVars() {
@@ -43,6 +45,7 @@ export class SoftVoiceWorld {
     else if (phase === 'waiting_memory') state = '可用内存不足，暂时只显示文字，等待恢复。';
     else if (this.blocked || phase === 'error') state = '语音暂时发生故障，目前不能保证发声。';
     else if (phase === 'waiting_user') state = '语音运行环境尚未配置完整，目前只显示文字。';
+    else if (phase === 'sleeping') state = '语音省内存待机中，下一次 pet_say 会自动加载模型并朗读，首句需要额外等待。';
     else if (this.accepting) state = '语音已启用且已就绪，你已经可以开口说话；pet_say 的可朗读文字会自动合成并播放。';
     return { 'softVoice.state': state };
   }
@@ -84,8 +87,8 @@ export class SoftVoiceWorld {
           if (method === 'test') {
             if (!this.accepting || this.blocked || this.speaking || this.queue.length) throw new Error('请等语音就绪且当前播放结束后再试听');
             this.speaking = true;
-            try { await this.runtime.speak('我在这里陪你呀，慢慢来，不着急。', { receivedAt: Date.now() }); }
-            finally { this.speaking = false; this.draining = this.drain(); }
+            try { await this.sleepPromise; await this.runtime.speak('我在这里陪你呀，慢慢来，不着急。', { receivedAt: Date.now() }); }
+            finally { this.lastActivity = Date.now(); this.speaking = false; this.draining = this.drain(); }
             return this.status();
           }
           throw new Error('未知语音控制操作');
@@ -125,6 +128,7 @@ export class SoftVoiceWorld {
     this.tailer = new ToolCallTailer(this.opts.dataDir, entry => this.onToolCall(entry), host.log,
       { checkpoint: cursor => this.saveCursor(cursor) });
     this.tick = () => {
+      void this.maybeUnload().catch(err => host.log.warn(`空闲卸载失败: ${err.message}`));
       if (this.speechEnabled && this.active && !this.accepting && !this.initialization &&
           this.opts.cfg.autoRecover && this.runtime?.state?.phase === 'waiting_memory' && freemem() >= 4.5*1024**3 &&
           Date.now() - (this.lastMemoryRetry || 0) >= 60000) {
@@ -144,6 +148,22 @@ export class SoftVoiceWorld {
   }
 
   makeRuntime(host) { return new SoftVoiceRuntime({ cfg: this.opts.cfg, log: host.log, dataDir: this.opts.dataDir }); }
+
+  async maybeUnload(now = Date.now()) {
+    const seconds = this.opts.cfg.idleUnloadSec;
+    if (!seconds || !this.active || !this.speechEnabled || !this.accepting || this.blocked ||
+        this.speaking || this.queue.length || this.initialization || this.togglePromise || this.sleepPromise ||
+        this.runtime?.status().phase !== 'ready' || now - this.lastActivity < seconds * 1000) return;
+    const runtime = this.runtime;
+    this.sleepPromise = (async () => {
+      await runtime.stop();
+      if (this.active && this.speechEnabled && this.runtime === runtime) {
+        runtime.workerError = null;
+        runtime.stage('sleeping', '省内存待机：模型已卸载，下一句话自动加载；首句会增加加载和预热时间。');
+      }
+    })().finally(() => { this.sleepPromise = null; });
+    await this.sleepPromise;
+  }
 
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
@@ -166,6 +186,9 @@ export class SoftVoiceWorld {
     this.opts.persist?.(patch);
     this.writeSettings({ ...this.settings, speechEnabled: this.speechEnabled, config: configValues(next) });
     Object.assign(this.opts.cfg, patch);
+    if (patch.idleUnloadSec === 0 && this.speechEnabled && this.runtime?.status().phase === 'sleeping') {
+      void this.initialize(false).catch(err => this.host?.log.warn(`恢复常驻失败: ${err.message}`));
+    }
     if ('pollMs' in patch && this.timer) {
       clearInterval(this.timer);
       this.timer = setInterval(this.tick, this.opts.cfg.pollMs);
@@ -200,6 +223,7 @@ export class SoftVoiceWorld {
         this.accepting = false;
         this.blocked = true;
         this.queue.length = 0;
+        await this.sleepPromise;
         await this.runtime.stop();
         await this.draining;
         await this.initialization?.catch(() => {});
@@ -222,11 +246,13 @@ export class SoftVoiceWorld {
         runtime.stage('disabled', '环境与模型已安装；语音保持停用，点击「启用语音」开始使用。');
         return;
       }
+      await this.sleepPromise;
       await runtime.ensure({ allowInstall: false });
       if (!this.active || this.runtime !== runtime) return;
       if (!this.speechEnabled) return;
       if (!this.accepting) this.tailer?.skipHistory();
       this.accepting = true;
+      this.lastActivity = Date.now();
       this.blocked = false;
       if (!this.speaking) { this.draining = this.drain(); await this.draining; }
     })().catch(err => {
@@ -246,6 +272,7 @@ export class SoftVoiceWorld {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.queue.length = 0;
+    await this.sleepPromise;
     await this.runtime?.stop();
     await this.draining;
     await this.initialization?.catch(() => {});
@@ -276,15 +303,19 @@ export class SoftVoiceWorld {
         const item = this.queue.shift();
         if (this.opts.cfg.volume === 0 || Date.now() - item.receivedAt > this.opts.cfg.maxAgeSec * 1000) { ++this.dropped; continue; }
         try {
+          await this.sleepPromise;
+          if (!this.active || !this.speechEnabled || this.blocked || !this.runtime) break;
           this.host?.log.info(`本地语音助手: ${item.text}`);
           await this.runtime.speak(item.text, { receivedAt: item.receivedAt });
         } catch (err) {
           this.host?.log.warn(`本地语音助手 朗读失败: ${err.message}`);
           // Never repeat a partially spoken sentence automatically.
           this.blocked = true; this.accepting = false;
+          if (/4 GiB free RAM|keeping text only/.test(err.message)) this.runtime?.stage('waiting_memory', '内存不足，暂用文字；达到 4.5 GiB 后可自动恢复。');
         }
       }
     } finally {
+      this.lastActivity = Date.now();
       this.speaking = false;
     }
   }

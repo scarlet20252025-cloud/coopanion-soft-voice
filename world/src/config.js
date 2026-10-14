@@ -1,10 +1,11 @@
 export const ID = 'soft-voice';
 const K = `worlds.${ID}`;
 
-export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true });
+export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, idleUnloadSec: 0 });
 export const CONFIG_GROUP = {
   id: `world:${ID}`, owner: `world:${ID}`,
   schema: { type: 'object', title: '本地语音助手', properties: {
+    [`${K}.idleUnloadSec`]: { type: 'integer', title: '空闲卸载秒数（0 为常驻，建议 300）', minimum: 0, maximum: 3600, 'x-hot': true },
     [`${K}.volume`]: { type: 'integer', title: '音量（0 为静音，跳过合成）', minimum: 0, maximum: 100, 'x-hot': true },
     [`${K}.maxQueue`]: { type: 'integer', title: '待说队列上限（满时丢弃最旧）', minimum: 1, maximum: 12, 'x-hot': true },
     [`${K}.maxAgeSec`]: { type: 'integer', title: '排队超过多少秒不再朗读', minimum: 5, maximum: 180, 'x-hot': true },
