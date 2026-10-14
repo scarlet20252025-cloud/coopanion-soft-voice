@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 from coopanion_soft_voice.cli import load
+from coopanion_soft_voice.speech_text import model_speech_pieces
 
 
 def main():
@@ -17,7 +18,8 @@ def main():
     model = load(Path(args.runtime).resolve(), 'igpu')
     try:
         chunks = []
-        model.synthesize_stream(args.text, 'accepted', lambda audio, rate: chunks.append(audio.copy()))
+        for piece in model_speech_pieces(model,args.text):
+            model.synthesize_stream(piece, 'accepted', lambda audio, rate: chunks.append(audio.copy()))
         out = Path(args.output).resolve()
         out.parent.mkdir(parents=True, exist_ok=True)
         sf.write(out, np.concatenate(chunks), 24000, subtype='PCM_16')

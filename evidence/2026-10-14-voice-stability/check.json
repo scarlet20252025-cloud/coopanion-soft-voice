@@ -1,0 +1,304 @@
+{
+  "checkedAt": "2026-10-14T11:38:12.894685+00:00",
+  "packageVersion": "0.4.10",
+  "worldVersion": "0.3.8",
+  "model": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan iGPU",
+  "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+  "originalPieceLengths": [
+    48,
+    41
+  ],
+  "baselineRepeatIdentical": true,
+  "pitchEstimator": "librosa.pyin, 16 kHz, 80-900 Hz, frame1024 hop256",
+  "pitch": [
+    {
+      "name": "reference",
+      "voicedFrames": 164,
+      "voicedFraction": 0.594,
+      "all": {
+        "medianHz": 330.3,
+        "p10Hz": 242.0,
+        "p90Hz": 447.6
+      },
+      "first": {
+        "medianHz": 333.2,
+        "p10Hz": 300.3,
+        "p90Hz": 396.9
+      },
+      "last": {
+        "medianHz": 326.5,
+        "p10Hz": 232.2,
+        "p90Hz": 482.2
+      }
+    },
+    {
+      "name": "baseline-1",
+      "voicedFrames": 350,
+      "voicedFraction": 0.613,
+      "all": {
+        "medianHz": 298.6,
+        "p10Hz": 227.6,
+        "p90Hz": 417.4
+      },
+      "first": {
+        "medianHz": 300.3,
+        "p10Hz": 222.4,
+        "p90Hz": 449.4
+      },
+      "last": {
+        "medianHz": 298.6,
+        "p10Hz": 234.8,
+        "p90Hz": 410.2
+      }
+    },
+    {
+      "name": "baseline-2",
+      "voicedFrames": 332,
+      "voicedFraction": 0.592,
+      "all": {
+        "medianHz": 224.3,
+        "p10Hz": 178.6,
+        "p90Hz": 329.0
+      },
+      "first": {
+        "medianHz": 235.6,
+        "p10Hz": 197.0,
+        "p90Hz": 304.5
+      },
+      "last": {
+        "medianHz": 214.8,
+        "p10Hz": 174.2,
+        "p90Hz": 341.0
+      }
+    },
+    {
+      "name": "short-1",
+      "voicedFrames": 134,
+      "voicedFraction": 0.606,
+      "all": {
+        "medianHz": 319.1,
+        "p10Hz": 220.2,
+        "p90Hz": 528.0
+      },
+      "first": {
+        "medianHz": 369.9,
+        "p10Hz": 232.8,
+        "p90Hz": 559.4
+      },
+      "last": {
+        "medianHz": 297.7,
+        "p10Hz": 214.8,
+        "p90Hz": 478.7
+      }
+    },
+    {
+      "name": "short-2",
+      "voicedFrames": 227,
+      "voicedFraction": 0.696,
+      "all": {
+        "medianHz": 280.2,
+        "p10Hz": 230.2,
+        "p90Hz": 357.1
+      },
+      "first": {
+        "medianHz": 264.5,
+        "p10Hz": 235.3,
+        "p90Hz": 379.1
+      },
+      "last": {
+        "medianHz": 285.9,
+        "p10Hz": 226.8,
+        "p90Hz": 354.2
+      }
+    },
+    {
+      "name": "short-3",
+      "voicedFrames": 201,
+      "voicedFraction": 0.565,
+      "all": {
+        "medianHz": 331.3,
+        "p10Hz": 273.8,
+        "p90Hz": 535.1
+      },
+      "first": {
+        "medianHz": 335.1,
+        "p10Hz": 280.2,
+        "p90Hz": 539.8
+      },
+      "last": {
+        "medianHz": 321.9,
+        "p10Hz": 262.9,
+        "p90Hz": 519.6
+      }
+    },
+    {
+      "name": "short-4",
+      "voicedFrames": 117,
+      "voicedFraction": 0.555,
+      "all": {
+        "medianHz": 321.9,
+        "p10Hz": 217.6,
+        "p90Hz": 438.7
+      },
+      "first": {
+        "medianHz": 365.5,
+        "p10Hz": 280.5,
+        "p90Hz": 447.9
+      },
+      "last": {
+        "medianHz": 291.8,
+        "p10Hz": 209.9,
+        "p90Hz": 380.5
+      }
+    }
+  ],
+  "nativeSamplingUnchanged": [
+    true,
+    true
+  ],
+  "shortPiecePcmUnchanged": [
+    {
+      "characters": 20,
+      "sampleHash": "eb65b20c84a1d5799fed161a1a573611888550ae3ce4835b782cf1c0555817e0"
+    },
+    {
+      "characters": 28,
+      "sampleHash": "5945f60532cf7958469c3aa1376d38872fcf90b1bd6a8de8dd65378dc3d713f9"
+    },
+    {
+      "characters": 25,
+      "sampleHash": "b55807b49d7beecad5594ddf22717375d39b7ade4486baa5379cf09fc71a6f3d"
+    },
+    {
+      "characters": 16,
+      "sampleHash": "2692ca78936fe35d94dd221377ead86df1b917b5bde2595f59b4e610c994d6c6"
+    }
+  ],
+  "isolatedPlaybackRounds": [
+    {
+      "generationMs": 24153,
+      "audioSeconds": 17.76,
+      "queueUnderrunMs": 4920,
+      "deviceUnderflows": 0,
+      "oldLongPieceGenerationMs": [
+        13317,
+        11498
+      ],
+      "note": "High-load run; both old long pieces and new short pieces slower than realtime. Voice/reference invariants passed; continuity failed."
+    },
+    {
+      "type": "done",
+      "id": "voice-stability-check",
+      "seconds": 17.76,
+      "totalSynthesisMs": 13869,
+      "firstChunkMs": 1351,
+      "firstDeviceCallbackMs": 1371,
+      "underrunMs": 0,
+      "deviceUnderflows": 2,
+      "playbackMode": "continuous_pcm",
+      "pieceCount": 4,
+      "pieces": [
+        {
+          "characters": 20,
+          "seconds": 3.52,
+          "synthesisMs": 3170
+        },
+        {
+          "characters": 28,
+          "seconds": 5.2,
+          "synthesisMs": 4236
+        },
+        {
+          "characters": 25,
+          "seconds": 5.68,
+          "synthesisMs": 3742
+        },
+        {
+          "characters": 16,
+          "seconds": 3.36,
+          "synthesisMs": 2610
+        }
+      ],
+      "voiceConditioning": {
+        "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+        "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+        "mode": "full-icl",
+        "pieceLimit": 32
+      },
+      "startupBufferMode": "adaptive",
+      "nextBufferMode": "fixed"
+    }
+  ],
+  "deployedLive": {
+    "checkedAt": "2026-10-14T11:36:18.726Z",
+    "speech": {
+      "id": "s6",
+      "synthesisMs": 1973,
+      "queueWaitMs": 3,
+      "startDelayMs": 1978,
+      "type": "done",
+      "seconds": 17.76,
+      "totalSynthesisMs": 16391,
+      "firstChunkMs": 1973,
+      "firstDeviceCallbackMs": 1977,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "pieceCount": 4,
+      "pieces": [
+        {
+          "characters": 20,
+          "seconds": 3.52,
+          "synthesisMs": 3815
+        },
+        {
+          "characters": 28,
+          "seconds": 5.2,
+          "synthesisMs": 4664
+        },
+        {
+          "characters": 25,
+          "seconds": 5.68,
+          "synthesisMs": 4835
+        },
+        {
+          "characters": 16,
+          "seconds": 3.36,
+          "synthesisMs": 2978
+        }
+      ],
+      "voiceConditioning": {
+        "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+        "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+        "mode": "full-icl",
+        "pieceLimit": 32
+      },
+      "startupBufferMode": "adaptive",
+      "nextBufferMode": "adaptive",
+      "processMemory": {
+        "privateMiB": 2033.7,
+        "residentMiB": 127.5,
+        "peakResidentMiB": 1952.1
+      },
+      "at": 1791977778532,
+      "totalStartMs": 1980
+    },
+    "bubble": {
+      "id": "smv81afs26",
+      "state": "done",
+      "at": 1791977758635,
+      "displayedAt": 1791977758638,
+      "closedAt": 1791977778600,
+      "audioStartedAt": 1791977758685,
+      "audioEndedAt": 1791977778535
+    },
+    "speechEnabled": true,
+    "result": "fixed full-ICL reference, bounded clauses and real playback completion"
+  },
+  "tests": {
+    "pythonSuiteBeforeFinalEnqueueFix": 53,
+    "nativeTestsAfterFinalEnqueueFix": 8,
+    "nodeWorldPreviouslyPassed": 29
+  },
+  "subjectiveVoiceQuality": "Not evaluated. No original recording available. Pitch is evidence of pitch stability, not an identity or pleasantness test."
+}

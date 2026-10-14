@@ -79,6 +79,10 @@ def settings(runtime, *, cached_verification=False):
 
 class NativeEngine:
     sample_rate = 24000
+    # Re-anchor longer replies at natural clause boundaries. Short utterances
+    # retain their approved seed, sampling and waveform unchanged.
+    speech_piece_limit = 32
+    speech_piece_target = 24
 
     def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True, buffer_mode='adaptive', on_stage=None):
         started = time.perf_counter()
@@ -197,9 +201,23 @@ class NativeEngine:
                     if not self.ctx:
                         raise RuntimeError(self.dll.qt_last_error().decode())
             self.device_name = config['deviceName']
+            self._conditioning_signature = self.conditioning_signature()
+            self.voice_conditioning = {'referenceSha256':hashlib.sha256(self.reference_path.read_bytes()).hexdigest(),
+                                       'conditioningSha256':self._conditioning_signature,
+                                       'mode':'full-icl', 'pieceLimit':self.speech_piece_limit}
             self.startup_timings['totalMs'] = round((time.perf_counter()-started)*1000)
         except BaseException:
             self.close(); raise
+
+    def conditioning_signature(self):
+        voice = self.voice
+        if (not voice.ref_spk_emb or voice.ref_spk_dim != 1024 or not voice.ref_codes
+                or not 1 <= voice.ref_T <= 1024 or voice.num_codebooks != 16 or not self.reference_text.strip()):
+            raise RuntimeError('Missing full reference conditioning; default voice fallback is disabled')
+        h = hashlib.sha256(self.reference_text.encode('utf-8'))
+        h.update(C.string_at(voice.ref_spk_emb, voice.ref_spk_dim*C.sizeof(C.c_float)))
+        h.update(C.string_at(voice.ref_codes, voice.ref_T*16*C.sizeof(C.c_int32)))
+        return h.hexdigest()
 
     def synthesize_stream(self, text, key, receive, on_complete=None):
         import numpy as np
@@ -207,8 +225,11 @@ class NativeEngine:
             raise RuntimeError('Native engine closed')
         if not text.strip() or len(text) > 60:
             raise ValueError('Native synthesis requires 1-60 characters per piece')
+        if self.conditioning_signature() != self._conditioning_signature:
+            raise RuntimeError('Reference conditioning changed; refusing to switch voice mid-utterance')
         p = Params(); self.dll.qt_tts_default_params(C.byref(p))
         p.text = text.encode(); p.lang = b'Chinese'; p.ref_text = self.reference_text.encode()
+        p.speaker = None  # Always use the full reference, never a native preset.
         p.ref_spk_emb = self.voice.ref_spk_emb; p.ref_spk_dim = self.voice.ref_spk_dim
         p.ref_codes = self.voice.ref_codes; p.ref_T = self.voice.ref_T
         p.seed = 44; p.max_new_tokens = 360
@@ -250,8 +271,11 @@ class NativeEngine:
             raise RuntimeError('Speech reached the generation limit; output may be incomplete')
         if not total_samples:
             raise RuntimeError('Native engine returned no audio')
-        if on_complete: on_complete()
         if pending: receive(np.concatenate(pending), 24000)
+        # Queue the final (possibly shorter than the start buffer) chunk before
+        # telling the audio thread it can stop. Otherwise a drained previous
+        # piece could end playback between completion and this final enqueue.
+        if on_complete: on_complete()
 
     def close(self):
         if getattr(self, 'dll', None) and not self.cached_arrays:
