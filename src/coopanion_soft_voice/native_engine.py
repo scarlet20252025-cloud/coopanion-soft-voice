@@ -51,7 +51,7 @@ def integrated_device(name):
         v.vkDestroyInstance(instance, None)
 
 
-def settings(runtime):
+def settings(runtime, *, cached_verification=False):
     config = json.loads((Path(runtime)/'native-runtime.json').read_text(encoding='utf-8'))
     speech_only = config.get('speechOnly')
     if speech_only and (speech_only.get('format') != 1 or speech_only.get('sourceHashes') != MODEL_HASHES):
@@ -60,13 +60,9 @@ def settings(runtime):
         path = Path(config[key]).resolve()
         if not path.is_file():
             raise ValueError('Missing native runtime file: ' + key)
-        digest = hashlib.sha256()
-        with path.open('rb') as f:
-            for block in iter(lambda: f.read(8*1024*1024), b''):
-                digest.update(block)
         expected = (speech_only['hashes'][key] if speech_only else MODEL_HASHES[key]) if key != 'dll' else config['dllSha256']
-        if digest.hexdigest() != expected:
-            raise ValueError('Native runtime checksum mismatch: ' + key)
+        from .integrity_cache import verify
+        verify(path, expected, Path(runtime)/'integrity-cache' if cached_verification and key != 'dll' else None)
         config[key] = str(path)
     context = config.get('kvContext', 4096)
     if type(context) is not int or context < 1024 or context > 4096 or context % 256:
@@ -81,6 +77,8 @@ class NativeEngine:
     sample_rate = 24000
 
     def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True):
+        started = time.perf_counter()
+        self.startup_timings = {}
         self.ctx = None; self.voice = Voice(); self.dirs = []
         self.cached_arrays = None
         self.reference_path = reference()
@@ -89,7 +87,8 @@ class NativeEngine:
             from .voice_pack import load
             self.reference_path, pack = load(voice_pack)
             self.reference_text = pack['referenceText']
-        config = settings(runtime)
+        config = settings(runtime, cached_verification=True)
+        self.startup_timings['validationMs'] = round((time.perf_counter()-started)*1000)
         class MemoryStatus(C.Structure):
             _fields_ = [('length', C.c_uint32), ('load', C.c_uint32)] + [
                 (n, C.c_uint64) for n in ('total', 'available', 'pageTotal', 'pageAvailable',
@@ -129,7 +128,9 @@ class NativeEngine:
                 raise RuntimeError('Unsupported native ABI')
             init.talker_path = config['model'].encode(); init.codec_path = config['codec'].encode()
             init.max_batch = 1; init.use_fa = False
+            loading = time.perf_counter()
             self.ctx = self.dll.qt_init(C.byref(init))
+            self.startup_timings['modelInitMs'] = round((time.perf_counter()-loading)*1000)
             if not self.ctx:
                 raise RuntimeError(self.dll.qt_last_error().decode())
             from . import reference_cache
@@ -174,6 +175,7 @@ class NativeEngine:
                     if not self.ctx:
                         raise RuntimeError(self.dll.qt_last_error().decode())
             self.device_name = config['deviceName']
+            self.startup_timings['totalMs'] = round((time.perf_counter()-started)*1000)
         except BaseException:
             self.close(); raise
 

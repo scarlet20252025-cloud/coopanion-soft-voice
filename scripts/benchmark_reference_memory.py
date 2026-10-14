@@ -28,13 +28,17 @@ def main():
     p.add_argument('--runtime', required=True)
     p.add_argument('--variant', choices=['baseline', 'cached'], required=True)
     p.add_argument('--output', required=True)
+    p.add_argument('--no-prewarm', action='store_true', help='Measure the first real sentence without a discarded warmup')
     args = p.parse_args()
     started = time.perf_counter()
     model = NativeEngine(args.runtime, use_reference_cache=args.variant == 'cached')
     report = dict(variant=args.variant, cacheHit=model.reference_cache_hit,
                   loadSeconds=round(time.perf_counter()-started, 3), loaded=memory())
+    report['startupTimings'] = model.startup_timings
+    report['prewarm'] = not args.no_prewarm
     try:
-        model.synthesize_stream('准备好了。', 'warm', lambda a, s: None)
+        if not args.no_prewarm:
+            model.synthesize_stream('准备好了。', 'warm', lambda a, s: None)
         report['warm'] = memory(); report['samples'] = []
         for text in ['我在这里陪你呀，慢慢来，不着急。',
                      '今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？',

@@ -27,8 +27,8 @@ def load(runtime,mode='gpu',voice_pack=None):
         from .native_engine import NativeEngine
         import atexit
         model=NativeEngine(runtime,voice_pack=voice_pack)
-        try:model.synthesize_stream('准备好了。','accepted',lambda a,s:None)
-        except BaseException:model.close();raise
+        # The verified native path builds graphs on the first real sentence.
+        # Do not make the user wait for an extra discarded utterance on every wake.
         atexit.register(model.close)
         return model
     from .stream_engine import StreamEngine
@@ -46,10 +46,17 @@ def worker(runtime,mode='gpu',voice_pack=None):
     protocol=sys.stdout;sys.stdout=sys.stderr
     def emit(obj):print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
     def stage(name,detail,**extra):emit(dict(type='status',stage=name,detail=detail,**extra))
-    stage('load_model','加载固定参考音色并预热')
-    model=load(runtime,mode,voice_pack)
+    stage('load_model','加载语音模型')
+    # Native initialization releases the GIL. Import the playback stack meanwhile,
+    # and only announce ready after both are usable (previously this was hidden latency).
+    from concurrent.futures import ThreadPoolExecutor
+    from importlib import import_module
+    with ThreadPoolExecutor(max_workers=1) as imports:
+        playback_future=imports.submit(import_module, '.playback', __package__)
+        model=load(runtime,mode,voice_pack)
+        try:speak=playback_future.result().speak
+        except BaseException:model.close();raise
     emit({'type':'ready','device':('本地语音 / 核显 / streaming' if mode=='igpu' else '本地语音 / CUDA / streaming'),'sampleRate':24000})
-    from .playback import speak
     import math
     for line in sys.stdin:
         request_id=None
