@@ -1,0 +1,141 @@
+{
+  "workerIds": [
+    42192,
+    41076,
+    33840
+  ],
+  "initialLoadMs": 2212,
+  "loadedMemory": [
+    {
+      "Id": 41076,
+      "PrivateMemorySize64": 1232896,
+      "WorkingSet64": 176128
+    },
+    {
+      "Id": 33840,
+      "PrivateMemorySize64": 2311794688,
+      "WorkingSet64": 2891776
+    },
+    {
+      "Id": 42192,
+      "PrivateMemorySize64": 835584,
+      "WorkingSet64": 20480
+    }
+  ],
+  "sleeping": {
+    "phase": "sleeping",
+    "stage": "sleeping",
+    "detail": "低占用休眠，保留进程与播放器；模型已释放，下一句话自动唤醒。",
+    "initializing": false,
+    "workerPid": 42192,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 1551,
+        "queueWaitMs": 1448,
+        "startDelayMs": 3000,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 3008,
+        "firstChunkMs": 1551,
+        "firstDeviceCallbackMs": 1593,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "at": 1791955375794,
+        "totalStartMs": 3041
+      }
+    ],
+    "loadMs": 2212,
+    "sampleRate": 24000,
+    "lastSpeech": null,
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  },
+  "sleepingMemory": [
+    {
+      "Id": 41076,
+      "PrivateMemorySize64": 1232896,
+      "WorkingSet64": 176128
+    },
+    {
+      "Id": 33840,
+      "PrivateMemorySize64": 603033600,
+      "WorkingSet64": 22290432
+    },
+    {
+      "Id": 42192,
+      "PrivateMemorySize64": 835584,
+      "WorkingSet64": 20480
+    }
+  ],
+  "remainingWorkerIds": [
+    41076,
+    33840,
+    42192
+  ],
+  "wakeAndPlaybackMs": 6651,
+  "afterWake": {
+    "phase": "ready",
+    "stage": "ready",
+    "detail": "所选音色已就绪",
+    "initializing": false,
+    "workerPid": 42192,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 1551,
+        "queueWaitMs": 1448,
+        "startDelayMs": 3000,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 3008,
+        "firstChunkMs": 1551,
+        "firstDeviceCallbackMs": 1593,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "at": 1791955375794,
+        "totalStartMs": 3041
+      }
+    ],
+    "loadMs": 1448,
+    "sampleRate": 24000,
+    "lastSpeech": {
+      "id": "s1",
+      "synthesisMs": 1551,
+      "queueWaitMs": 1448,
+      "startDelayMs": 3000,
+      "type": "done",
+      "seconds": 3.52,
+      "totalSynthesisMs": 3008,
+      "firstChunkMs": 1551,
+      "firstDeviceCallbackMs": 1593,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "at": 1791955375794,
+      "totalStartMs": 3041
+    },
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  }
+}

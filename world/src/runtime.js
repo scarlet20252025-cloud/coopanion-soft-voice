@@ -49,6 +49,11 @@ export class SoftVoiceRuntime {
   async prepare() { if (!this.hasLocalFiles()) throw new Error('运行环境未安装，请运行 setup-native.ps1 和 install_world.py'); }
   async ensure() {
     if (this.readyPromise) return this.readyPromise;
+    if (this.worker && this.state.phase === 'sleeping') {
+      this.loadingAt=Date.now(); this.stage('load_model','正在从低占用休眠唤醒');
+      this.readyPromise=this.command('wake','__ready__',120000).finally(()=>{this.readyPromise=null;});
+      return this.readyPromise;
+    }
     if (this.worker && this.state.phase !== 'error') return;
     if (this.worker) await this.stop();
     this.readyPromise = this.startWorker().finally(() => { this.readyPromise = null; });
@@ -96,6 +101,10 @@ export class SoftVoiceRuntime {
     this.pending.clear();
   }
   message(msg) {
+    if (msg.type === 'slept') {
+      const p=this.pending.get('__sleep__'); this.pending.delete('__sleep__');
+      this.stage('sleeping','低占用休眠：保留进程与播放器，模型已释放。'); p?.resolve(msg); return;
+    }
     if (msg.type === 'status') {
       this.stage(msg.stage, msg.detail);
       if (msg.stage === 'playing' && msg.id) {
@@ -128,6 +137,18 @@ export class SoftVoiceRuntime {
     });
   }
   async openFolder() { spawn('explorer.exe', [this.root], { windowsHide: true, detached: true, stdio: 'ignore' }).unref(); return this.root; }
+  async command(type,key,timeout) {
+    return new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>{this.fail(new Error('语音休眠/唤醒超时'));void this.terminateWorker(this.worker);},timeout);
+      this.pending.set(key,{resolve:v=>{clearTimeout(timer);resolve(v);},reject:e=>{clearTimeout(timer);reject(e);}});
+      this.worker?.stdin.write(JSON.stringify({type})+'\n',e=>{if(e)this.fail(e);});
+    });
+  }
+  async sleep() {
+    if (!this.worker || this.pending.size || this.state.phase!=='ready') throw new Error('当前语音忙，暂不能休眠');
+    this.stage('suspending','正在释放模型，保留播放器与进程');
+    await this.command('sleep','__sleep__',15000);
+  }
   async terminateWorker(child) {
     if (!child || child.exitCode != null) return;
     if (child.termination) return child.termination;

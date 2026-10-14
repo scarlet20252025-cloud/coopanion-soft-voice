@@ -72,7 +72,7 @@ test('panels have separate mounts and read-only status rejects mutations', async
   assert.deepEqual(w.console().panels.map(p=>p.id),['controls','status','config','voices']);
   await assert.rejects(w.console().invoke('status','disable'),/未知/);
   await assert.rejects(w.console().invoke('config','test'),/未知/);
-  const ui=(await import('../dist/console-0.2.1.js')).default;
+  const ui=(await import('../dist/console-0.3.0.js')).default;
   assert.equal(new Set(Object.values(ui.panels).map(p=>p.mount)).size,4);
 });
 test('future voice is unavailable and cannot become a filesystem path', async () => {
@@ -92,7 +92,7 @@ test('fixed-voice rejection keeps current speech enabled', async () => {
 });
 
 test('idle unloading defaults off, skips busy work, and wakes without losing queued speech', async () => {
-  const w = world(); w.speaking = false; w.lastActivity = 0;
+  const w = world(); w.speaking = false; w.lastActivity = 0; w.opts.cfg.keepWorker=false;
   let stopped = 0; let phase = 'ready'; const spoken = [];
   w.runtime = { status: () => ({phase}), stop: async () => { stopped++; },
     stage: p => { phase=p; }, speak: async t => { phase='ready'; spoken.push(t); } };
@@ -108,10 +108,20 @@ test('idle unloading defaults off, skips busy work, and wakes without losing que
 });
 
 test('shutdown during idle unloading cannot restore sleeping state', async () => {
-  const w=world(); w.speaking=false; w.lastActivity=0; w.opts.cfg.idleUnloadSec=1;
+  const w=world(); w.speaking=false; w.lastActivity=0; w.opts.cfg.idleUnloadSec=1; w.opts.cfg.keepWorker=false;
   let finish; let phase='ready';
   w.runtime={status:()=>({phase}),stop:()=>new Promise(r=>{finish=r;}),stage:p=>{phase=p;}};
   const sleeping=w.maybeUnload(10000); w.active=false; w.speechEnabled=false;
   finish(); await sleeping;
   assert.equal(phase,'ready'); assert.equal(w.sleepPromise,null);
+});
+
+test('low-memory protection sleeps only when idle and uses retained worker mode', async () => {
+  const w=world(); w.speaking=false; w.opts.cfg.lowMemoryMiB=1536; w.opts.cfg.keepWorker=true;
+  let sleeps=0; let phase='ready';
+  w.runtime={status:()=>({phase}),sleep:async()=>{sleeps++;},stage:p=>{phase=p;}};
+  await w.maybeUnload(Date.now(),2000); assert.equal(sleeps,0);
+  w.queue=[{}]; await w.maybeUnload(Date.now(),1000); assert.equal(sleeps,0);
+  w.queue=[]; await w.maybeUnload(Date.now(),1000); assert.equal(sleeps,1);
+  assert.equal(phase,'sleeping'); assert.equal(w.speechEnabled,true);
 });

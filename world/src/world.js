@@ -149,17 +149,19 @@ export class SoftVoiceWorld {
 
   makeRuntime(host) { return new SoftVoiceRuntime({ cfg: this.opts.cfg, log: host.log, dataDir: this.opts.dataDir }); }
 
-  async maybeUnload(now = Date.now()) {
+  async maybeUnload(now = Date.now(), freeMiB = freemem()/1024**2) {
     const seconds = this.opts.cfg.idleUnloadSec;
-    if (!seconds || !this.active || !this.speechEnabled || !this.accepting || this.blocked ||
+    const pressure = this.opts.cfg.lowMemoryMiB > 0 && freeMiB < this.opts.cfg.lowMemoryMiB;
+    if ((!seconds && !pressure) || !this.active || !this.speechEnabled || !this.accepting || this.blocked ||
         this.speaking || this.queue.length || this.initialization || this.togglePromise || this.sleepPromise ||
-        this.runtime?.status().phase !== 'ready' || now - this.lastActivity < seconds * 1000) return;
+        this.runtime?.status().phase !== 'ready' || (!pressure && now - this.lastActivity < seconds * 1000)) return;
     const runtime = this.runtime;
     this.sleepPromise = (async () => {
-      await runtime.stop();
+      if (this.opts.cfg.keepWorker) await runtime.sleep();
+      else await runtime.stop();
       if (this.active && this.speechEnabled && this.runtime === runtime) {
         runtime.workerError = null;
-        runtime.stage('sleeping', '省内存待机：模型已卸载，下一句话自动加载；首句会增加加载和预热时间。');
+        runtime.stage('sleeping', `${pressure?'内存保护触发：':''}${this.opts.cfg.keepWorker?'低占用休眠，保留进程与播放器':'深度休眠，进程已退出'}；模型已释放，下一句话自动唤醒。`);
       }
     })().finally(() => { this.sleepPromise = null; });
     await this.sleepPromise;
