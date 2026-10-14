@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-14",
+  "name": "cortico-world-soft-voice",
+  "version": "0.3.11",
+  "author": "Asryto",
+  "corticoAPI": 5,
+  "worldTestsPassed": 33,
+  "packedBytes": 39380,
+  "sha256": "79dd5503819843fc11b6297435cd2d9dc229ff64344a3697fd7b3242bac3006c",
+  "npmIntegrity": "sha512-IrtO/rFqyFkfpzd/2p7aDgTra1DWsWCz2OpzUgZ/ID+MDcRUKw7F1Gvpw0v5xhV4QN4kC67US0zh8ROJ+r8xew==",
+  "registryNameAvailableAtCheck": true,
+  "publishDryRunPassed": true,
+  "publishedToNpm": false,
+  "blockingCondition": "Publisher has no npm account; signup is blocked by access verification",
+  "officialFrameworkCommit": "dce5c12f1b731ef5f9782faaa2071cb4ca51ccd5",
+  "officialManifestAndDryMount": {
+    "manifest": true,
+    "worldShape": true,
+    "report": {
+      "ok": [
+        "defaults() 返回配置段。",
+        "create() 返回 World 实例,id = soft-voice。",
+        "tools(): 没有工具。",
+        "envPromptVars(): 2 个占位符值。",
+        "console(): 4 个面板,0 个配置组,1 份提示词文档。"
+      ],
+      "warnings": [],
+      "failures": []
+    }
+  },
+  "validationScope": "Called upstream parseExtensionManifest/isWorldDefinition/dryMountWorld on the unpacked TGZ; World declares no tools. Full CLI checker not completed because its Minecraft dependency was absent; live console install-check unavailable because app was not running."
+}

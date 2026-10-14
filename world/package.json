@@ -8,7 +8,10 @@
   "keywords": [
     "cortico-world",
     "coopanion",
-    "tts"
+    "tts",
+    "qwen3-tts",
+    "vulkan",
+    "local-voice"
   ],
   "engines": {
     "node": ">=22"
@@ -29,5 +32,24 @@
     "displayName": "轻量化本地语音引擎",
     "consoleClient": "dist/console-0.3.11.js",
     "consoleStyle": "dist/console-0.3.11.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scarlet20252025-cloud/coopanion-soft-voice.git",
+    "directory": "world"
+  },
+  "homepage": "https://github.com/scarlet20252025-cloud/coopanion-soft-voice#readme",
+  "bugs": {
+    "url": "https://github.com/scarlet20252025-cloud/coopanion-soft-voice/issues"
+  },
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }
