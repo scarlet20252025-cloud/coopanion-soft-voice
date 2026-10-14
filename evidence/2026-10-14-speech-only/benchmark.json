@@ -1,0 +1,53 @@
+{
+  "variant": "cached",
+  "cacheHit": true,
+  "loadSeconds": 3.825,
+  "loaded": {
+    "privateCommitMiB": 2203.8,
+    "workingSetMiB": 38.7,
+    "peakWorkingSetMiB": 2613.1
+  },
+  "warm": {
+    "privateCommitMiB": 2385.5,
+    "workingSetMiB": 220.1,
+    "peakWorkingSetMiB": 2613.1
+  },
+  "samples": [
+    {
+      "text": "我在这里陪你呀，慢慢来，不着急。",
+      "samples": 84480,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "firstChunkSeconds": 0.924,
+      "seconds": 2.308,
+      "memory": {
+        "privateCommitMiB": 2465.4,
+        "workingSetMiB": 296.7,
+        "peakWorkingSetMiB": 2613.1
+      }
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "samples": 253440,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "firstChunkSeconds": 0.796,
+      "seconds": 6.3,
+      "memory": {
+        "privateCommitMiB": 2467.7,
+        "workingSetMiB": 299.4,
+        "peakWorkingSetMiB": 2613.1
+      }
+    },
+    {
+      "text": "我在这里陪你呀，慢慢来，不着急。",
+      "samples": 84480,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "firstChunkSeconds": 0.804,
+      "seconds": 2.179,
+      "memory": {
+        "privateCommitMiB": 2467.7,
+        "workingSetMiB": 299.4,
+        "peakWorkingSetMiB": 2613.1
+      }
+    }
+  ]
+}

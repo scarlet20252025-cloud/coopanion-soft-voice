@@ -26,6 +26,12 @@ export class SoftVoiceRuntime {
     try { const p = this.profile(); return existsSync(p.python) && existsSync(join(p.runtime, 'native-runtime.json')); }
     catch { return false; }
   }
+  assertVoiceSupported(key) {
+    const config = JSON.parse(readFileSync(join(this.profile().runtime, 'native-runtime.json'), 'utf8'));
+    if (config.speechOnly && key !== BUILTIN) {
+      throw new Error('当前是固定音色精简运行时。更换音色前请切回完整运行时；当前音色保持不变。');
+    }
+  }
   stage(phase, detail) { this.state = { phase, stage: phase, detail }; }
   status() {
     return { ...this.state, initializing: !!this.readyPromise, workerPid: this.worker?.pid ?? null,

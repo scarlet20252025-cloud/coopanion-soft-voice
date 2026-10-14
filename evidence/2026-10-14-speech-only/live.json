@@ -1,0 +1,8 @@
+{
+  "readyBeforeTest": true,
+  "acceptingBeforeTest": true,
+  "testPlayback": "interrupted by application shutdown",
+  "coreExitCode": 0,
+  "coreShutdown": "all steps completed normally",
+  "note": "Offline three-sentence PCM equivalence passed; full live playback after deployment not confirmed"
+}

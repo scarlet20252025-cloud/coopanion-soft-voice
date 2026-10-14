@@ -82,3 +82,11 @@ test('future voice is unavailable and cannot become a filesystem path', async ()
   assert.throws(()=>voicePath('.','future-default'));
   assert.equal(voicePath('.','builtin'),null);
 });
+
+test('fixed-voice rejection keeps current speech enabled', async () => {
+  const w = world(); w.speaking = false;
+  w.runtime = { assertVoiceSupported: () => { throw new Error('固定音色'); } };
+  await assert.rejects(w.selectVoice('another-voice'), /固定音色/);
+  assert.equal(w.speechEnabled, true);
+  assert.equal(w.accepting, true);
+});

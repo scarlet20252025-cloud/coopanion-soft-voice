@@ -175,6 +175,7 @@ export class SoftVoiceWorld {
 
   async selectVoice(key) {
     if (this.switchingVoice || this.togglePromise || this.initialization || this.speaking) throw new Error('请等待当前语音操作完成后切换音色');
+    this.runtime.assertVoiceSupported(key);
     voicePath(this.runtime.root, key);
     if ((this.opts.cfg.voiceId || BUILTIN) === key) return this.status();
     this.switchingVoice = true;

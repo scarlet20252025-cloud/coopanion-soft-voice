@@ -53,6 +53,9 @@ def integrated_device(name):
 
 def settings(runtime):
     config = json.loads((Path(runtime)/'native-runtime.json').read_text(encoding='utf-8'))
+    speech_only = config.get('speechOnly')
+    if speech_only and (speech_only.get('format') != 1 or speech_only.get('sourceHashes') != MODEL_HASHES):
+        raise ValueError('Unsupported speech-only model provenance')
     for key in ('dll', 'model', 'codec'):
         path = Path(config[key]).resolve()
         if not path.is_file():
@@ -61,7 +64,7 @@ def settings(runtime):
         with path.open('rb') as f:
             for block in iter(lambda: f.read(8*1024*1024), b''):
                 digest.update(block)
-        expected = MODEL_HASHES[key] if key != 'dll' else config['dllSha256']
+        expected = (speech_only['hashes'][key] if speech_only else MODEL_HASHES[key]) if key != 'dll' else config['dllSha256']
         if digest.hexdigest() != expected:
             raise ValueError('Native runtime checksum mismatch: ' + key)
         config[key] = str(path)
@@ -131,7 +134,20 @@ class NativeEngine:
                 raise RuntimeError(self.dll.qt_last_error().decode())
             from . import reference_cache
             cache = reference_cache.cache_path(runtime, config, self.reference_path)
-            features = reference_cache.read(cache) if use_reference_cache else None
+            fixed = config.get('speechOnly')
+            if fixed:
+                if not use_reference_cache:
+                    raise ValueError('Speech-only runtime requires pre-extracted reference features')
+                if hashlib.sha256(self.reference_path.read_bytes()).hexdigest() != fixed['referenceSha256']:
+                    raise ValueError('Speech-only runtime is bound to its reference voice; build a new profile for this voice or restore the full runtime')
+                feature_path = Path(runtime) / 'voice-features.json'
+                if hashlib.sha256(feature_path.read_bytes()).hexdigest() != fixed['featuresSha256']:
+                    raise ValueError('Speech-only reference features checksum mismatch; rebuild this profile')
+                features = reference_cache.read(feature_path)
+                if features is None:
+                    raise ValueError('Speech-only reference features invalid; rebuild this profile')
+            else:
+                features = reference_cache.read(cache) if use_reference_cache else None
             self.reference_cache_hit = features is not None
             if features is not None:
                 emb, codes, frames = features
