@@ -96,7 +96,7 @@ test('runtime memory guard follows the actual model layout and keeps fallback pr
     assert.equal(r.memoryPolicy().minimumGiB,4);
     const file=join(dir,'native-runtime.json');
     writeFileSync(file,JSON.stringify({compactGraphs:true,kvContext:1024,speechOnly:{format:1}}));
-    assert.deepEqual(r.memoryPolicy(),{minimumGiB:3.5,recoveryGiB:4,layout:'compact'});
+    assert.deepEqual(r.memoryPolicy(),{minimumGiB:3.25,recoveryGiB:3.75,layout:'compact'});
     writeFileSync(file,JSON.stringify({compactGraphs:false,kvContext:1024,speechOnly:{format:1}}));
     assert.equal(r.memoryPolicy().recoveryGiB,4.5);
   } finally {rmSync(dir,{recursive:true});}
@@ -106,7 +106,7 @@ test('panels have separate mounts and read-only status rejects mutations', async
   assert.deepEqual(w.console().panels.map(p=>p.id),['controls','status','config','voices']);
   await assert.rejects(w.console().invoke('status','disable'),/未知/);
   await assert.rejects(w.console().invoke('config','test'),/未知/);
-  const ui=(await import('../dist/console-0.3.4.js')).default;
+  const ui=(await import('../dist/console-0.3.5.js')).default;
   assert.equal(new Set(Object.values(ui.panels).map(p=>p.mount)).size,4);
 });
 test('future voice is unavailable and cannot become a filesystem path', async () => {

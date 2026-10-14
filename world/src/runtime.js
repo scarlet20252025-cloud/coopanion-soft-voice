@@ -29,7 +29,7 @@ export class SoftVoiceRuntime {
   memoryPolicy() {
     try {
       const c=JSON.parse(readFileSync(join(this.profile().runtime,'native-runtime.json'),'utf8'));
-      if(c.compactGraphs===true && c.kvContext===1024 && c.speechOnly?.format===1) return {minimumGiB:3.5,recoveryGiB:4,layout:'compact'};
+      if(c.compactGraphs===true && c.kvContext===1024 && c.speechOnly?.format===1) return {minimumGiB:3.25,recoveryGiB:3.75,layout:'compact'};
     } catch { /* Unconfigured or older layouts retain their existing guard. */ }
     return {minimumGiB:4,recoveryGiB:4.5,layout:'standard'};
   }

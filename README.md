@@ -1,6 +1,6 @@
 # 本地语音助手 · Coopanion Local Voice Assistant
 
-为 Windows Coopanion 提供核显流式语音。**0.4.7 / World 0.3.4** 提供独立的本地语音助手：四个独立面板、真实延迟图表、内存要求提示和 ZIP 音色包导入。默认保留已确认的 `soft-child-design-2`，新版默认音色标为“待更新”。工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
+为 Windows Coopanion 提供核显流式语音。**0.4.8 / World 0.3.5** 提供独立的本地语音助手：四个独立面板、真实延迟图表、内存要求提示和 ZIP 音色包导入。默认保留已确认的 `soft-child-design-2`，新版默认音色标为“待更新”。工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
 
 0.4.1 使用参考音色特征缓存，实测合成后提交内存减少约 288 MiB，三次对照输出逐字节一致。见[内存优化与复现记录](docs/MEMORY_OPTIMIZATION.md)。0.4.2 另提供可选的[固定音色精简模型构建器](docs/SPEECH_ONLY.md)，无损删除 221 个参考分析张量，模型文件再减少 108.6 MiB；内存基本不变。World 0.2.1 增加可选空闲卸载：配置中设置秒数，默认 0 保持常驻，建议 300；下一句自动唤醒但会增加首句等待。
 
@@ -12,7 +12,7 @@ Q8 核显版音色已于 **2026-10-12** 通过用户试听并接入正式桌宠�
 
 ## 从零部署
 
-先安装 **Windows 10/11 x64、Python 3.10 x64、Git 和显卡厂商驱动（含 Vulkan）**，准备至少 **8 GB 可用磁盘**。核显实测平台为 Ryzen 7 7735H / AMD Radeon(TM) Graphics / 16 GB RAM；其他核显的性能和兼容性需自行验证。启动前常规运行时要求至少 4 GiB 系统可用内存；固定音色 + KV 1024 + compactGraphs 的精简运行时降为 3.5 GiB，自动恢复为 4 GiB。游戏仍与核显共享系统资源。
+先安装 **Windows 10/11 x64、Python 3.10 x64、Git 和显卡厂商驱动（含 Vulkan）**，准备至少 **8 GB 可用磁盘**。核显实测平台为 Ryzen 7 7735H / AMD Radeon(TM) Graphics / 16 GB RAM；其他核显的性能和兼容性需自行验证。启动前常规运行时要求至少 4 GiB 系统可用内存；固定音色 + KV 1024 + compactGraphs 的精简运行时降为 3.25 GiB，自动恢复为 3.75 GiB。游戏仍与核显共享系统资源。
 
 ```powershell
 git clone https://github.com/scarlet20252025-cloud/coopanion-soft-voice.git

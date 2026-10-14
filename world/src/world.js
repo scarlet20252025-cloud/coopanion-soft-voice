@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const LOADING_PHASES = new Set(['check_environment', 'installed', 'bootstrap_uv', 'bootstrap_python', 'create_venv',
   'bootstrap_source', 'bootstrap_matcha', 'install_torch', 'install_dependencies', 'preflight',
-  'download_reference', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'prepare_audio', 'stopping', 'synthesizing', 'playing']);
+  'download_reference', 'check_memory', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'prepare_audio', 'stopping', 'synthesizing', 'playing']);
 
 export class SoftVoiceWorld {
   constructor(opts) {

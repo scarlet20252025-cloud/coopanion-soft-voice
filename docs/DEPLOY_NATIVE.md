@@ -8,7 +8,7 @@
 
 - Windows 10/11 x64；安装 [Python 3.10](https://www.python.org/downloads/windows/) x64 和 [Git for Windows](https://git-scm.com/downloads/win)，新开 PowerShell 验证 `py -3.10 --version`、`git --version`。
 - 安装显卡厂商驱动并启用核显，需要系统 `vulkan-1.dll`。只开启独显的模式不适用。当前实测核显名为 `AMD Radeon(TM) Graphics`，其他硬件需验证。
-- 至少 8 GB 可用磁盘，建议 16 GB 以上 RAM，启动语音前常规运行时至少 4 GiB 系统可用 RAM；固定音色 + KV 1024 + compactGraphs 的已验证精简布局为 3.5 GiB（自动恢复 4 GiB）。首次编译可能需要几分钟或更久。
+- 至少 8 GB 可用磁盘，建议 16 GB 以上 RAM，启动语音前常规运行时至少 4 GiB 系统可用 RAM；固定音色 + KV 1024 + compactGraphs 的已验证精简布局为 3.25 GiB（自动恢复 3.75 GiB）。首次编译可能需要几分钟或更久。
 - 网络可访问 GitHub、PyPI、Google Storage、Hugging Face。无需语音 API 密钥。若需代理，可设置当前终端的 `HTTPS_PROXY`/`HTTP_PROXY`；脚本不会改系统代理。
 
 ## 2. 安装

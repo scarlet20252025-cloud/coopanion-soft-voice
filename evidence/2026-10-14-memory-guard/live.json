@@ -1,0 +1,32 @@
+{
+  "phase": "ready",
+  "loadMs": 3292,
+  "processMemory": {
+    "privateMiB": 2320,
+    "residentMiB": 108,
+    "peakResidentMiB": 2470.3
+  },
+  "lastSpeech": {
+    "id": "s1",
+    "synthesisMs": 1650,
+    "queueWaitMs": 0,
+    "startDelayMs": 1653,
+    "type": "done",
+    "seconds": 3.52,
+    "totalSynthesisMs": 3415,
+    "firstChunkMs": 1650,
+    "firstDeviceCallbackMs": 1659,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "startupBufferMode": "adaptive",
+    "nextBufferMode": "adaptive",
+    "processMemory": {
+      "privateMiB": 2320,
+      "residentMiB": 108,
+      "peakResidentMiB": 2470.3
+    },
+    "at": 1791963921384,
+    "totalStartMs": 1659
+  }
+}

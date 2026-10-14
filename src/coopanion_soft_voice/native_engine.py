@@ -102,7 +102,10 @@ class NativeEngine:
         memory = MemoryStatus(); memory.length = C.sizeof(memory)
         from .memory_policy import loading_requirement
         minimum = loading_requirement(config)
-        if not C.windll.kernel32.GlobalMemoryStatusEx(C.byref(memory)) or memory.available < minimum*1024**3:
+        report('check_memory','正在检查加载所需的系统内存')
+        measured = C.windll.kernel32.GlobalMemoryStatusEx(C.byref(memory))
+        self.startup_timings['availableBeforeLoadGiB'] = round(memory.available/1024**3, 4) if measured else None
+        if not measured or memory.available < minimum*1024**3:
             raise RuntimeError(f'Native voice needs at least {minimum:g} GiB free RAM before loading; keeping text only')
         os.environ['GGML_BACKEND'] = 'Vulkan0'
         os.environ['GGML_VK_VISIBLE_DEVICES'] = str(config['deviceIndex'])
