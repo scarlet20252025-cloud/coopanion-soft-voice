@@ -1,8 +1,12 @@
 # 轻量化本地语音引擎 · Asryto
 
+**无需扩展市场或 npm 账号。完整 ZIP 已包含扩展、模型和运行环境。**
+
+首次安装请看 [不依赖扩展市场的详细步骤与排错指南](INSTALL_WITHOUT_MARKET.md)。
+
 ## 最简安装
 
-1. 下载完整 Windows 便携 ZIP，解压到英文路径，例如 `D:\CoopanionVoice`。
+1. 下载 [完整 Windows 便携 ZIP](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.4.11/coopanion-local-voice-0.4.11-windows-x64.zip)，解压到英文路径，例如 `D:\CoopanionVoice`。
 2. 双击 `install.cmd`，自动识别 Coopanion 的运行路径、快捷方式、安装记录和常见目录；仅找不到或存在多个副本时要求选择目录。若桌宠正在运行，已验证版本会尝试正常退出后安装。
 3. 安装器校验模型、实际生成一段语音并测试静音播放，安装独立 World 后打开桌宠。进入“轻量化本地语音引擎”即可使用。
 

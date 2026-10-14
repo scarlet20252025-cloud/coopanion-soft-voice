@@ -6,6 +6,8 @@ Windows Coopanion 的独立核显语音扩展。保留已确认的 `soft-child-d
 
 ## 最简安装
 
+**[不依赖扩展市场的安装教程](docs/INSTALL_WITHOUT_MARKET.md)**：完整包自动安装 World，不需要 npm 账号或市场安装。
+
 1. 从 [GitHub Releases 下载完整 Windows 安装包](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest)，解压到英文路径，例如 `D:\CoopanionVoice`。
 2. 双击 **`install.cmd`**。自动寻找正在运行的桌宠、快捷方式、安装记录与常见目录；找不到或有多个副本时再选择路径。
 3. 安装器校验模型、执行真实合成和静音播放测试，接入 World 并重启桌宠。进入 **轻量化本地语音引擎** 即可使用。
