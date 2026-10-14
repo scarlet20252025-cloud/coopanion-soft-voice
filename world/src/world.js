@@ -114,6 +114,7 @@ export class SoftVoiceWorld {
         const savedConfig = savedSettings.config ? validateConfigPatch(savedSettings.config) : {};
         this.settings = savedSettings;
         this.speechEnabled = savedSettings.speechEnabled === true;
+        if (!('lowPowerMode' in savedConfig)) savedConfig.lowPowerMode = (savedConfig.idleUnloadSec ?? 0) > 0 || (savedConfig.lowMemoryMiB ?? 0) > 0;
         Object.assign(this.opts.cfg, savedConfig);
         this.opts.cfg.voiceId = savedSettings.selectedVoice || this.opts.cfg.voiceId || BUILTIN;
       }
@@ -150,6 +151,7 @@ export class SoftVoiceWorld {
   makeRuntime(host) { return new SoftVoiceRuntime({ cfg: this.opts.cfg, log: host.log, dataDir: this.opts.dataDir }); }
 
   async maybeUnload(now = Date.now(), freeMiB = freemem()/1024**2) {
+    if (!this.opts.cfg.lowPowerMode) return;
     const seconds = this.opts.cfg.idleUnloadSec;
     const pressure = this.opts.cfg.lowMemoryMiB > 0 && freeMiB < this.opts.cfg.lowMemoryMiB;
     if ((!seconds && !pressure) || !this.active || !this.speechEnabled || !this.accepting || this.blocked ||
@@ -188,8 +190,8 @@ export class SoftVoiceWorld {
     this.opts.persist?.(patch);
     this.writeSettings({ ...this.settings, speechEnabled: this.speechEnabled, config: configValues(next) });
     Object.assign(this.opts.cfg, patch);
-    if (patch.idleUnloadSec === 0 && this.speechEnabled && this.runtime?.status().phase === 'sleeping') {
-      void this.initialize(false).catch(err => this.host?.log.warn(`恢复常驻失败: ${err.message}`));
+    if ((patch.lowPowerMode === false || (next.idleUnloadSec === 0 && next.lowMemoryMiB === 0)) && this.speechEnabled && (this.sleepPromise || this.runtime?.status().phase === 'sleeping')) {
+      void Promise.resolve(this.sleepPromise).then(() => { if (this.active && this.speechEnabled && (!this.opts.cfg.lowPowerMode || (!this.opts.cfg.idleUnloadSec && !this.opts.cfg.lowMemoryMiB))) return this.initialize(false); }).catch(err => this.host?.log.warn(`恢复常驻失败: ${err.message}`));
     }
     if ('pollMs' in patch && this.timer) {
       clearInterval(this.timer);
@@ -260,7 +262,7 @@ export class SoftVoiceWorld {
     })().catch(err => {
       if (this.active && this.runtime === runtime) {
         this.blocked = true;
-        if (/4 GiB free RAM|keeping text only/.test(err.message)) runtime.stage('waiting_memory', '内存不足，暂用文字；可用内存达到 4.5 GB 后自动恢复。也可在语音控制页重试。');
+        if (/4 GiB free RAM|keeping text only/.test(err.message)) runtime.stage('waiting_memory', '内存不足，暂用文字；可用内存达到 4.5 GiB 后自动恢复。也可在语音控制页重试。');
       }
       throw err;
     }).finally(() => { this.initialization = null; });

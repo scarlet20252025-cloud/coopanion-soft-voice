@@ -72,7 +72,7 @@ test('panels have separate mounts and read-only status rejects mutations', async
   assert.deepEqual(w.console().panels.map(p=>p.id),['controls','status','config','voices']);
   await assert.rejects(w.console().invoke('status','disable'),/未知/);
   await assert.rejects(w.console().invoke('config','test'),/未知/);
-  const ui=(await import('../dist/console-0.3.0.js')).default;
+  const ui=(await import('../dist/console-0.3.1.js')).default;
   assert.equal(new Set(Object.values(ui.panels).map(p=>p.mount)).size,4);
 });
 test('future voice is unavailable and cannot become a filesystem path', async () => {
@@ -97,7 +97,7 @@ test('idle unloading defaults off, skips busy work, and wakes without losing que
   w.runtime = { status: () => ({phase}), stop: async () => { stopped++; },
     stage: p => { phase=p; }, speak: async t => { phase='ready'; spoken.push(t); } };
   await w.maybeUnload(10000); assert.equal(stopped,0);
-  w.opts.cfg.idleUnloadSec = 1;
+  w.opts.cfg.lowPowerMode = true; w.opts.cfg.idleUnloadSec = 1;
   w.speaking=true; await w.maybeUnload(10000); assert.equal(stopped,0);
   w.speaking=false; await w.maybeUnload(10000); assert.equal(stopped,1);
   assert.equal(phase,'sleeping'); assert.equal(w.accepting,true);
@@ -108,7 +108,7 @@ test('idle unloading defaults off, skips busy work, and wakes without losing que
 });
 
 test('shutdown during idle unloading cannot restore sleeping state', async () => {
-  const w=world(); w.speaking=false; w.lastActivity=0; w.opts.cfg.idleUnloadSec=1; w.opts.cfg.keepWorker=false;
+  const w=world(); w.speaking=false; w.lastActivity=0; w.opts.cfg.lowPowerMode=true; w.opts.cfg.idleUnloadSec=1; w.opts.cfg.keepWorker=false;
   let finish; let phase='ready';
   w.runtime={status:()=>({phase}),stop:()=>new Promise(r=>{finish=r;}),stage:p=>{phase=p;}};
   const sleeping=w.maybeUnload(10000); w.active=false; w.speechEnabled=false;
@@ -117,11 +117,32 @@ test('shutdown during idle unloading cannot restore sleeping state', async () =>
 });
 
 test('low-memory protection sleeps only when idle and uses retained worker mode', async () => {
-  const w=world(); w.speaking=false; w.opts.cfg.lowMemoryMiB=1536; w.opts.cfg.keepWorker=true;
+  const w=world(); w.speaking=false; w.opts.cfg.lowPowerMode=true; w.opts.cfg.lowMemoryMiB=1536; w.opts.cfg.keepWorker=true;
   let sleeps=0; let phase='ready';
   w.runtime={status:()=>({phase}),sleep:async()=>{sleeps++;},stage:p=>{phase=p;}};
   await w.maybeUnload(Date.now(),2000); assert.equal(sleeps,0);
   w.queue=[{}]; await w.maybeUnload(Date.now(),1000); assert.equal(sleeps,0);
   w.queue=[]; await w.maybeUnload(Date.now(),1000); assert.equal(sleeps,1);
   assert.equal(phase,'sleeping'); assert.equal(w.speechEnabled,true);
+});
+
+
+test('low power off suppresses BOTH idle and memory sleep without erasing thresholds', async () => {
+  const w=world();w.speaking=false;w.lastActivity=0;
+  let slept=0;w.runtime={status:()=>({phase:'ready'}),sleep:async()=>{slept++;},stage(){}};
+  w.opts.cfg.lowPowerMode=false;w.opts.cfg.idleUnloadSec=1;w.opts.cfg.lowMemoryMiB=1536;
+  await w.maybeUnload(999999,100);assert.equal(slept,0);
+  w.opts.cfg.lowPowerMode=true;await w.maybeUnload(999999,100);assert.equal(slept,1);
+});
+
+test('disabling low power during sleep transition waits, then wakes', async () => {
+  const w=world();w.speaking=false;w.opts.cfg.lowPowerMode=true;
+  w.writeSettings=s=>{w.settings=s;};
+  w.runtime={status:()=>({phase:'suspending'})};
+  let finish,wakes=0;w.sleepPromise=new Promise(r=>{finish=r;});
+  w.initialize=async()=>{wakes++;};
+  w.saveConfig({lowPowerMode:false});await Promise.resolve();assert.equal(wakes,0);
+  finish();await new Promise(r=>setImmediate(r));assert.equal(wakes,1);
+  assert.equal(w.settings.config.lowPowerMode,false);
+  assert.equal(w.settings.config.idleUnloadSec,300);
 });

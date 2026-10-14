@@ -1,13 +1,14 @@
 export const ID = 'soft-voice';
 const K = `worlds.${ID}`;
 
-export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, idleUnloadSec: 0, keepWorker: true, lowMemoryMiB: 0 });
+export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, lowPowerMode: false, idleUnloadSec: 300, keepWorker: true, lowMemoryMiB: 1536 });
 export const CONFIG_GROUP = {
   id: `world:${ID}`, owner: `world:${ID}`,
   schema: { type: 'object', title: '本地语音助手', properties: {
-    [`${K}.keepWorker`]: { type: 'boolean', title: '低占用休眠（关闭则完全退出进程）', 'x-hot': true },
+    [`${K}.lowPowerMode`]: { type: 'boolean', title: '低功耗模式（空闲或内存紧张时自动休眠）', 'x-hot': true },
+    [`${K}.keepWorker`]: { type: 'boolean', title: '休眠时保留工作进程（关闭则完全退出）', 'x-hot': true },
     [`${K}.lowMemoryMiB`]: { type: 'integer', title: '空闲内存低于此值时休眠（MiB，0 关闭）', minimum: 0, maximum: 4096, 'x-hot': true },
-    [`${K}.idleUnloadSec`]: { type: 'integer', title: '自动休眠秒数（0 为常驻，建议 300）', minimum: 0, maximum: 3600, 'x-hot': true },
+    [`${K}.idleUnloadSec`]: { type: 'integer', title: '自动休眠秒数（0 关闭空闲计时，建议 300）', minimum: 0, maximum: 3600, 'x-hot': true },
     [`${K}.volume`]: { type: 'integer', title: '音量（0 为静音，跳过合成）', minimum: 0, maximum: 100, 'x-hot': true },
     [`${K}.maxQueue`]: { type: 'integer', title: '待说队列上限（满时丢弃最旧）', minimum: 1, maximum: 12, 'x-hot': true },
     [`${K}.maxAgeSec`]: { type: 'integer', title: '排队超过多少秒不再朗读', minimum: 5, maximum: 180, 'x-hot': true },
