@@ -70,6 +70,8 @@ def settings(runtime, *, cached_verification=False):
     config['kvContext'] = context
     if type(config.get('compactGraphs', False)) is not bool:
         raise ValueError('compactGraphs must be boolean')
+    if type(config.get('streamTextEmbedding', False)) is not bool:
+        raise ValueError('streamTextEmbedding must be boolean')
     reference()
     config['deviceIndex'] = integrated_device(config['deviceName'])
     return config
@@ -113,6 +115,8 @@ class NativeEngine:
         os.environ['QWEN_TTS_KV_CONTEXT'] = str(config['kvContext'])
         if config.get('compactGraphs', False): os.environ['QWEN_TTS_COMPACT_GRAPHS'] = '1'
         else: os.environ.pop('QWEN_TTS_COMPACT_GRAPHS', None)
+        if config.get('streamTextEmbedding', False): os.environ['QWEN_TTS_STREAM_TEXT_EMBEDDING'] = '1'
+        else: os.environ.pop('QWEN_TTS_STREAM_TEXT_EMBEDDING', None)
         kernel = C.windll.kernel32
         kernel.GetCurrentProcess.restype = C.c_void_p
         kernel.SetPriorityClass.argtypes = [C.c_void_p, C.c_ulong]
@@ -122,6 +126,9 @@ class NativeEngine:
             for folder in [str(Path(config['dll']).parent)] + config['dllDirectories']:
                 self.dirs.append(os.add_dll_directory(folder))
             self.dll = C.CDLL(config['dll'])
+            if config.get('streamTextEmbedding', False):
+                from .native_capabilities import require_text_stream
+                require_text_stream(self.dll)
             signatures = {
                 'qt_version': ([], C.c_char_p), 'qt_last_error': ([], C.c_char_p),
                 'qt_init_default_params': ([C.POINTER(Init)], None),

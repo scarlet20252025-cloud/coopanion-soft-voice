@@ -28,9 +28,16 @@ def main():
     p.add_argument('--runtime', required=True)
     p.add_argument('--variant', choices=['baseline', 'cached'], required=True)
     p.add_argument('--output', required=True)
+    p.add_argument('--texts', help='JSON array of 1–60 character strings for a broader regression corpus')
     p.add_argument('--no-prewarm', action='store_true', help='Measure the first real sentence without a discarded warmup')
     p.add_argument('--buffer-mode', choices=['fixed','adaptive'], default='adaptive')
     args = p.parse_args()
+    texts = json.loads(Path(args.texts).read_text(encoding='utf-8')) if args.texts else [
+        '我在这里陪你呀，慢慢来，不着急。',
+        '今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？',
+        '我在这里陪你呀，慢慢来，不着急。']
+    if not isinstance(texts, list) or not texts or any(not isinstance(t,str) or not t.strip() or len(t)>60 for t in texts):
+        p.error('texts must be a nonempty array of 1–60 character strings')
     started = time.perf_counter()
     model = NativeEngine(args.runtime, use_reference_cache=args.variant == 'cached', buffer_mode=args.buffer_mode)
     report = dict(variant=args.variant, cacheHit=model.reference_cache_hit,
@@ -42,9 +49,7 @@ def main():
         if not args.no_prewarm:
             model.synthesize_stream('准备好了。', 'warm', lambda a, s: None)
         report['warm'] = memory(); report['samples'] = []
-        for text in ['我在这里陪你呀，慢慢来，不着急。',
-                     '今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？',
-                     '我在这里陪你呀，慢慢来，不着急。']:
+        for text in texts:
             chunks = []; first = []; start = time.perf_counter()
             def receive(audio, rate):
                 if not first: first.append(time.perf_counter()-start)

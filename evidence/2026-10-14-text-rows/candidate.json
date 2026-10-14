@@ -1,0 +1,79 @@
+{
+  "variant": "cached",
+  "cacheHit": true,
+  "loadSeconds": 4.256,
+  "loaded": {
+    "privateCommitMiB": 1887.4,
+    "workingSetMiB": 1823.3,
+    "peakWorkingSetMiB": 1833.5
+  },
+  "startupTimings": {
+    "validationMs": 1908,
+    "availableBeforeLoadGiB": 5.6132,
+    "modelInitMs": 2309,
+    "totalMs": 4256
+  },
+  "prewarm": false,
+  "bufferMode": "adaptive",
+  "warm": {
+    "privateCommitMiB": 1887.4,
+    "workingSetMiB": 1823.3,
+    "peakWorkingSetMiB": 1833.5
+  },
+  "samples": [
+    {
+      "text": "我在这里陪你呀，慢慢来，不着急。",
+      "samples": 84480,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "firstChunkSeconds": 1.478,
+      "seconds": 2.984,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 1.0664019999932497,
+        "maxGap": 0.4532009999966249
+      },
+      "memory": {
+        "privateCommitMiB": 2008.1,
+        "workingSetMiB": 1901.5,
+        "peakWorkingSetMiB": 1906.2
+      }
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "samples": 253440,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "firstChunkSeconds": 0.94,
+      "seconds": 7.912,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 1.04511920000019,
+        "maxGap": 0.4425596000000951
+      },
+      "memory": {
+        "privateCommitMiB": 2014.6,
+        "workingSetMiB": 1912.5,
+        "peakWorkingSetMiB": 1938.8
+      }
+    },
+    {
+      "text": "我在这里陪你呀，慢慢来，不着急。",
+      "samples": 84480,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "firstChunkSeconds": 0.901,
+      "seconds": 2.701,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 1.0044567999977152,
+        "maxGap": 0.42222839999885764
+      },
+      "memory": {
+        "privateCommitMiB": 2057.1,
+        "workingSetMiB": 1939.0,
+        "peakWorkingSetMiB": 1944.3
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "phase": "ready",
+  "speechEnabled": true,
+  "memory": {
+    "freeGiB": 5.010734558105469,
+    "totalGiB": 15.2425537109375,
+    "minimumGiB": 3,
+    "recoveryGiB": 3.5,
+    "layout": "text-rows"
+  },
+  "processMemory": {
+    "privateMiB": 1888.9,
+    "residentMiB": 1829.6,
+    "peakResidentMiB": 1839.8
+  },
+  "values": {
+    "lowPowerMode": true,
+    "keepWorker": true,
+    "lowMemoryMiB": 1536,
+    "idleUnloadSec": 300,
+    "volume": 100,
+    "maxQueue": 3,
+    "maxAgeSec": 45,
+    "autoRecover": true,
+    "pollMs": 180
+  }
+}

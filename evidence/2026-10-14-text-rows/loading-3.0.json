@@ -1,0 +1,90 @@
+{
+  "initialFreeGiB": 6.2288055419921875,
+  "targetFreeGiB": 3.08,
+  "maxBallastMiB": 6144,
+  "cycles": [
+    {
+      "beforeLoadFreeGiB": 3.0797996520996094,
+      "ballastMiB": 3232,
+      "loadMs": 2668,
+      "startupTimings": {
+        "validationMs": 419,
+        "availableBeforeLoadGiB": 3.0798,
+        "modelInitMs": 2652,
+        "totalMs": 5121
+      },
+      "afterLoadFreeGiB": 2.490528106689453,
+      "loadedMemory": {
+        "privateMiB": 5126.1,
+        "residentMiB": 1759.1,
+        "peakResidentMiB": 3308.8
+      },
+      "samples": [
+        {
+          "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+          "freeGiB": 2.1640968322753906,
+          "memory": {
+            "privateMiB": 5247.1,
+            "residentMiB": 1838.2,
+            "peakResidentMiB": 3308.8
+          },
+          "synthesisMs": 3305
+        },
+        {
+          "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+          "freeGiB": 2.6639747619628906,
+          "memory": {
+            "privateMiB": 5253.6,
+            "residentMiB": 68.5,
+            "peakResidentMiB": 3308.8
+          },
+          "synthesisMs": 7436
+        }
+      ],
+      "afterSleepFreeGiB": 3.6392593383789062
+    },
+    {
+      "beforeLoadFreeGiB": 3.0772361755371094,
+      "ballastMiB": 1872,
+      "loadMs": 1557,
+      "startupTimings": {
+        "validationMs": 227,
+        "availableBeforeLoadGiB": 3.0772,
+        "modelInitMs": 1548,
+        "totalMs": 3353
+      },
+      "afterLoadFreeGiB": 2.877880096435547,
+      "loadedMemory": {
+        "privateMiB": 3785.2,
+        "residentMiB": 667.2,
+        "peakResidentMiB": 3308.8
+      },
+      "samples": [
+        {
+          "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+          "freeGiB": 4.1222076416015625,
+          "memory": {
+            "privateMiB": 3890.5,
+            "residentMiB": 734.8,
+            "peakResidentMiB": 3308.8
+          },
+          "synthesisMs": 2917
+        },
+        {
+          "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+          "freeGiB": 4.3705902099609375,
+          "memory": {
+            "privateMiB": 3914.8,
+            "residentMiB": 759.4,
+            "peakResidentMiB": 3308.8
+          },
+          "synthesisMs": 6986
+        }
+      ],
+      "afterSleepFreeGiB": 5.55438232421875
+    }
+  ],
+  "safetyReleased": false,
+  "minFreeGiB": 1.8774375915527344,
+  "endFreeGiB": 7.416561126708984
+}

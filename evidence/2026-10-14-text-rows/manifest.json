@@ -1,0 +1,29 @@
+{
+  "upstream": "51512f129a7419567f4b8abfb06801451789b8f1",
+  "ggml": "2eddaf94a8cdbbf1c30017d28313cd661a9da543",
+  "dllSha256": "e6c765b1eabd5e5e590f28326ed46bd1ba8a67da61d670a911458727a62b7b48",
+  "patchSha256": "5d0e2dfb832d4f7fc27a1f987fd3dc734931aae26b347958c9127c05173dde0c",
+  "kvContext": 1024,
+  "compactGraphs": true,
+  "streamTextEmbedding": true,
+  "speechOnly": {
+    "format": 1,
+    "sourceHashes": {
+      "model": "d54dbaf10591421fa764ed630d764efa717ae40cd959bd48c66d4eb1af226426",
+      "codec": "1883beeed99348fc35e23dd225e9082f93f6f8c109330a33d935baa8acdbfd94"
+    },
+    "hashes": {
+      "model": "c4af966ade422ec29ff573d4811cba6766a0273baf056b7291efe8716145cbbd",
+      "codec": "72b05f6436093f4698fc7b2e69d726a26008c78d2cf7007413e39e9f4cd6b556"
+    },
+    "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+    "featuresSha256": "c92f0caf965285a8001263e0dcbc689227f9a73333b396b983747c7b44613771"
+  },
+  "tests": {
+    "python": 45,
+    "world": 18,
+    "corpusPcmEqual": 7,
+    "lowMemoryLoads": 2,
+    "sleepWakePlayback": 2
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "variant": "cached",
+  "cacheHit": true,
+  "loadSeconds": 4.0,
+  "loaded": {
+    "privateCommitMiB": 2203.3,
+    "workingSetMiB": 2454.2,
+    "peakWorkingSetMiB": 2464.4
+  },
+  "startupTimings": {
+    "validationMs": 1567,
+    "availableBeforeLoadGiB": 6.4314,
+    "modelInitMs": 2404,
+    "totalMs": 4000
+  },
+  "prewarm": false,
+  "bufferMode": "adaptive",
+  "warm": {
+    "privateCommitMiB": 2203.3,
+    "workingSetMiB": 2454.2,
+    "peakWorkingSetMiB": 2464.4
+  },
+  "samples": [
+    {
+      "text": "我在这里陪你呀，慢慢来，不着急。",
+      "samples": 84480,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "firstChunkSeconds": 1.454,
+      "seconds": 2.95,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 1.0554549999907612,
+        "maxGap": 0.44772749999538064
+      },
+      "memory": {
+        "privateCommitMiB": 2324.1,
+        "workingSetMiB": 2532.6,
+        "peakWorkingSetMiB": 2537.3
+      }
+    },
+    {
+      "text": "今天也辛苦啦，先喝一点水，放松一下肩膀。等你准备好了，我们再一起复习数学，把不懂的地方慢慢弄明白，好不好？",
+      "samples": 253440,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "firstChunkSeconds": 0.944,
+      "seconds": 6.92,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 1.0584823999926447,
+        "maxGap": 0.4492411999963224
+      },
+      "memory": {
+        "privateCommitMiB": 2331.0,
+        "workingSetMiB": 2543.7,
+        "peakWorkingSetMiB": 2570.2
+      }
+    },
+    {
+      "text": "嗯？怎么啦，我听着呢！",
+      "samples": 57600,
+      "sha256": "77ecf939836500edc368a57c964abb835250ee82f618cb1c87724bcc0df563fc",
+      "firstChunkSeconds": 0.897,
+      "seconds": 1.696,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 0.9835127999942052,
+        "maxGap": 0.41175639999710256
+      },
+      "memory": {
+        "privateCommitMiB": 2373.8,
+        "workingSetMiB": 2570.2,
+        "peakWorkingSetMiB": 2586.1
+      }
+    },
+    {
+      "text": "今天是十月十四日，二加三等于五。",
+      "samples": 90240,
+      "sha256": "6bb705618643099f995326a83e7ce26db6dc352c92b68021db431a138ea6db0d",
+      "firstChunkSeconds": 0.895,
+      "seconds": 2.573,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 0.9866786000021966,
+        "maxGap": 0.4133393000010983
+      },
+      "memory": {
+        "privateCommitMiB": 2411.2,
+        "workingSetMiB": 2602.2,
+        "peakWorkingSetMiB": 2602.2
+      }
+    },
+    {
+      "text": "你好呀，Hello！我们一起玩CS吧。",
+      "samples": 84480,
+      "sha256": "bea91d9a3919d08d18c388582810d4bf263f2b646798e0471ddc5c926094293e",
+      "firstChunkSeconds": 0.89,
+      "seconds": 2.369,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 0.9695511999999872,
+        "maxGap": 0.4047755999999936
+      },
+      "memory": {
+        "privateCommitMiB": 2411.2,
+        "workingSetMiB": 2581.1,
+        "peakWorkingSetMiB": 2602.2
+      }
+    },
+    {
+      "text": "魑魅魍魉，龘龖，星光闪闪，晚安。",
+      "samples": 138240,
+      "sha256": "bcdf48d42493c2c62d4db8fbd8b1ea5f07f4acf0f1bbc0c1c81e5ab0499602f5",
+      "firstChunkSeconds": 0.89,
+      "seconds": 3.815,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 0.9710068000096362,
+        "maxGap": 0.4055034000048181
+      },
+      "memory": {
+        "privateCommitMiB": 2383.2,
+        "workingSetMiB": 2563.8,
+        "peakWorkingSetMiB": 2602.2
+      }
+    },
+    {
+      "text": "我在这里陪你呀，慢慢来，不着急。",
+      "samples": 84480,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "firstChunkSeconds": 0.896,
+      "seconds": 2.394,
+      "startBuffer": {
+        "chunks": 4,
+        "bufferSeconds": 1.2,
+        "targetSeconds": 0.9766968000005,
+        "maxGap": 0.40834840000024997
+      },
+      "memory": {
+        "privateCommitMiB": 2341.0,
+        "workingSetMiB": 2553.3,
+        "peakWorkingSetMiB": 2602.2
+      }
+    }
+  ]
+}

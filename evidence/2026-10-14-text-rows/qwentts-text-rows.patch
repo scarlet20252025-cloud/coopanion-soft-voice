@@ -1,0 +1,108 @@
+diff --git a/src/prompt-builder.h b/src/prompt-builder.h
+index b5380fc..ceeea68 100644
+--- a/src/prompt-builder.h
++++ b/src/prompt-builder.h
+@@ -127,6 +127,24 @@ static bool project_text_ids_backend(PipelineTTS * pt, const int32_t * ids, int
+     }
+ 
+     const int    hidden    = pt->talker.hidden_size;
++    const bool stream_text = pt->talker.stream_text_embedding;
++    struct ggml_tensor * source = pt->talker.text_embedding;
++    const size_t row_bytes = ggml_row_size(source->type, source->ne[0]);
++    std::vector<uint8_t> packed_rows;
++    std::vector<int32_t> local_ids;
++    if (stream_text) {
++        const uint8_t * base = (const uint8_t *) gf_get_data(pt->gguf_talker, "talker.text_embd.weight");
++        if (!base || (size_t) count > SIZE_MAX / row_bytes) return false;
++        for (int i = 0; i < count; i++) {
++            if (ids[i] < 0 || ids[i] >= source->ne[1]) return false;
++        }
++        packed_rows.resize((size_t) count * row_bytes);
++        local_ids.resize((size_t) count);
++        for (int i = 0; i < count; i++) {
++            std::memcpy(packed_rows.data() + (size_t) i * row_bytes, base + (size_t) ids[i] * row_bytes, row_bytes);
++            local_ids[(size_t) i] = i;
++        }
++    }
+     const int    max_nodes = 64;
+     const size_t graph_arena_bytes =
+         ggml_tensor_overhead() * (size_t) max_nodes + ggml_graph_overhead_custom((size_t) max_nodes, false);
+@@ -145,7 +163,9 @@ static bool project_text_ids_backend(PipelineTTS * pt, const int32_t * ids, int
+     ggml_set_name(ids_in, "prompt_text_ids");
+     ggml_set_input(ids_in);
+ 
+-    struct ggml_tensor * h = ggml_get_rows(gctx, pt->talker.text_embedding, ids_in);
++    struct ggml_tensor * table = stream_text ? ggml_new_tensor_2d(gctx, source->type, source->ne[0], count) : source;
++    if (stream_text) ggml_set_input(table);
++    struct ggml_tensor * h = ggml_get_rows(gctx, table, ids_in);
+     ggml_set_name(h, "prompt_text_embeds");
+     h = ggml_mul_mat(gctx, pt->talker.text_proj_fc1_w, h);
+     ggml_prec_set_acc(h, GGML_PREC_F32);
+@@ -162,13 +182,15 @@ static bool project_text_ids_backend(PipelineTTS * pt, const int32_t * ids, int
+     ggml_build_forward_expand(graph, out);
+ 
+     ggml_backend_sched_reset(pt->sched);
++    if (stream_text) ggml_backend_sched_set_tensor_backend(pt->sched, table, pt->backend);
+     if (!ggml_backend_sched_alloc_graph(pt->sched, graph)) {
+         ggml_backend_sched_reset(pt->sched);
+         ggml_free(gctx);
+         return false;
+     }
+ 
+-    ggml_backend_tensor_set(ids_in, ids, 0, (size_t) count * sizeof(int32_t));
++    if (stream_text) ggml_backend_tensor_set(table, packed_rows.data(), 0, packed_rows.size());
++    ggml_backend_tensor_set(ids_in, stream_text ? local_ids.data() : ids, 0, (size_t) count * sizeof(int32_t));
+     if (ggml_backend_sched_graph_compute(pt->sched, graph) != GGML_STATUS_SUCCESS) {
+         ggml_backend_sched_reset(pt->sched);
+         ggml_free(gctx);
+diff --git a/src/qwen.cpp b/src/qwen.cpp
+index 5234907..38d19ec 100644
+--- a/src/qwen.cpp
++++ b/src/qwen.cpp
+@@ -192,6 +192,7 @@ static int64_t qt_resolve_seed(int64_t seed) {
+ }
+ 
+ extern "C" {
++int qt_text_embedding_stream_version(void) { return 1; }
+ 
+ const char * qt_version(void) {
+     // QWEN_VERSION is a string literal injected by tools/version.cmake
+diff --git a/src/qwen.h b/src/qwen.h
+index e12542a..1eb16da 100644
+--- a/src/qwen.h
++++ b/src/qwen.h
+@@ -71,6 +71,8 @@ extern "C" {
+ // the exact commit this binary was built from. Safe to call from any
+ // thread, no allocation. Pointer stays valid for the process lifetime.
+ QT_API const char * qt_version(void);
++// Local Voice extension capability; does not change the upstream ABI structs.
++QT_API int qt_text_embedding_stream_version(void);
+ 
+ // Status code returned by every fallible entry. QT_STATUS_OK is always
+ // zero so `if (rc)` reads as `if (rc != QT_STATUS_OK)`.
+diff --git a/src/talker-weights.h b/src/talker-weights.h
+index e138973..02f7e52 100644
+--- a/src/talker-weights.h
++++ b/src/talker-weights.h
+@@ -83,6 +83,7 @@ struct TalkerWeights {
+ 
+     struct ggml_tensor * codec_embedding;
+     struct ggml_tensor * text_embedding;
++    bool stream_text_embedding;
+     struct ggml_tensor * text_proj_fc1_w;
+     struct ggml_tensor * text_proj_fc1_b;
+     struct ggml_tensor * text_proj_fc2_w;
+@@ -131,7 +132,12 @@ static bool talker_weights_load(TalkerWeights * tw, const GGUFModel & gf, ggml_b
+     wctx_init(&wctx, n_tensors);
+ 
+     tw->codec_embedding = gf_load_tensor(&wctx, gf, "talker.codec_embd.weight");
+-    tw->text_embedding  = gf_load_tensor(&wctx, gf, "talker.text_embd.weight");
++    const char * stream_text = std::getenv("QWEN_TTS_STREAM_TEXT_EMBEDDING");
++    tw->stream_text_embedding = stream_text && std::strcmp(stream_text, "1") == 0;
++    // Keep the full table in the existing read-only file mapping. Upload only
++    // the rows needed by each prompt, preserving the original quantized bytes.
++    tw->text_embedding = tw->stream_text_embedding ? ggml_get_tensor(gf.meta, "talker.text_embd.weight") :
++                                                  gf_load_tensor(&wctx, gf, "talker.text_embd.weight");
+     tw->text_proj_fc1_w = gf_load_tensor(&wctx, gf, "talker.text_proj.fc1.weight");
+     tw->text_proj_fc1_b = gf_load_tensor(&wctx, gf, "talker.text_proj.fc1.bias");
+     tw->text_proj_fc2_w = gf_load_tensor(&wctx, gf, "talker.text_proj.fc2.weight");

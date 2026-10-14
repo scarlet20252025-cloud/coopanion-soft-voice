@@ -50,6 +50,17 @@ if (-not $compactPatched) {
     git -C $Source apply $compactPatch
     if ($LASTEXITCODE -ne 0) { throw 'Cannot apply compact graph patch.' }
 }
+$rowsPatch = Join-Path $PSScriptRoot '../evidence/2026-10-14-text-rows/qwentts-text-rows.patch'
+$ErrorActionPreference = 'Continue'
+git -C $Source apply --reverse --check $rowsPatch 2>$null
+$rowsPatched = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $rowsPatched) {
+    git -C $Source apply --check $rowsPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Source does not match text-row streaming patch.' }
+    git -C $Source apply $rowsPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot apply text-row streaming patch.' }
+}
 $oldPath = $env:Path
 $oldCC = $env:CC
 $oldCXX = $env:CXX

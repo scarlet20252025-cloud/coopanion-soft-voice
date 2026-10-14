@@ -1,0 +1,334 @@
+{
+  "workerIds": [
+    44888,
+    14164,
+    22052
+  ],
+  "initialLoadMs": 3641,
+  "loadedMemory": [
+    {
+      "Id": 14164,
+      "PrivateMemorySize64": 1236992,
+      "WorkingSet64": 7888896
+    },
+    {
+      "Id": 22052,
+      "PrivateMemorySize64": 1980121088,
+      "WorkingSet64": 1918132224
+    },
+    {
+      "Id": 44888,
+      "PrivateMemorySize64": 839680,
+      "WorkingSet64": 4423680
+    }
+  ],
+  "sleeping": {
+    "phase": "sleeping",
+    "stage": "sleeping",
+    "detail": "低占用休眠，保留进程与播放器；模型已释放，下一句话自动唤醒。",
+    "initializing": false,
+    "loadingSince": null,
+    "workerPid": 44888,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 1512,
+        "queueWaitMs": 1393,
+        "startDelayMs": 2906,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 3041,
+        "firstChunkMs": 1512,
+        "firstDeviceCallbackMs": 1517,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "processMemory": {
+          "privateMiB": 2005.2,
+          "residentMiB": 1907.7,
+          "peakResidentMiB": 1913.2
+        },
+        "at": 1791966635750,
+        "totalStartMs": 2910
+      },
+      {
+        "id": "s2",
+        "synthesisMs": 1378,
+        "queueWaitMs": 1301,
+        "startDelayMs": 2679,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2866,
+        "firstChunkMs": 1378,
+        "firstDeviceCallbackMs": 1394,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "processMemory": {
+          "privateMiB": 2005.7,
+          "residentMiB": 1909.3,
+          "peakResidentMiB": 1916
+        },
+        "at": 1791966649638,
+        "totalStartMs": 2695
+      }
+    ],
+    "loadMs": 3641,
+    "sampleRate": 24000,
+    "processMemory": {
+      "privateMiB": 573.8,
+      "residentMiB": 96,
+      "peakResidentMiB": 1839.5
+    },
+    "lastSpeech": null,
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  },
+  "sleepingMemory": [
+    {
+      "Id": 14164,
+      "PrivateMemorySize64": 1236992,
+      "WorkingSet64": 7888896
+    },
+    {
+      "Id": 22052,
+      "PrivateMemorySize64": 601702400,
+      "WorkingSet64": 100691968
+    },
+    {
+      "Id": 44888,
+      "PrivateMemorySize64": 839680,
+      "WorkingSet64": 4423680
+    }
+  ],
+  "remainingWorkerIds": [
+    14164,
+    22052,
+    44888
+  ],
+  "wakeAndPlaybackMs": 6528,
+  "afterWake": {
+    "phase": "ready",
+    "stage": "ready",
+    "detail": "所选音色已就绪",
+    "initializing": false,
+    "loadingSince": null,
+    "workerPid": 44888,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 1512,
+        "queueWaitMs": 1393,
+        "startDelayMs": 2906,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 3041,
+        "firstChunkMs": 1512,
+        "firstDeviceCallbackMs": 1517,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "processMemory": {
+          "privateMiB": 2005.2,
+          "residentMiB": 1907.7,
+          "peakResidentMiB": 1913.2
+        },
+        "at": 1791966635750,
+        "totalStartMs": 2910
+      },
+      {
+        "id": "s2",
+        "synthesisMs": 1378,
+        "queueWaitMs": 1301,
+        "startDelayMs": 2679,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2866,
+        "firstChunkMs": 1378,
+        "firstDeviceCallbackMs": 1394,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "processMemory": {
+          "privateMiB": 2005.7,
+          "residentMiB": 1909.3,
+          "peakResidentMiB": 1916
+        },
+        "at": 1791966649638,
+        "totalStartMs": 2695
+      }
+    ],
+    "loadMs": 1393,
+    "sampleRate": 24000,
+    "processMemory": {
+      "privateMiB": 2005.2,
+      "residentMiB": 1907.7,
+      "peakResidentMiB": 1913.2
+    },
+    "lastSpeech": {
+      "id": "s1",
+      "synthesisMs": 1512,
+      "queueWaitMs": 1393,
+      "startDelayMs": 2906,
+      "type": "done",
+      "seconds": 3.52,
+      "totalSynthesisMs": 3041,
+      "firstChunkMs": 1512,
+      "firstDeviceCallbackMs": 1517,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "startupBufferMode": "adaptive",
+      "nextBufferMode": "adaptive",
+      "processMemory": {
+        "privateMiB": 2005.2,
+        "residentMiB": 1907.7,
+        "peakResidentMiB": 1913.2
+      },
+      "at": 1791966635750,
+      "totalStartMs": 2910
+    },
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  },
+  "sleepingAfterSpeechMemory": [
+    {
+      "Id": 14164,
+      "PrivateMemorySize64": 1236992,
+      "WorkingSet64": 7888896
+    },
+    {
+      "Id": 22052,
+      "PrivateMemorySize64": 620384256,
+      "WorkingSet64": 117764096
+    },
+    {
+      "Id": 44888,
+      "PrivateMemorySize64": 839680,
+      "WorkingSet64": 4423680
+    }
+  ],
+  "secondWake": {
+    "phase": "ready",
+    "stage": "ready",
+    "detail": "所选音色已就绪",
+    "initializing": false,
+    "loadingSince": null,
+    "workerPid": 44888,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 1512,
+        "queueWaitMs": 1393,
+        "startDelayMs": 2906,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 3041,
+        "firstChunkMs": 1512,
+        "firstDeviceCallbackMs": 1517,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "processMemory": {
+          "privateMiB": 2005.2,
+          "residentMiB": 1907.7,
+          "peakResidentMiB": 1913.2
+        },
+        "at": 1791966635750,
+        "totalStartMs": 2910
+      },
+      {
+        "id": "s2",
+        "synthesisMs": 1378,
+        "queueWaitMs": 1301,
+        "startDelayMs": 2679,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2866,
+        "firstChunkMs": 1378,
+        "firstDeviceCallbackMs": 1394,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "processMemory": {
+          "privateMiB": 2005.7,
+          "residentMiB": 1909.3,
+          "peakResidentMiB": 1916
+        },
+        "at": 1791966649638,
+        "totalStartMs": 2695
+      }
+    ],
+    "loadMs": 1301,
+    "sampleRate": 24000,
+    "processMemory": {
+      "privateMiB": 2005.7,
+      "residentMiB": 1909.3,
+      "peakResidentMiB": 1916
+    },
+    "lastSpeech": {
+      "id": "s2",
+      "synthesisMs": 1378,
+      "queueWaitMs": 1301,
+      "startDelayMs": 2679,
+      "type": "done",
+      "seconds": 3.52,
+      "totalSynthesisMs": 2866,
+      "firstChunkMs": 1378,
+      "firstDeviceCallbackMs": 1394,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "startupBufferMode": "adaptive",
+      "nextBufferMode": "adaptive",
+      "processMemory": {
+        "privateMiB": 2005.7,
+        "residentMiB": 1909.3,
+        "peakResidentMiB": 1916
+      },
+      "at": 1791966649638,
+      "totalStartMs": 2695
+    },
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  }
+}

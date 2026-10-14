@@ -9,7 +9,7 @@ const data=resolve('.runtime/idle-check-'+Date.now()),root=join(data,'soft-voice
 mkdirSync(root,{recursive:true});
 writeFileSync(join(root,'runtime-profile.json'),readFileSync(profileFile));
 const light=process.argv[4]==='light';
-writeFileSync(join(root,'settings.json'),JSON.stringify({speechEnabled:true,config:{idleUnloadSec:5,keepWorker:light}}));
+writeFileSync(join(root,'settings.json'),JSON.stringify({speechEnabled:true,config:{lowPowerMode:true,idleUnloadSec:5,keepWorker:light}}));
 const w=new SoftVoiceWorld({cfg:{},dataDir:data});
 const wait=async predicate=>{const start=Date.now();while(!predicate()){if(Date.now()-start>120000)throw new Error('Timeout');await new Promise(r=>setTimeout(r,100));}};
 const ids=pid=>JSON.parse(execFileSync('powershell.exe',['-NoProfile','-Command',`$ids=@(${pid}); $ids+=@(Get-CimInstance Win32_Process -Filter "ParentProcessId=${pid}" | Select-Object -ExpandProperty ProcessId); ConvertTo-Json -InputObject @($ids)`],{encoding:'utf8',windowsHide:true}));

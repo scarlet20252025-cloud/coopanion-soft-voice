@@ -31,8 +31,8 @@ def main():
     p.add_argument('--max-ballast-mib', type=int, default=2560)
     p.add_argument('--cycles', type=int, default=2)
     a = p.parse_args()
-    if not 3.25 <= a.target_free <= 8 or not 0 <= a.max_ballast_mib <= 6144 or not 1 <= a.cycles <= 3:
-        p.error('Target 3.25–8 GiB; ballast 0–6144 MiB; cycles 1–3')
+    if not 3.0 <= a.target_free <= 8 or not 0 <= a.max_ballast_mib <= 6144 or not 1 <= a.cycles <= 3:
+        p.error('Target 3–8 GiB; ballast 0–6144 MiB; cycles 1–3')
     ballast = []
     report = {'initialFreeGiB': free(), 'targetFreeGiB': a.target_free,
               'maxBallastMiB': a.max_ballast_mib, 'cycles': [], 'safetyReleased': False}
