@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-14T12:34:18.849398+00:00",
+  "worldVersion": "0.3.9",
+  "nodeTestsPassed": 32,
+  "verifiedPolicies": [
+    "first-use default enabled",
+    "only active with audible ready voice and display bridge",
+    "independent disable releases bubble waits without clearing speech queue or restarting voice",
+    "manual selection survives speech toggle and World restart",
+    "old cancelled waits do not reactivate"
+  ],
+  "packageContainsPythonCaches": false,
+  "assets": {
+    "consoleClient": {
+      "path": "dist/console-0.3.9.js",
+      "sha256": "10411e9f4a6245b41102d3ef861b2641e2415fdddea714689c244f5350750afe",
+      "matchesInstalledCopies": true
+    },
+    "consoleStyle": {
+      "path": "dist/console-0.3.9.css",
+      "sha256": "3dc17dc22d5db0a7472eaf57741ecab9f9a7a5ff2ce29a2ccc8f8e9b069ae3ed",
+      "matchesInstalledCopies": true
+    }
+  },
+  "installedPreferencesPreserved": {
+    "speechEnabled": true,
+    "syncBubbles": true
+  },
+  "liveApplicationCheck": "Application was closed. Installed package and assets verified without launching; state persistence and lifecycle checked in isolated World tests."
+}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SoftVoiceWorld } from '../src/world.js';
-import { validateConfigPatch, DEFAULTS } from '../src/config.js';
+import { validateConfigPatch, DEFAULTS, CONFIG_GROUP } from '../src/config.js';
 import { petSayFromEntry } from '../src/parser.js';
 import { SoftVoiceRuntime } from '../src/runtime.js';
 
@@ -10,6 +10,59 @@ function world() {
   w.active = true; w.accepting = true; w.speechEnabled = true;
   w.speaking = true; return w;
 }
+
+test('bubble sync defaults on but becomes active only with audible ready speech and bridge', () => {
+  const w=world();w.removeBubbleBridge=()=>{};
+  assert.equal(DEFAULTS.syncBubbles,true);
+  assert.equal(CONFIG_GROUP.schema.properties['worlds.soft-voice.syncBubbles'].default,true);
+  assert.equal(w.bubbleSyncStatus().active,true);
+  w.speechEnabled=false;assert.equal(w.bubbleSyncStatus().phase,'voice_off');
+  assert.equal(w.bubbleSync.snapshot().enabled,false);
+  w.speechEnabled=true;w.opts.cfg.volume=0;assert.equal(w.bubbleSyncStatus().phase,'muted');
+  w.opts.cfg.volume=65;w.blocked=true;assert.equal(w.bubbleSyncStatus().phase,'waiting_voice');
+  w.blocked=false;w.removeBubbleBridge=null;assert.equal(w.bubbleSyncStatus().phase,'unavailable');
+  w.opts.cfg.syncBubbles=false;assert.equal(w.bubbleSyncStatus().phase,'disabled');
+});
+
+test('turning sync off releases old bubbles and keeps current and queued speech intact', async () => {
+  const w=world();w.removeBubbleBridge=()=>{};w.writeSettings=s=>{w.settings=s;};
+  const spoken=[];let stopped=0;
+  w.runtime={status:()=>({phase:'ready'}),speak:async t=>spoken.push(t),stop:async()=>{stopped++;}};
+  w.onToolCall(entry(1));w.bubbleSync.register('bubble','你好呀');
+  w.saveConfig({syncBubbles:false});
+  assert.equal(w.bubbleSync.snapshot().bubbles[0].state,'cancelled');
+  assert.equal(w.speechEnabled,true);assert.equal(w.accepting,true);assert.equal(w.queue.length,1);
+  assert.equal(stopped,0);assert.equal(w.settings.config.syncBubbles,false);
+  w.speaking=false;await w.drain();assert.deepEqual(spoken,['你好呀']);
+  w.saveConfig({syncBubbles:true});assert.equal(w.bubbleSync.snapshot().bubbles[0].state,'cancelled');
+});
+
+test('saved sync choice survives voice toggles and a full World restart', async () => {
+  const {mkdtempSync,readFileSync,rmSync}=await import('node:fs');
+  const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+  const dir=mkdtempSync(join(tmpdir(),'bubble-pref-')),log={warn(){},info(){}};
+  const make=()=>{
+    const w=new SoftVoiceWorld({cfg:{},dataDir:dir});
+    w.makeRuntime=()=>{
+      let phase='idle';return {root:join(dir,'soft-voice'),hasLocalFiles:()=>true,status:()=>({phase}),
+        ensure:async()=>{phase='ready';},stop:async()=>{},stage:p=>{phase=p;}};
+    };
+    return w;
+  };
+  let w=make();
+  try {
+    await w.start({log});assert.equal(w.opts.cfg.syncBubbles,true);
+    await w.setSpeechEnabled(true);await w.initialization;
+    w.saveConfig({syncBubbles:false});
+    await w.setSpeechEnabled(false);await w.setSpeechEnabled(true);await w.initialization;
+    assert.equal(w.opts.cfg.syncBubbles,false);
+    await w.stop();w=make();await w.start({log});await w.initialization;
+    assert.equal(w.opts.cfg.syncBubbles,false);assert.equal(w.speechEnabled,true);
+    assert.equal(JSON.parse(readFileSync(join(dir,'soft-voice/settings.json'),'utf8')).config.syncBubbles,false);
+  } finally {
+    await w.stop();assert.ok(dir.startsWith(join(tmpdir(),'bubble-pref-')));rmSync(dir,{recursive:true});
+  }
+});
 
 test('stop requested during an existing toggle is applied after that toggle', async () => {
   const w=world();w.speaking=false;w.writeSettings=s=>{w.settings=s;};
@@ -110,7 +163,9 @@ test('panels have separate mounts and read-only status rejects mutations', async
   assert.deepEqual(w.console().panels.map(p=>p.id),['controls','status','config','voices']);
   await assert.rejects(w.console().invoke('status','disable'),/未知/);
   await assert.rejects(w.console().invoke('config','test'),/未知/);
-  const ui=(await import('../dist/console-0.3.6.js')).default;
+  const {readFileSync}=await import('node:fs');
+  const meta=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+  const ui=(await import('../'+meta.cortico.consoleClient)).default;
   assert.equal(new Set(Object.values(ui.panels).map(p=>p.mount)).size,4);
 });
 test('future voice is unavailable and cannot become a filesystem path', async () => {

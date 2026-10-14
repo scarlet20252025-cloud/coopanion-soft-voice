@@ -77,6 +77,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-native.ps1
 
 ## 部署验证
 
-World 0.3.8 的控制页有“气泡同步”开关。标准 `scripts/install_world.py` 会给官方桌宠 0.1.4 安装可撤销的显示桥，让一段语音读完后再切换到下一气泡。自定义安装目录或官方更新替换了页面时，退出桌宠后重新运行 `python scripts/install_bubble_bridge.py --desktop-pet "你的桌宠包目录"`，再启动桌宠；详见 [World 安装与同步说明](../world/README.md)。适配脚本、浏览器端和扩展端逻辑都随仓库分发，未知版本或结构不会被强行改写。
+World 0.3.9 的控制页提供独立“气泡同步”选项，首次默认开启，随语音就绪自动生效；可单独关闭并保存选择，语音仍继续播放。标准 `scripts/install_world.py` 会给官方桌宠 0.1.4 安装可撤销的显示桥，让一段语音读完后再切换到下一气泡。自定义安装目录或官方更新替换了页面时，退出桌宠后重新运行 `python scripts/install_bubble_bridge.py --desktop-pet "你的桌宠包目录"`，再启动桌宠；详见 [World 安装与同步说明](../world/README.md)。适配脚本、浏览器端和扩展端逻辑都随仓库分发，未知版本或结构不会被强行改写。
 
 0.3.2 已在独立源码目录和全新 venv 中完成工具链解压、源码检出、DLL 重建、环境检查及实际合成。生成的 10.56 秒 WAV 与用户认可的核显候选 SHA256 完全一致。公开下载 URL 均检查为 HTTP 200，本机大文件采用 SHA256 校验后的下载缓存复用；不依赖旧 DLL 或旧 Python 环境。详情见 [验证记录](../evidence/2026-10-12-native/portable-deployment.json)。这是同一物理机器上的独立安装验证，跨硬件仍需试听和性能检查。

@@ -5,7 +5,7 @@ export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180,
 export const CONFIG_GROUP = {
   id: `world:${ID}`, owner: `world:${ID}`,
   schema: { type: 'object', title: '本地语音助手', properties: {
-    [`${K}.syncBubbles`]: { type: 'boolean', title: '气泡等待语音朗读完成', 'x-hot': true },
+    [`${K}.syncBubbles`]: { type: 'boolean', title: '气泡同步（默认随语音启用，可单独关闭）', default: true, 'x-hot': true },
     [`${K}.lowPowerMode`]: { type: 'boolean', title: '低功耗模式（空闲或内存紧张时自动休眠）', 'x-hot': true },
     [`${K}.keepWorker`]: { type: 'boolean', title: '休眠时保留工作进程（关闭则完全退出）', 'x-hot': true },
     [`${K}.lowMemoryMiB`]: { type: 'integer', title: '空闲内存低于此值时休眠（MiB，0 关闭）', minimum: 0, maximum: 4096, 'x-hot': true },

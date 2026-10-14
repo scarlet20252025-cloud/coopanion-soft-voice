@@ -39,7 +39,7 @@ export class SoftVoiceWorld {
     this.togglePromise = null;
     this.lastActivity = Date.now();
     this.sleepPromise = null;
-    this.bubbleSync = new BubbleSpeechSync(() => this.active && this.speechEnabled && this.accepting && !this.blocked && this.opts.cfg.volume > 0 && this.opts.cfg.syncBubbles);
+    this.bubbleSync = new BubbleSpeechSync(() => this.bubbleSyncStatus().active);
     this.removeBubbleBridge = null;
   }
 
@@ -181,9 +181,17 @@ export class SoftVoiceWorld {
     await this.sleepPromise;
   }
 
+  bubbleSyncStatus() {
+    const enabled = !!this.opts.cfg.syncBubbles, available = !!this.removeBubbleBridge;
+    const phase = !enabled ? 'disabled' : !this.active || !this.speechEnabled ? 'voice_off' :
+      volumePercent(this.opts.cfg.volume) === 0 ? 'muted' : !available ? 'unavailable' :
+      !this.accepting || this.blocked ? 'waiting_voice' : 'active';
+    return { enabled, available, active: phase === 'active', phase };
+  }
+
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
-      bubbleSync: { enabled: !!this.opts.cfg.syncBubbles, available: !!this.removeBubbleBridge },
+      bubbleSync: this.bubbleSyncStatus(),
       volume: volumePercent(this.opts.cfg.volume),
       speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
       dropped: this.dropped, accepting: this.accepting, skippedBeforeReady: this.skippedBeforeReady };
@@ -203,6 +211,7 @@ export class SoftVoiceWorld {
     this.opts.persist?.(patch);
     this.writeSettings({ ...this.settings, speechEnabled: this.speechEnabled, config: configValues(next) });
     Object.assign(this.opts.cfg, patch);
+    if (patch.syncBubbles === false) this.bubbleSync.cancelAll();
     if ((patch.lowPowerMode === false || (next.idleUnloadSec === 0 && next.lowMemoryMiB === 0)) && this.speechEnabled && (this.sleepPromise || this.runtime?.status().phase === 'sleeping')) {
       void Promise.resolve(this.sleepPromise).then(() => { if (this.active && this.speechEnabled && (!this.opts.cfg.lowPowerMode || (!this.opts.cfg.idleUnloadSec && !this.opts.cfg.lowMemoryMiB))) return this.initialize(false); }).catch(err => this.host?.log.warn(`恢复常驻失败: ${err.message}`));
     }
@@ -240,6 +249,7 @@ export class SoftVoiceWorld {
       this.writeSettings({ ...this.settings, speechEnabled: enabled, config: configValues(this.opts.cfg) });
       this.speechEnabled = enabled;
       if (!enabled) {
+        this.bubbleSync.cancelAll();
         this.accepting = false;
         this.blocked = true;
         this.queue.length = 0;
