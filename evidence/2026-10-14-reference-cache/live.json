@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-14",
+  "phase": "ready",
+  "voice": "builtin",
+  "speechEnabled": true,
+  "lastSpeech": {
+    "id": "s3",
+    "synthesisMs": 997,
+    "queueWaitMs": 4,
+    "startDelayMs": 1006,
+    "type": "done",
+    "seconds": 12.48,
+    "totalSynthesisMs": 8493,
+    "firstChunkMs": 997,
+    "firstDeviceCallbackMs": 1042,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "at": 1791953487209,
+    "totalStartMs": 1046
+  },
+  "scope": "Post-deployment live speech; CS2 coexistence not retested"
+}

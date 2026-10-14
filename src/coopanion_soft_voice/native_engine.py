@@ -77,8 +77,9 @@ def settings(runtime):
 class NativeEngine:
     sample_rate = 24000
 
-    def __init__(self, runtime, voice_pack=None):
+    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True):
         self.ctx = None; self.voice = Voice(); self.dirs = []
+        self.cached_arrays = None
         self.reference_path = reference()
         self.reference_text = REFERENCE_TEXT
         if voice_pack:
@@ -128,12 +129,34 @@ class NativeEngine:
             self.ctx = self.dll.qt_init(C.byref(init))
             if not self.ctx:
                 raise RuntimeError(self.dll.qt_last_error().decode())
-            import soundfile as sf
-            ref, rate = sf.read(self.reference_path, dtype='float32')
-            if rate != 24000 or ref.ndim != 1:
-                raise ValueError('Invalid reference format')
-            if self.dll.qt_extract_voice_ref(self.ctx, ref.ctypes.data_as(F32), len(ref), C.byref(self.voice)):
-                raise RuntimeError(self.dll.qt_last_error().decode())
+            from . import reference_cache
+            cache = reference_cache.cache_path(runtime, config, self.reference_path)
+            features = reference_cache.read(cache) if use_reference_cache else None
+            self.reference_cache_hit = features is not None
+            if features is not None:
+                emb, codes, frames = features
+                # Python owns these arrays. Never pass them to the C malloc/free API.
+                self.cached_arrays = ((C.c_float * len(emb))(*emb), (C.c_int32 * len(codes))(*codes))
+                self.voice = Voice(self.cached_arrays[0], len(emb), self.cached_arrays[1], frames, 16)
+            else:
+                import soundfile as sf
+                ref, rate = sf.read(self.reference_path, dtype='float32')
+                if rate != 24000 or ref.ndim != 1:
+                    raise ValueError('Invalid reference format')
+                if self.dll.qt_extract_voice_ref(self.ctx, ref.ctypes.data_as(F32), len(ref), C.byref(self.voice)):
+                    raise RuntimeError(self.dll.qt_last_error().decode())
+                if use_reference_cache:
+                    try:
+                        reference_cache.write(cache, list(self.voice.ref_spk_emb[:self.voice.ref_spk_dim]),
+                                              list(self.voice.ref_codes[:16*self.voice.ref_T]), self.voice.ref_T)
+                    except (OSError, ValueError):
+                        pass  # Read-only cache must not break speech.
+                    # Extraction-only encoder weights and scratch allocations are lazy in upstream.
+                    # Recreate the context once to release them; the malloc-owned reference survives.
+                    self.dll.qt_free(self.ctx); self.ctx = None
+                    self.ctx = self.dll.qt_init(C.byref(init))
+                    if not self.ctx:
+                        raise RuntimeError(self.dll.qt_last_error().decode())
             self.device_name = config['deviceName']
         except BaseException:
             self.close(); raise
@@ -187,8 +210,10 @@ class NativeEngine:
         if pending: receive(np.concatenate(pending), 24000)
 
     def close(self):
-        if self.ctx:
+        if getattr(self, 'dll', None) and not self.cached_arrays:
             self.dll.qt_voice_ref_free(C.byref(self.voice))
+        if self.ctx:
             self.dll.qt_free(self.ctx); self.ctx = None
+        self.voice = Voice(); self.cached_arrays = None
         for folder in self.dirs: folder.close()
         self.dirs.clear()

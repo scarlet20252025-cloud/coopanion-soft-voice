@@ -1,6 +1,8 @@
 # 本地语音助手 · Coopanion Local Voice Assistant
 
-为 Windows Coopanion 提供核显流式语音。**0.4.0 / World 0.2.0** 提供独立的本地语音助手：四个独立面板、真实延迟图表、内存要求提示和 ZIP 音色包导入。默认保留已确认的 `soft-child-design-2`，新版默认音色标为“待更新”。工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
+为 Windows Coopanion 提供核显流式语音。**0.4.1 / World 0.2.0** 提供独立的本地语音助手：四个独立面板、真实延迟图表、内存要求提示和 ZIP 音色包导入。默认保留已确认的 `soft-child-design-2`，新版默认音色标为“待更新”。工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
+
+0.4.1 使用参考音色特征缓存，实测合成后提交内存减少约 288 MiB，三次对照输出逐字节一致。见[内存优化与复现记录](docs/MEMORY_OPTIMIZATION.md)。
 
 - [独立扩展安装与控制](docs/STANDALONE_WORLD.md)
 - [音色制作、ZIP 打包和导入教程](docs/VOICE_PACKS.md)

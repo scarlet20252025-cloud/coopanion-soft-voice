@@ -1,0 +1,48 @@
+# 参考音色特征缓存与内存验证
+
+2026-10-14 在原有 Q8、核显 Vulkan、1024 KV 上继续优化，不改变模型、采样参数、参考音源或语速。
+
+## 已采用：参考特征缓存
+
+按照 [qwentts.cpp 官方 pre-encoded reference 方案](https://github.com/ServeurpersoCom/qwentts.cpp#quick-start)，保存参考 WAV 提取出的说话人 embedding 和 RVQ codes。以后启动直接使用这些数值，不加载只为分析参考音频服务的 speaker encoder、codec encoder 和相关临时计算缓冲。
+
+缓存存于 Runtime 的 `reference-cache/`，按引擎 DLL 校验值、模型路径、codec 路径和音源 SHA256 隔离。模型与 codec 仍在加载前验证固定 SHA256。缓存采用有大小、维度、数值边界和摘要校验的 JSON，不使用 pickle。损坏、缺失时从原 WAV 重建，不切换音色。Python 持有的特征数组不会交给原生 malloc/free 释放。
+
+首次提取后重新创建原生上下文，释放分析用编码器。首次准备略慢；之后缓存命中更快。缓存无法写入时仍可正常使用，但下次需重新提取。ZIP 导入流程不变，新的参考 WAV 自动获得独立缓存。
+
+## 实测
+
+独立进程、同一设备与模型、相同预热和三次短句/长句/短句。原始记录位于 `evidence/2026-10-14-reference-cache/`。
+
+| 指标 | 原方案 | 缓存命中 |
+|---|---:|---:|
+| 预热后进程提交内存 | 2673.5 MiB | 2385.7 MiB |
+| 三次合成后提交内存 | 2756.0 MiB | 2468.1 MiB |
+| 初始化，不含预热 | 5.180 秒 | 3.379 秒 |
+| 首段 PCM 回调 | 0.886 / 0.979 / 0.876 秒 | 1.001 / 0.870 / 0.896 秒 |
+| 三次 PCM SHA256 对比 | 基准 | 全部逐字节相同 |
+
+提交内存降低约 288 MiB（10.4%），不是降低 2 GiB。运行期间 Windows 明显裁剪工作集，因此不能把某次仅几百 MiB 的工作集读数当作完整物理内存需求。GPU 共享内存、文件页和整个桌宠其他进程也不等于这里的进程提交内存。保留 4 GiB 启动保护线；本轮未重新验证 CS2 共存。
+
+首次生成缓存初始化 7.269 秒，三次合成后提交内存 2469.9 MiB，音频同样逐字节一致。
+
+## 未采用的路线
+
+- Flash Attention：同机实测 2471.2 MiB，未比特征缓存进一步节省；改变了生成样本与长度，故保留关闭。
+- 更低权重量化：此前 Q4 未达到接受标准，本轮不把已认可声音换掉。
+- 继续缩小 KV：1024 已有边界验证；进一步缩小会减少长参考音频和文本的上下文余量，不作为通用默认值。
+- 强制清空工作集：只把页面赶出驻留内存，不减少已提交分配，还可能增加下一句延迟，不采用。
+- 空闲卸载：能显著减少空闲占用，但下一句需重新加载与预热；当前保留控制台已有“立即停止 / 释放内存”，不暗中改变常驻行为。
+
+## 复现
+
+在两个独立进程中顺序运行（勿并行加载模型），缓存变体首次运行后再运行一次才能测命中。命令不会播放音频或修改桌宠配置。
+
+```powershell
+$env:PYTHONPATH = "$PWD/src"
+.runtime-native/venv/Scripts/python.exe scripts/benchmark_reference_memory.py --runtime .runtime-native --variant baseline --output baseline.json
+.runtime-native/venv/Scripts/python.exe scripts/benchmark_reference_memory.py --runtime .runtime-native --variant cached --output cache-first.json
+.runtime-native/venv/Scripts/python.exe scripts/benchmark_reference_memory.py --runtime .runtime-native --variant cached --output cache-hit.json
+```
+
+回滚可恢复上一版 `native_engine.py` 并重启语音 worker；缓存文件不影响旧版本。不应删除模型或修改用户音色包。
