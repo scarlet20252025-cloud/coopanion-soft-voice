@@ -68,6 +68,8 @@ def settings(runtime, *, cached_verification=False):
     if type(context) is not int or context < 1024 or context > 4096 or context % 256:
         raise ValueError('kvContext must be a multiple of 256 between 1024 and 4096')
     config['kvContext'] = context
+    if type(config.get('compactGraphs', False)) is not bool:
+        raise ValueError('compactGraphs must be boolean')
     reference()
     config['deviceIndex'] = integrated_device(config['deviceName'])
     return config
@@ -102,6 +104,8 @@ class NativeEngine:
         os.environ['GGML_VK_VISIBLE_DEVICES'] = str(config['deviceIndex'])
         os.environ['QWEN_CPU_THREADS'] = '4'
         os.environ['QWEN_TTS_KV_CONTEXT'] = str(config['kvContext'])
+        if config.get('compactGraphs', False): os.environ['QWEN_TTS_COMPACT_GRAPHS'] = '1'
+        else: os.environ.pop('QWEN_TTS_COMPACT_GRAPHS', None)
         kernel = C.windll.kernel32
         kernel.GetCurrentProcess.restype = C.c_void_p
         kernel.SetPriorityClass.argtypes = [C.c_void_p, C.c_ulong]

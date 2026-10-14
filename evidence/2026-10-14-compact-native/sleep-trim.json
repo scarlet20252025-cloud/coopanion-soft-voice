@@ -1,0 +1,32 @@
+[
+  {
+    "loadMs": 1790,
+    "before": {
+      "privateCommitMiB": 588.9,
+      "workingSetMiB": 26.7,
+      "peakWorkingSetMiB": 2535.9
+    },
+    "after": {
+      "privateCommitMiB": 588.9,
+      "workingSetMiB": 26.8,
+      "peakWorkingSetMiB": 2535.9
+    },
+    "heapminReturn": 0,
+    "trimMs": 0
+  },
+  {
+    "loadMs": 1501,
+    "before": {
+      "privateCommitMiB": 590.2,
+      "workingSetMiB": 43.7,
+      "peakWorkingSetMiB": 2535.9
+    },
+    "after": {
+      "privateCommitMiB": 590.2,
+      "workingSetMiB": 43.7,
+      "peakWorkingSetMiB": 2535.9
+    },
+    "heapminReturn": 0,
+    "trimMs": 0
+  }
+]

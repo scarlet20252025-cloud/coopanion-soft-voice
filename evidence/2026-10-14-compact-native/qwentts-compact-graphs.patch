@@ -1,0 +1,37 @@
+--- a/src/talker-forward.h
++++ b/src/talker-forward.h
+@@ -758,6 +758,13 @@
+     const int n_kv_pad   = kv_pad_raw < kv->max_seq_len ? kv_pad_raw : kv->max_seq_len;
+ 
+     TalkerDecodeGraph * tg = &graphs[(size_t) ((n_kv_pad + 255) / 256 - 1)];
++    // Single-speaker bounded-cache mode: inactive decode graphs contain only
++    // scratch storage. KV state is independently owned and never evicted here.
++    if (std::getenv("QWEN_TTS_COMPACT_GRAPHS")) {
++        for (auto & other : graphs) {
++            if (&other != tg && other.ctx) talker_decode_graph_free(&other);
++        }
++    }
+     if (tg->ctx && tg->N != N) {
+         talker_decode_graph_free(tg);
+     }
+--- a/src/pipeline-codec.cpp
++++ b/src/pipeline-codec.cpp
+@@ -615,6 +615,18 @@
+     CodecStreamGraph * sg = staging ?
+                                 &pc->staging_graphs[cls] :
+                                 &pc->stream_graphs[(size_t) cls * (size_t) (pc->stream_sets - 1) + (size_t) (M - 1)];
++    // The codec executes one graph at a time. Preserve ring/convolution state,
++    // but release scratch allocations from inactive chunk widths/lanes.
++    if (std::getenv("QWEN_TTS_COMPACT_GRAPHS")) {
++        auto release_other = [sg](CodecStreamGraph & other) {
++            if (&other == sg || !other.ctx) return;
++            if (other.galloc) ggml_gallocr_free(other.galloc);
++            ggml_free(other.ctx);
++            other = {};
++        };
++        for (auto & other : pc->stream_graphs) release_other(other);
++        for (auto & other : pc->staging_graphs) release_other(other);
++    }
+     if (sg->ctx) {
+         return sg;
+     }

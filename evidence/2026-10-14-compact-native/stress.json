@@ -1,0 +1,166 @@
+{
+  "rows": [
+    {
+      "cycle": 0,
+      "i": 0,
+      "seconds": 3.258,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "memory": {
+        "privateCommitMiB": 2345.2,
+        "workingSetMiB": 421.4,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "cycle": 0,
+      "i": 1,
+      "seconds": 6.725,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "memory": {
+        "privateCommitMiB": 2352.2,
+        "workingSetMiB": 353.4,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "cycle": 0,
+      "i": 2,
+      "seconds": 2.339,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "memory": {
+        "privateCommitMiB": 2394.6,
+        "workingSetMiB": 356.4,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "cycle": 0,
+      "i": 3,
+      "seconds": 6.522,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "memory": {
+        "privateCommitMiB": 2356.1,
+        "workingSetMiB": 357.0,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "cycle": 0,
+      "i": 4,
+      "seconds": 2.291,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "memory": {
+        "privateCommitMiB": 2398.4,
+        "workingSetMiB": 357.4,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "cycle": 0,
+      "i": 5,
+      "seconds": 6.713,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "memory": {
+        "privateCommitMiB": 2356.1,
+        "workingSetMiB": 357.8,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "cycle": 1,
+      "i": 0,
+      "seconds": 2.837,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "memory": {
+        "privateCommitMiB": 2338.9,
+        "workingSetMiB": 2480.0,
+        "peakWorkingSetMiB": 2492.8
+      }
+    },
+    {
+      "cycle": 1,
+      "i": 1,
+      "seconds": 6.379,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "memory": {
+        "privateCommitMiB": 2355.6,
+        "workingSetMiB": 2510.6,
+        "peakWorkingSetMiB": 2516.3
+      }
+    },
+    {
+      "cycle": 1,
+      "i": 2,
+      "seconds": 2.203,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "memory": {
+        "privateCommitMiB": 2374.0,
+        "workingSetMiB": 2513.2,
+        "peakWorkingSetMiB": 2518.5
+      }
+    },
+    {
+      "cycle": 1,
+      "i": 3,
+      "seconds": 6.595,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "memory": {
+        "privateCommitMiB": 2372.1,
+        "workingSetMiB": 2527.2,
+        "peakWorkingSetMiB": 2544.9
+      }
+    },
+    {
+      "cycle": 1,
+      "i": 4,
+      "seconds": 2.281,
+      "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "memory": {
+        "privateCommitMiB": 2376.6,
+        "workingSetMiB": 2515.9,
+        "peakWorkingSetMiB": 2544.9
+      }
+    },
+    {
+      "cycle": 1,
+      "i": 5,
+      "seconds": 6.371,
+      "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "memory": {
+        "privateCommitMiB": 2371.8,
+        "workingSetMiB": 2526.9,
+        "peakWorkingSetMiB": 2547.5
+      }
+    }
+  ],
+  "loads": [
+    {
+      "ms": 3939,
+      "memory": {
+        "privateCommitMiB": 2203.1,
+        "workingSetMiB": 293.9,
+        "peakWorkingSetMiB": 2386.1
+      }
+    },
+    {
+      "ms": 1492,
+      "memory": {
+        "privateCommitMiB": 2244.2,
+        "workingSetMiB": 2442.3,
+        "peakWorkingSetMiB": 2453.7
+      }
+    }
+  ],
+  "sleep": [
+    {
+      "privateCommitMiB": 618.3,
+      "workingSetMiB": 75.4,
+      "peakWorkingSetMiB": 2386.1
+    },
+    {
+      "privateCommitMiB": 619.2,
+      "workingSetMiB": 83.8,
+      "peakWorkingSetMiB": 2547.5
+    }
+  ]
+}

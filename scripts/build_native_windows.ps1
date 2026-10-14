@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory=$true)][string]$Source,
     [Parameter(Mandatory=$true)][string]$Toolchain,
     [Parameter(Mandatory=$true)][string]$CMake,
@@ -38,6 +38,17 @@ if (-not $contextPatched) {
     if ($LASTEXITCODE -ne 0) { throw 'Source does not match the bounded KV cache patch.' }
     git -C $Source apply $contextPatch
     if ($LASTEXITCODE -ne 0) { throw 'Cannot apply bounded KV cache patch.' }
+}
+$compactPatch = Join-Path $PSScriptRoot '../evidence/2026-10-14-compact-native/qwentts-compact-graphs.patch'
+$ErrorActionPreference = 'Continue'
+git -C $Source apply --reverse --check $compactPatch 2>$null
+$compactPatched = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $compactPatched) {
+    git -C $Source apply --check $compactPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Source does not match compact graph patch.' }
+    git -C $Source apply $compactPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot apply compact graph patch.' }
 }
 $oldPath = $env:Path
 $oldCC = $env:CC
