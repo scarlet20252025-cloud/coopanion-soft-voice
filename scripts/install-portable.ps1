@@ -65,6 +65,9 @@ $verify=& $voicePython (Join-Path $PSScriptRoot 'verify_deployment.py') --runtim
 if ($LASTEXITCODE -ne 0) { throw "Speech verification failed. See $log" }
 $report=$verify | ConvertFrom-Json
 Write-Host ('Audio: '+$report.playback.seconds+' seconds; first callback: '+$report.playback.firstDeviceCallbackMs+' ms')
+Write-Host ('Playback: '+$report.playback.effectivePlaybackMode+'; RTF: '+$report.playback.realTimeFactor+'; underrun: '+$report.playback.underrunMs+' ms')
+if (-not $report.playbackHealth.smooth) { Write-Warning 'Audio device starvation was detected. Installation succeeded, but smooth playback was NOT verified. Select buffered playback and retest.' }
+elseif (-not $report.playbackHealth.streamingRecommended) { Write-Host 'This GPU uses complete-utterance buffering for smooth audio. Expect longer startup; faster streaming was not verified.' }
 if (-not $RuntimeOnly) {
     Write-Host '[3/3] Installing the independent World and preserving personal settings...'
     $worldArgs=@('--extensions',$extensions,'--bot',$bot,'--runtime',$bundleRoot)

@@ -1,0 +1,30 @@
+name: 问题反馈
+description: 报告安装、播放、设备选择或更新问题
+title: "[Bug] "
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: 引擎 / World / Coopanion 版本
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: 系统和设备
+      description: Windows、CPU、实际 Vulkan GPU、驱动、可用系统内存。不要填写用户名或账号。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 如何复现、预期和实际结果
+      description: 写清播放策略、设备选择与具体操作。
+    validations:
+      required: true
+  - type: textarea
+    id: metrics
+    attributes:
+      label: 脱敏诊断
+      description: 可粘贴音频时长、合成耗时、RTF、首次出声、断流指标和错误码。请删除令牌、聊天内容与个人路径。
+      render: text

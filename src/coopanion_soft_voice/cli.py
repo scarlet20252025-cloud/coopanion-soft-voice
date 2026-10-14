@@ -22,11 +22,11 @@ def doctor(runtime,mode='gpu'):
     return {'ok':True,'cuda':True,'device':torch.cuda.get_device_name(0),'torch':torch.__version__,
             'engine':'Qwen3-TTS 0.6B Base','voice':'soft-child-design-2','sampleRate':24000}
 
-def load(runtime,mode='gpu',voice_pack=None,register_exit=True,on_stage=None):
+def load(runtime,mode='gpu',voice_pack=None,register_exit=True,on_stage=None,device_name=None):
     if mode=='igpu':
         from .native_engine import NativeEngine
         import atexit
-        model=NativeEngine(runtime,voice_pack=voice_pack,on_stage=on_stage)
+        model=NativeEngine(runtime,voice_pack=voice_pack,on_stage=on_stage,device_name=device_name)
         # The verified native path builds graphs on the first real sentence.
         # Do not make the user wait for an extra discarded utterance on every wake.
         if register_exit:atexit.register(model.close)
@@ -39,13 +39,23 @@ def load(runtime,mode='gpu',voice_pack=None,register_exit=True,on_stage=None):
     from .playback import speak
     return model
 
-def worker(runtime,mode='gpu',voice_pack=None):
+def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
     if mode=='cache':
         from .cache_worker import worker as cache_worker
         return cache_worker()
     protocol=sys.stdout;sys.stdout=sys.stderr
     from .memory_metrics import snapshot
-    def emit(obj):print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
+    def emit(obj):
+        print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
+        # A bounded diagnostic sidecar contains status/numbers, never text or traces.
+        from datetime import datetime,timezone
+        fields=('type','stage','device','deviceType','engineVersion','processMemory','startupTimings','nativeSettings','errorKind')
+        safe={key:obj[key] for key in fields if key in obj}
+        safe['atUtc']=datetime.now(timezone.utc).isoformat()
+        try:
+            folder=Path(runtime)/'cache';folder.mkdir(parents=True,exist_ok=True)
+            temp=folder/'worker-status.json.tmp';temp.write_text(json.dumps(safe,ensure_ascii=False),encoding='utf-8');temp.replace(folder/'worker-status.json')
+        except OSError:pass
     def stage(name,detail,**extra):emit(dict(type='status',stage=name,detail=detail,**extra))
     stage('load_model','加载语音模型')
     # Native initialization releases the GIL. Import the playback stack meanwhile,
@@ -54,11 +64,18 @@ def worker(runtime,mode='gpu',voice_pack=None):
     from importlib import import_module
     with ThreadPoolExecutor(max_workers=1) as imports:
         playback_future=imports.submit(import_module, '.playback', __package__)
-        model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage)
+        try:model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage,device_name=device_name)
+        except Exception as exc:
+            emit({'type':'error','stage':'initialization','errorKind':type(exc).__name__})
+            raise
         stage('prepare_audio','正在检查播放器，完成后即可发声')
         try:speak=playback_future.result().speak
         except BaseException:model.close();raise
-    emit({'type':'ready','device':('本地语音 / 核显 / streaming' if mode=='igpu' else '本地语音 / CUDA / streaming'),'sampleRate':24000,'processMemory':snapshot()})
+    from . import __version__
+    def ready():emit({'type':'ready','engineVersion':__version__,'device':getattr(model,'device_name',mode),
+        'deviceType':getattr(model,'device_type',None),'sampleRate':24000,'processMemory':snapshot(),
+        'startupTimings':getattr(model,'startup_timings',None),'nativeSettings':getattr(model,'runtime_parameters',None)})
+    ready()
     import math
     for line in sys.stdin:
         request_id=None
@@ -72,8 +89,8 @@ def worker(runtime,mode='gpu',voice_pack=None):
                 emit({'type':'slept','processMemory':snapshot()})
                 continue
             if msg.get('type')=='wake':
-                if model is None:model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage)
-                emit({'type':'ready','sampleRate':24000,'processMemory':snapshot()})
+                if model is None:model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage,device_name=device_name)
+                ready()
                 continue
             request_id=str(msg.get('id',''))
             if not request_id:raise ValueError('Missing request id')
@@ -84,30 +101,36 @@ def worker(runtime,mode='gpu',voice_pack=None):
             supplied=msg.get('referenceAudio')
             if supplied and Path(supplied).resolve()!=reference():raise ValueError('Reference voice is locked')
             stage('synthesizing','正在生成固定参考声线')
-            if model is None:model=load(runtime,mode,voice_pack,register_exit=False)
-            result=speak(model,text,'accepted',volume,float(msg.get('speed',1)),request_id,stage,runtime)
+            if model is None:model=load(runtime,mode,voice_pack,register_exit=False,device_name=device_name)
+            result=speak(model,text,'accepted',volume,float(msg.get('speed',1)),request_id,stage,runtime,
+                         playback_mode=msg.get('playbackMode','auto'))
             emit({**result,'processMemory':snapshot()})
         except Exception as exc:
-            emit({'type':'error','id':request_id,'stage':'synthesizing','error':str(exc),'trace':traceback.format_exc()})
+            emit({'type':'error','id':request_id,'stage':'synthesizing','error':str(exc),'errorKind':type(exc).__name__,'trace':traceback.format_exc()})
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
     parser.add_argument('--runtime',default='.runtime')
     sub=parser.add_subparsers(dest='command',required=True)
     sub.add_parser('download')
+    sub.add_parser('devices')
     for name in ('doctor','worker'):
         part=sub.add_parser(name)
         part.add_argument('--mode',choices=['gpu','cache','igpu'],default='gpu')
-        if name=='worker':part.add_argument('--voice-pack')
+        if name=='worker':
+            part.add_argument('--voice-pack');part.add_argument('--device-name')
     sample=sub.add_parser('speak');sample.add_argument('text');sample.add_argument('--volume',type=float,default=65)
     render=sub.add_parser('render');render.add_argument('text');render.add_argument('--output',required=True)
     args=parser.parse_args(argv);runtime=Path(args.runtime).resolve()
+    if args.command=='devices':
+        from .native_engine import vulkan_devices
+        print(json.dumps({'devices':vulkan_devices()},ensure_ascii=False));return
     if args.command=='download':
         from huggingface_hub import snapshot_download
         snapshot_download(MODEL_REPO,revision=MODEL_REVISION,local_dir=str(runtime/'clone-model'))
         validate_model(runtime,hashes=True);print('Model downloaded and verified.');return
     if args.command=='doctor':print(json.dumps(doctor(runtime,args.mode),ensure_ascii=False));return
-    if args.command=='worker':worker(runtime,args.mode,args.voice_pack);return
+    if args.command=='worker':worker(runtime,args.mode,args.voice_pack,args.device_name);return
     model=load(runtime)
     if args.command=='speak':
         if not 0<=args.volume<=100:raise ValueError('Volume must be between 0 and 100')

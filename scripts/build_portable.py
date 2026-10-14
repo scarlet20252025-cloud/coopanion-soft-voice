@@ -3,6 +3,8 @@ import argparse,hashlib,json,shutil,zipfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0,str(ROOT/'src'))
 PYTHON_SHA256='4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3'
 
 def digest(path):
@@ -46,15 +48,19 @@ def build(args):
     (out/'python/python312._pth').write_text('python312.zip\n.\nLib/site-packages\nimport site\n',encoding='utf-8')
     shutil.copytree(ROOT/'world',out/'world',ignore=shutil.ignore_patterns('__pycache__','*.pyc','test'))
     scripts=out/'scripts';scripts.mkdir()
-    for file in ['activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1']:
+    for file in ['activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','report_issue.py']:
         shutil.copyfile(ROOT/'scripts'/file,scripts/file)
+    shutil.copyfile(ROOT/'src/coopanion_soft_voice/diagnostics.py',scripts/'collect_diagnostics.py')
+    shutil.copyfile(ROOT/'collect-diagnostics.cmd',out/'collect-diagnostics.cmd')
     (out/'install.cmd').write_text('@echo off\r\npowershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\\install-portable.ps1" %*\r\nif errorlevel 1 pause\r\n',encoding='ascii')
     for file in ['LICENSE','THIRD_PARTY_NOTICES.md']:shutil.copyfile(ROOT/file,out/file)
     licenses=out/'licenses';licenses.mkdir()
     for name in ['qwentts-MIT.txt','ggml-MIT.txt','llvm-mingw-LICENSE.txt','models-APACHE-2.0.txt']:
         shutil.copyfile(Path(args.licenses)/name,licenses/name)
-    shutil.copyfile(ROOT/'docs/PORTABLE_INSTALL.md',out/'README.md')
-    meta={'format':1,'version':'0.4.11','author':'Asryto','python':'3.12.10','nativeCPU':'generic',
+    shutil.copytree(ROOT/'docs',out/'docs')
+    (out/'README.md').write_text((ROOT/'docs/PORTABLE_INSTALL.md').read_text(encoding='utf-8').replace('(INSTALL_WITHOUT_MARKET.md)','(docs/INSTALL_WITHOUT_MARKET.md)'),encoding='utf-8')
+    from coopanion_soft_voice import __version__
+    meta={'format':1,'version':__version__,'worldVersion':json.loads((ROOT/'world/package.json').read_text(encoding='utf-8'))['version'],'author':'Asryto','python':'3.12.10','nativeCPU':'generic',
           'nativeSource':'51512f129a7419567f4b8abfb06801451789b8f1','dependencies':dependencies,'runtime':cfg}
     (out/'portable-manifest.json').write_text(json.dumps(meta,indent=2),encoding='utf-8')
     archive=out.parent/(out.name+'.zip')

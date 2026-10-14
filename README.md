@@ -1,10 +1,14 @@
 # 轻量化本地语音引擎 · Coopanion
 
-作者：**Asryto** · Python **0.4.11** / World **0.3.11**
+作者：**Asryto** · Python **0.5.0** / World **0.4.0**
 
-Windows Coopanion 的独立核显语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，并提供 GitHub 安装入口。
+0.5.0 已验证本机 AMD 核显与 RTX 4050；Intel UHD 提速、其他显卡和能效提升仍在 [验证与优化计划](docs/OPTIMIZATION_PLAN.md) 中，不作为已通过承诺。
+
+Windows Coopanion 的独立 Vulkan 语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，并提供 GitHub 安装入口。
 
 ## 最简安装
+
+0.5.0 新增慢设备连续播放、核显/独显选择、右上角更新提示与一键主动更新，详见 [更新记录](CHANGELOG.md)。原音色与采样参数保持不变。
 
 **[不依赖扩展市场的安装教程](docs/INSTALL_WITHOUT_MARKET.md)**：完整包自动安装 World，不需要 npm 账号或市场安装。
 
@@ -12,9 +16,17 @@ Windows Coopanion 的独立核显语音扩展。保留已确认的 `soft-child-d
 2. 双击 **`install.cmd`**。自动寻找正在运行的桌宠、快捷方式、安装记录与常见目录；找不到或有多个副本时再选择路径。
 3. 安装器校验模型、执行真实合成和静音播放测试，接入 World 并重启桌宠。进入 **轻量化本地语音引擎** 即可使用。
 
+默认自动选择核显。安装时可用 `-DeviceName 'Vulkan 设备名称'` 明确指定独显；面板中“检测设备 → 切换设备”可在空闲时重载模型，不重启桌宠。独显与游戏共享显存，错误不会导致自动切换到别的 GPU。
+
+生成偏慢时，默认先生成整句再连续播放；这能消除合成欠载造成的间歇静音，但不代表推理变快。设备表现、RTF 和断流需看实际验收：[播放与设备说明](docs/PLAYBACK_AND_UPDATES.md)。
+
+排错 AI 在用户已授权报障时应按 [AI Issue 规范](docs/AI_BUG_REPORTS.md) 自动提交脱敏问题。
+
+性能或错误反馈可用 [诊断包与日志采集](docs/DIAGNOSTICS.md)。AI 无法提交时生成含日志、分析和 Issue 草稿的 ZIP 交回作者。
+
 **完整包自带固定音色精简版 Qwen3-TTS 0.6B Base Q8、音频解码模型、Vulkan DLL、Python 3.12 和播放器依赖。无需安装 Python、Git、Node、PyTorch、CUDA 或编译工具，无需语音 API key。** 解压目录就是运行目录，请保留。
 
-仍需要 Windows 10/11 x64、支持 Vulkan 的核显及厂商驱动、至少 **3 GiB 系统可用内存**和约 **4 GB 可用磁盘**。桌宠应先安装并初始化一次；本包不提供桌宠角色、聊天模型账号或账号额度。只使用核显，不自动切换独显或默认声音。其他硬件需验证驱动与实际性能。
+仍需要 Windows 10/11 x64、支持 Vulkan 的显卡及厂商驱动、至少 **3 GiB 系统可用内存**和约 **4 GB 可用磁盘**。桌宠应先安装并初始化一次；本包不提供桌宠角色、聊天模型账号或账号额度。默认使用核显；独显须明确选择，不自动切换设备或默认声音。其他硬件需验证驱动与实际性能。
 
 详细步骤、迁移及排错见 [便携安装指南](docs/PORTABLE_INSTALL.md)。作者和上游许可证均保留，见 [第三方说明](THIRD_PARTY_NOTICES.md)。
 
@@ -26,7 +38,7 @@ Windows Coopanion 的独立核显语音扩展。保留已确认的 `soft-child-d
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1
 ```
 
-可指定 `-CoopanionRoot '你的桌宠目录'`、`-Runtime '英文安装路径'`、`-BotId 'Bot目录名'`；`-RuntimeOnly` 仅验证语音，`-NoLaunch` 安装后不打开桌宠。包内安装器也支持这些操作。多块核显用 `-DeviceName '核显名称'`。
+可指定 `-CoopanionRoot '你的桌宠目录'`、`-Runtime '英文安装路径'`、`-BotId 'Bot目录名'`；`-RuntimeOnly` 仅验证语音，`-NoLaunch` 安装后不打开桌宠。包内安装器也支持这些操作。多块显卡或独显用 `-DeviceName 'Vulkan设备名称'`。
 
 [源码重建](docs/DEPLOY_NATIVE.md) 是开发者备用路线，入口 `scripts/deploy-source.ps1`。不再作为普通用户默认安装步骤。模型、源码、补丁及固定下载校验公开；不依赖作者电脑的虚拟环境、模型路径或 DLL。单个 Python wheel 包含代码和音色，但不包含全部模型；**完整离线部署请使用 Release ZIP**。
 

@@ -3,6 +3,7 @@ import { existsSync, readFileSync, mkdirSync, appendFileSync, statSync, renameSy
 import { join, resolve } from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
 import { voicePath, BUILTIN } from './voices.js';
+import { pythonJson } from './helpers.js';
 
 // Model/runtime installation belongs to this repository's setup-native script.
 // This extension never imports or executes another World extension.
@@ -40,7 +41,7 @@ export class SoftVoiceRuntime {
       installed=true;
     } catch(err) { problem=err.code==='ENOENT'?'模型、引擎或运行配置文件缺失':err.message; }
     const phase=this.state?.phase||'idle';
-    const connected=installed && !!this.worker && ['ready','playing','synthesizing'].includes(phase);
+    const connected=installed && !!this.worker && ['ready','playing','synthesizing','buffering'].includes(phase);
     const loading=installed && (!!this.readyPromise || ['load_model','validate_model','prepare_voice','prepare_audio','check_memory'].includes(phase));
     const state=!installed?'missing':phase==='error'?'error':phase==='waiting_memory'?'waiting_memory':connected?'connected':loading?'loading':phase==='sleeping'?'sleeping':'installed';
     return {installed,connected,state,url,model:'Qwen3-TTS 0.6B Base Q8',
@@ -66,8 +67,9 @@ export class SoftVoiceRuntime {
   stage(phase, detail) { this.state = { phase, stage: phase, detail }; }
   status() {
     return { ...this.state, initializing: !!this.readyPromise, loadingSince:this.readyPromise ? this.loadingAt : null, workerPid: this.worker?.pid ?? null,
-      engine: 'Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显', voice: this.cfg.voiceId || BUILTIN,
-      history: this.history, loadMs: this.loadMs ?? null,
+      engine: 'Qwen3-TTS 0.6B Base / Q8_0 / Vulkan GPU', voice: this.cfg.voiceId || BUILTIN,
+      deviceName:this.deviceName||this.cfg.deviceName||null,deviceType:this.deviceType||null,engineVersion:this.engineVersion||null,
+      history: this.history, loadMs: this.loadMs ?? null, nativeSettings:this.nativeSettings??null,startupTimings:this.startupTimings??null,
       sampleRate: 24000, deployment:this.deploymentStatus(), processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
   }
   record(text) {
@@ -77,8 +79,10 @@ export class SoftVoiceRuntime {
       appendFileSync(file, text);
     } catch { /* Logging must not interrupt playback. */ }
   }
+  async devices() {const p=this.profile();return pythonJson(p,'coopanion_soft_voice.cli',['--runtime',p.runtime,'devices']);}
   async prepare() { if (!this.hasLocalFiles()) throw new Error('运行环境未安装，请运行 setup-native.ps1 和 install_world.py'); }
   async ensure() {
+    if (this.stopPromise) await this.stopPromise;
     if (this.readyPromise) return this.readyPromise;
     if (this.worker && this.state.phase === 'sleeping') {
       this.loadingAt=Date.now(); this.stage('load_model','正在从低占用休眠唤醒');
@@ -95,7 +99,7 @@ export class SoftVoiceRuntime {
     this.loadingAt = Date.now();
     this.workerError = null; this.stage('load_model', '加载所选音色并预热');
     const pack = voicePath(this.root, this.cfg.voiceId || BUILTIN);
-    const child = spawn(p.python, ['-m', 'coopanion_soft_voice.cli', '--runtime', p.runtime, 'worker', '--mode', 'igpu', ...(pack ? ['--voice-pack', pack] : [])],
+    const child = spawn(p.python, ['-m', 'coopanion_soft_voice.cli', '--runtime', p.runtime, 'worker', '--mode', 'igpu', ...(pack ? ['--voice-pack', pack] : []), ...(this.cfg.deviceName ? ['--device-name',this.cfg.deviceName] : [])],
       { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, PYTHONUTF8: '1', PYTHONUNBUFFERED: '1', HF_HUB_OFFLINE: '1' } });
     this.worker = child;
     const stdout = new StringDecoder('utf8'), stderr = new StringDecoder('utf8');
@@ -121,7 +125,7 @@ export class SoftVoiceRuntime {
       this.worker = null;
       this.fail(new Error(errorTail.trim() || `语音进程退出 (${code})`));
     });
-    const timer = setTimeout(() => { this.fail(new Error('语音预热超过 120 秒')); void this.terminateWorker(child); }, 120000);
+    const timer = setTimeout(() => { this.fail(new Error('语音预热超过 120 秒')); void this.terminateWorker(child).catch(err=>this.fail(err)); }, 120000);
     try { await ready; }
     catch (err) { await this.terminateWorker(child); throw err; }
     finally { clearTimeout(timer); }
@@ -133,6 +137,7 @@ export class SoftVoiceRuntime {
   }
   message(msg) {
     if(msg.processMemory) this.workerMemory=msg.processMemory;
+    if(msg.type==='ready') {this.deviceName=msg.device;this.deviceType=msg.deviceType;this.engineVersion=msg.engineVersion;this.nativeSettings=msg.nativeSettings;this.startupTimings=msg.startupTimings;}
     if (msg.type === 'slept') {
       const p=this.pending.get('__sleep__'); this.pending.delete('__sleep__');
       this.stage('sleeping','低占用休眠：保留进程与播放器，模型已释放。'); p?.resolve(msg); return;
@@ -162,16 +167,16 @@ export class SoftVoiceRuntime {
     if (!this.worker?.stdin?.writable) throw new Error('语音进程不可用');
     const id = 's' + (++this.seq);
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.fail(new Error('语音生成或播放超时，请恢复语音')); void this.terminateWorker(this.worker); }, 180000);
+      const timer = setTimeout(() => { this.fail(new Error('语音生成或播放超时，请恢复语音')); void this.terminateWorker(this.worker).catch(err=>this.fail(err)); }, 180000);
       this.pending.set(id, { resolve: result => { clearTimeout(timer); resolve(result); },
         reject: err => { clearTimeout(timer); reject(err); }, receivedAt, queueWaitMs: Date.now() - receivedAt });
-      this.worker.stdin.write(JSON.stringify({ id, text, speed: 1, volume: this.cfg.volume }) + '\n', err => { if (err) this.fail(err); });
+      this.worker.stdin.write(JSON.stringify({ id, text, speed: 1, volume: this.cfg.volume, playbackMode:this.cfg.playbackMode||'auto' }) + '\n', err => { if (err) this.fail(err); });
     });
   }
   async openFolder() { spawn('explorer.exe', [this.root], { windowsHide: true, detached: true, stdio: 'ignore' }).unref(); return this.root; }
   async command(type,key,timeout) {
     return new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{this.fail(new Error('语音休眠/唤醒超时'));void this.terminateWorker(this.worker);},timeout);
+      const timer=setTimeout(()=>{this.fail(new Error('语音休眠/唤醒超时'));void this.terminateWorker(this.worker).catch(err=>this.fail(err));},timeout);
       this.pending.set(key,{resolve:v=>{clearTimeout(timer);resolve(v);},reject:e=>{clearTimeout(timer);reject(e);}});
       this.worker?.stdin.write(JSON.stringify({type})+'\n',e=>{if(e)this.fail(e);});
     });
@@ -182,24 +187,33 @@ export class SoftVoiceRuntime {
     await this.command('sleep','__sleep__',15000);
   }
   async terminateWorker(child) {
-    if (!child || child.exitCode != null) return;
+    if (!child || child.exitCode != null || child.signalCode != null) return;
     if (child.termination) return child.termination;
-    child.termination = new Promise(done => {
-      const timer = setTimeout(done, 5000);
-      child.once('close', () => { clearTimeout(timer); done(); });
+    child.termination = new Promise((done,reject) => {
+      const closed=()=>{clearTimeout(timer);done();};
+      const timer = setTimeout(()=>{child.removeListener('close',closed);reject(new Error('旧语音进程仍未退出，已阻止加载第二个模型；请重试停止'));},5000);
+      child.once('close',closed);
       if (process.platform === 'win32') {
         const killer = spawn('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
         killer.once('error', () => child.kill());
       } else child.kill();
-    });
+    }).finally(()=>{child.termination=null;});
     return child.termination;
   }
   async stop() {
+    if(this.stopPromise)return this.stopPromise;
+    this.stopPromise=this.stopWorker().finally(()=>{this.stopPromise=null;});
+    return this.stopPromise;
+  }
+  async stopWorker() {
     ++this.generation;
-    const child = this.worker; this.worker = null; this.workerMemory=null;
+    const child = this.worker;
     this.fail(new Error('语音已停止'));
     this.stage('stopping','正在停止并释放语音模型');
-    await this.terminateWorker(child);
+    try {await this.terminateWorker(child);}
+    catch(err){this.fail(err);throw err;}
+    if(this.worker===child)this.worker=null;
+    this.workerMemory=null;this.workerError=null;
     this.stage('stopped', '已停止并释放模型');
   }
 }

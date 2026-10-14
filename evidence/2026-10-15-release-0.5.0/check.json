@@ -1,0 +1,322 @@
+{
+  "status": "local-unpublished-candidate",
+  "author": "Asryto",
+  "engineVersion": "0.5.0",
+  "worldVersion": "0.4.0",
+  "dateBeijing": "2026-10-15",
+  "host": {
+    "cpu": "AMD Ryzen 7 7735H",
+    "ramGiB": 15.243,
+    "integratedGPU": "AMD Radeon(TM) Graphics",
+    "discreteGPU": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "nvidiaDriver": "581.08",
+    "amdDriver": "32.0.11038.3"
+  },
+  "nativeHashes": {
+    "localTrial": "e6c765b1eabd5e5e590f28326ed46bd1ba8a67da61d670a911458727a62b7b48",
+    "portableGeneric": "a79fd4cc6decc2128c06dc3bc4c7ce483f9c2b20bf0e26ce826808d1bc996b2a"
+  },
+  "cases": [
+    {
+      "case": "amd",
+      "method": "AMD original defaults",
+      "device": "AMD Radeon(TM) Graphics",
+      "loadMs": 3761,
+      "playback": {
+        "seconds": 7.12,
+        "totalSynthesisMs": 5512,
+        "realTimeFactor": 0.774,
+        "firstDeviceCallbackMs": 1489,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "stream",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": null
+      },
+      "wavSha256": "698bda16488d1eb2f4322097f1c7db72eff1306bd5d7ffef5fb51f3dba7ccefc"
+    },
+    {
+      "case": "nvidia",
+      "method": "NVIDIA original allocation; first driver cache use in this test series",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "loadMs": 2249,
+      "playback": {
+        "seconds": 6.96,
+        "totalSynthesisMs": 48282,
+        "realTimeFactor": 6.937,
+        "firstDeviceCallbackMs": 48296,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "buffered",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": null
+      },
+      "wavSha256": "9d04bd922fa110162a2f24bdb754b0bf80b405d4de27a6aa8e665c3128df7681"
+    },
+    {
+      "case": "nvidia-warm",
+      "method": "A: NVIDIA original allocation; warm driver cache",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "loadMs": 2270,
+      "playback": {
+        "seconds": 6.96,
+        "totalSynthesisMs": 19904,
+        "realTimeFactor": 2.86,
+        "firstDeviceCallbackMs": 19921,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "buffered",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": null
+      },
+      "wavSha256": "9d04bd922fa110162a2f24bdb754b0bf80b405d4de27a6aa8e665c3128df7681"
+    },
+    {
+      "case": "nvidia-device-local",
+      "method": "B: explicit device-local env; warm driver cache",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "loadMs": 2693,
+      "playback": {
+        "seconds": 6.96,
+        "totalSynthesisMs": 2743,
+        "realTimeFactor": 0.394,
+        "firstDeviceCallbackMs": 508,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "stream",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": null
+      },
+      "wavSha256": "9d04bd922fa110162a2f24bdb754b0bf80b405d4de27a6aa8e665c3128df7681"
+    },
+    {
+      "case": "nvidia-baseline-repeat",
+      "method": "A again: original allocation; warm driver cache",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "loadMs": 3823,
+      "playback": {
+        "seconds": 6.96,
+        "totalSynthesisMs": 20012,
+        "realTimeFactor": 2.875,
+        "firstDeviceCallbackMs": 20024,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "buffered",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": null
+      },
+      "wavSha256": "9d04bd922fa110162a2f24bdb754b0bf80b405d4de27a6aa8e665c3128df7681"
+    },
+    {
+      "case": "nvidia-auto",
+      "method": "Generic DLL and embedded Python, automatic NVIDIA device-local policy; driver cache already warm",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "loadMs": 1590,
+      "playback": {
+        "seconds": 6.96,
+        "totalSynthesisMs": 2217,
+        "realTimeFactor": 0.319,
+        "firstDeviceCallbackMs": 421,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "stream",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": {
+          "memoryPolicy": "device-local",
+          "disableHostVisibleVram": true,
+          "cpuThreads": 4,
+          "kvContext": 1024,
+          "compactGraphs": true,
+          "streamTextEmbedding": true
+        }
+      },
+      "wavSha256": "9d04bd922fa110162a2f24bdb754b0bf80b405d4de27a6aa8e665c3128df7681"
+    },
+    {
+      "case": "amd-default",
+      "method": "Generic bundle AMD first utterance in this test series",
+      "device": "AMD Radeon(TM) Graphics",
+      "loadMs": 2425,
+      "playback": {
+        "seconds": 7.12,
+        "totalSynthesisMs": 10873,
+        "realTimeFactor": 1.527,
+        "firstDeviceCallbackMs": 6991,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "stream",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": {
+          "memoryPolicy": "backend-default",
+          "disableHostVisibleVram": false,
+          "cpuThreads": 4,
+          "kvContext": 1024,
+          "compactGraphs": true,
+          "streamTextEmbedding": true
+        }
+      },
+      "wavSha256": "698bda16488d1eb2f4322097f1c7db72eff1306bd5d7ffef5fb51f3dba7ccefc"
+    },
+    {
+      "case": "amd-warm",
+      "method": "Generic bundle AMD; warm driver cache",
+      "device": "AMD Radeon(TM) Graphics",
+      "loadMs": 3595,
+      "playback": {
+        "seconds": 7.12,
+        "totalSynthesisMs": 5670,
+        "realTimeFactor": 0.796,
+        "firstDeviceCallbackMs": 1678,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "stream",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": {
+          "memoryPolicy": "backend-default",
+          "disableHostVisibleVram": false,
+          "cpuThreads": 4,
+          "kvContext": 1024,
+          "compactGraphs": true,
+          "streamTextEmbedding": true
+        }
+      },
+      "wavSha256": "698bda16488d1eb2f4322097f1c7db72eff1306bd5d7ffef5fb51f3dba7ccefc"
+    },
+    {
+      "case": "nvidia-final",
+      "method": "Final portable Python/code repeat; warm driver cache",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "loadMs": 1708,
+      "playback": {
+        "seconds": 6.96,
+        "totalSynthesisMs": 2254,
+        "realTimeFactor": 0.324,
+        "firstDeviceCallbackMs": 421,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "requestedPlaybackMode": "auto",
+        "effectivePlaybackMode": "stream",
+        "voiceConditioning": {
+          "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+          "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+          "mode": "full-icl",
+          "pieceLimit": 32
+        },
+        "nativeSettings": {
+          "memoryPolicy": "device-local",
+          "disableHostVisibleVram": true,
+          "cpuThreads": 4,
+          "kvContext": 1024,
+          "compactGraphs": true,
+          "streamTextEmbedding": true
+        }
+      },
+      "wavSha256": "9d04bd922fa110162a2f24bdb754b0bf80b405d4de27a6aa8e665c3128df7681"
+    }
+  ],
+  "lifecycle": {
+    "ok": true,
+    "wake": {
+      "pid": 24696,
+      "phase": "ready",
+      "sameProcess": true,
+      "memoryPolicy": "device-local"
+    },
+    "amdReady": {
+      "pid": 13040,
+      "phase": "ready",
+      "device": "AMD Radeon(TM) Graphics",
+      "policy": "backend-default",
+      "oldExited": true
+    },
+    "nvidiaAgain": {
+      "pid": 22272,
+      "phase": "ready",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "policy": "device-local"
+    },
+    "stopped": {
+      "pid": null,
+      "phase": "disabled",
+      "error": null
+    }
+  },
+  "codeUpdate": {
+    "ok": true,
+    "rollbackRestoredOriginal": true,
+    "embeddedDoctorPassed": true,
+    "engineVersion": "0.5.0",
+    "worldVersion": "0.4.0",
+    "userSettingsPreserved": true,
+    "newDiagnosticEntrypointPresent": true,
+    "nativeAndModelsCopiedOrReplaced": false,
+    "desktopProcessRestartStillRequiredForWorldCode": true
+  },
+  "automatedTests": {
+    "python": 80,
+    "node": 40,
+    "browserFixturePassed": true
+  },
+  "limits": [
+    "All hardware inference tests use muted real audio-device playback.",
+    "Warm-cache results are not guaranteed first-ever driver shader compilation times.",
+    "Different GPUs can yield different PCM; allocation A/B on the same NVIDIA GPU was byte-identical.",
+    "No new subjective listening approval or Intel UHD physical retest.",
+    "GPU background load is not controlled; these are measurements on this machine, not a universal guarantee.",
+    "Candidate is not committed, pushed, released or installed into the running Coopanion."
+  ],
+  "diagnosticKit": {
+    "standaloneOldPortableTestPassed": true,
+    "oldPortableVersion": "0.4.11",
+    "fallbackZipCreated": true,
+    "uploadPerformed": false
+  }
+}

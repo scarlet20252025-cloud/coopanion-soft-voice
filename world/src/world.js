@@ -7,13 +7,14 @@ import { BubbleSpeechSync } from './bubble-sync.js';
 import { installBubbleBridge } from './bubble-bridge.js';
 import { ToolCallTailer } from './tailer.js';
 import { SoftVoiceRuntime } from './runtime.js';
+import { VoiceUpdates } from './updates.js';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const LOADING_PHASES = new Set(['check_environment', 'installed', 'bootstrap_uv', 'bootstrap_python', 'create_venv',
   'bootstrap_source', 'bootstrap_matcha', 'install_torch', 'install_dependencies', 'preflight',
-  'download_reference', 'check_memory', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'prepare_audio', 'stopping', 'synthesizing', 'playing']);
+  'download_reference', 'check_memory', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'prepare_audio', 'stopping', 'synthesizing', 'buffering', 'playing']);
 
 export class SoftVoiceWorld {
   constructor(opts) {
@@ -41,6 +42,7 @@ export class SoftVoiceWorld {
     this.sleepPromise = null;
     this.bubbleSync = new BubbleSpeechSync(() => this.bubbleSyncStatus().active);
     this.removeBubbleBridge = null;
+    this.nextUpdateCheck=Date.now()+30000;this.updatePolling=null;
   }
 
   envPromptVars() {
@@ -89,13 +91,25 @@ export class SoftVoiceWorld {
         }
         if (panel === 'config' && method === 'save') return this.saveConfig(args[0]);
         if (panel === 'controls') {
+          if (this.updating && !['state','devices'].includes(method)) throw new Error('正在更新语音代码，请等待更新完成');
+          if (method === 'checkUpdate') return this.updates.run('check');
+          if (method === 'applyUpdate') return this.applyUpdate();
+          if (method === 'devices') return this.runtime.devices();
+          if (method === 'selectDevice') return this.selectDevice(args[0]);
           if (method === 'save') return this.saveConfig(args[0]);
           if (method === 'enable' || method === 'recover') { if (!this.speechEnabled) return this.setSpeechEnabled(true); void this.initialize(false).catch(err => this.host?.log.warn(err.message)); return this.status(); }
           if (method === 'disable') return this.setSpeechEnabled(false);
           if (method === 'stop') { await this.setSpeechEnabled(false); return this.status(); }
+          if (method === 'restartDesktop') {
+            if(args[0]!==true)throw new Error('请先确认重启；未确认时保持当前运行。');
+            if(this.updates?.status().busy)throw new Error('更新正在执行，请等待更新结束。');
+            if(!this.updates?.status().requiresRestart)throw new Error('当前没有待重启的语音扩展更新。');
+            if(!this.opts.requestDesktopRestart)throw new Error('当前宿主未提供重启入口，请手动重启桌宠。');
+            return this.opts.requestDesktopRestart();
+          }
           if (method === 'clearQueue') { for(const item of this.queue)this.bubbleSync.finish(item.key,'cancelled');this.queue.length = 0; return this.status(); }
           if (method === 'test') {
-            if (!this.accepting || this.blocked || this.speaking || this.queue.length) throw new Error('请等语音就绪且当前播放结束后再试听');
+            if (this.switchingDevice || !this.accepting || this.blocked || this.speaking || this.queue.length) throw new Error('请等语音就绪且当前播放结束后再试听');
             this.speaking = true;
             try { await this.sleepPromise; await this.runtime.speak('我在这里陪你呀，慢慢来，不着急。', { receivedAt: Date.now() }); }
             finally { this.lastActivity = Date.now(); this.speaking = false; this.draining = this.drain(); }
@@ -115,6 +129,7 @@ export class SoftVoiceWorld {
     this.accepting = false;
     this.skippedBeforeReady = 0;
     this.runtime = this.makeRuntime(host);
+    this.updates = new VoiceUpdates(this.runtime);
     this.settingsFile = join(this.runtime.root, 'settings.json');
     this.speechEnabled = false;
     if (existsSync(this.settingsFile)) {
@@ -139,6 +154,7 @@ export class SoftVoiceWorld {
     this.tailer = new ToolCallTailer(this.opts.dataDir, entry => this.onToolCall(entry), host.log,
       { checkpoint: cursor => this.saveCursor(cursor) });
     this.tick = () => {
+      if(!this.updatePolling)this.updatePolling=this.maybeUpdates().catch(err=>host.log.warn(`自动更新：${err.message}`)).finally(()=>{this.updatePolling=null;});
       void this.maybeUnload().catch(err => host.log.warn(`空闲卸载失败: ${err.message}`));
       if (this.speechEnabled && this.active && !this.accepting && !this.initialization &&
           this.opts.cfg.autoRecover && this.runtime?.state?.phase === 'waiting_memory' && freemem() >= (this.runtime?.memoryPolicy?.().recoveryGiB ?? 4.5)*1024**3 &&
@@ -161,6 +177,16 @@ export class SoftVoiceWorld {
   }
 
   makeRuntime(host) { return new SoftVoiceRuntime({ cfg: this.opts.cfg, log: host.log, dataDir: this.opts.dataDir }); }
+
+  async maybeUpdates(now=Date.now()) {
+    if(!this.active||!this.updates||!this.opts.cfg.autoCheckUpdates||this.updates.status().busy||this.updating||this.switchingDevice)return;
+    if(now>=this.nextUpdateCheck){
+      this.nextUpdateCheck=now+86400000;
+      try{await this.updates.run('check');}
+      catch(err){this.nextUpdateCheck=now+3600000;this.host?.log.warn(`自动检查失败，一小时后重试：${err.message}`);return;}
+    }
+
+  }
 
   async maybeUnload(now = Date.now(), freeMiB = freemem()/1024**2) {
     if (!this.opts.cfg.lowPowerMode) return;
@@ -191,6 +217,7 @@ export class SoftVoiceWorld {
 
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
+      updates:this.updates?.status(),switchingDevice:!!this.switchingDevice,updating:!!this.updating,
       bubbleSync: this.bubbleSyncStatus(),
       volume: volumePercent(this.opts.cfg.volume),
       speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
@@ -207,6 +234,7 @@ export class SoftVoiceWorld {
 
   saveConfig(values) {
     const patch = validateConfigPatch(values);
+    if ('deviceName' in patch && patch.deviceName!==this.opts.cfg.deviceName) throw new Error('请在语音控制的设备选择中切换，使模型安全重新加载');
     const next = { ...this.opts.cfg, ...patch };
     this.opts.persist?.(patch);
     this.writeSettings({ ...this.settings, speechEnabled: this.speechEnabled, config: configValues(next) });
@@ -238,6 +266,47 @@ export class SoftVoiceWorld {
       if (enabled) await this.setSpeechEnabled(true);
       return this.status();
     } finally { this.switchingVoice = false; }
+  }
+
+  assertIdleOperation() {
+    if (!this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.updating || this.updates?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
+  }
+
+  async selectDevice(name) {
+    this.assertIdleOperation();
+    const patch=validateConfigPatch({deviceName:name});
+    if(name===(this.opts.cfg.deviceName||''))return this.status();
+    if(name){const result=await this.runtime.devices();if(result.devices.filter(d=>d.name===name).length!==1)throw new Error('设备不存在或名称不唯一；不会自动切换到其他显卡');}
+    this.assertIdleOperation();this.switchingDevice=true;
+    const previous=this.opts.cfg.deviceName||'',enabled=this.speechEnabled;
+    try {
+      await this.setSpeechEnabled(false);
+      Object.assign(this.opts.cfg,patch);this.opts.persist?.(patch);
+      this.writeSettings({...this.settings,config:configValues(this.opts.cfg)});
+      this.runtime.history=[];this.runtime.lastSpeech=null;
+      if(enabled){await this.setSpeechEnabled(true);await this.initialization;}
+      return this.status();
+    } catch(error) {
+      await this.setSpeechEnabled(false);
+      this.opts.cfg.deviceName=previous;this.opts.persist?.({deviceName:previous});
+      this.writeSettings({...this.settings,config:configValues(this.opts.cfg)});
+      if(enabled){await this.setSpeechEnabled(true);await this.initialization?.catch(()=>{});}
+      throw new Error('设备切换失败，已恢复原设备配置：'+error.message);
+    } finally {this.switchingDevice=false;}
+  }
+
+  async applyUpdate() {
+    this.assertIdleOperation();
+    if(!this.opts.botDir)throw new Error('缺少桌宠部署目录，请使用完整包重新安装');
+    this.updating=true;const enabled=this.speechEnabled;
+    try {
+      await this.setSpeechEnabled(false);
+      await this.updates.run('apply',join(this.opts.botDir,'..','..','extensions'));
+      return this.updates.status();
+    } finally {
+      this.updating=false;
+      if(enabled&&this.active){await this.setSpeechEnabled(true);await this.initialization?.catch(err=>this.host?.log.warn('更新后启动失败：'+err.message));}
+    }
   }
 
   async setSpeechEnabled(enabled) {
@@ -304,6 +373,8 @@ export class SoftVoiceWorld {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.queue.length = 0;
+    await this.updatePolling?.catch(()=>{});
+    await this.updates?.running?.catch(()=>{});
     await this.sleepPromise;
     await this.runtime?.stop();
     await this.draining;
