@@ -10,6 +10,24 @@ function world() {
   w.active = true; w.accepting = true; w.speechEnabled = true;
   w.speaking = true; return w;
 }
+
+test('stop requested during an existing toggle is applied after that toggle', async () => {
+  const w=world();w.speaking=false;w.writeSettings=s=>{w.settings=s;};
+  let release,stops=0,phase='ready';
+  w.togglePromise=new Promise(resolve=>{release=resolve;});
+  w.runtime={status:()=>({phase}),stop:async()=>{stops++;},stage:p=>{phase=p;}};
+  const stop=w.setSpeechEnabled(false);release();await stop;
+  assert.equal(stops,1);assert.equal(w.speechEnabled,false);assert.equal(w.accepting,false);assert.equal(phase,'disabled');
+});
+
+test('cancel during model initialization does not restore enabled speech later', async () => {
+  const w=world();w.speaking=false;w.accepting=false;w.speechEnabled=false;w.writeSettings=s=>{w.settings=s;};
+  let rejectLoad,phase='load_model';
+  const loading=new Promise((resolve,reject)=>{rejectLoad=reject;});
+  w.runtime={hasLocalFiles:()=>true,ensure:()=>loading,status:()=>({phase}),stop:async()=>{rejectLoad(new Error('cancelled'));},stage:p=>{phase=p;}};
+  await w.setSpeechEnabled(true);await w.setSpeechEnabled(false);
+  assert.equal(w.speechEnabled,false);assert.equal(w.accepting,false);assert.equal(phase,'disabled');assert.equal(w.initialization,null);
+});
 const entry = seq => ({ tool: 'pet_say', mod: 'desktop-pet', run: 'r-test', seq, args: { script: '【开心】你好呀' } });
 
 test('official environment prompt declares template and reports real capability', async () => {
@@ -61,18 +79,34 @@ test('failed partly spoken sentence is not automatically replayed', async () => 
   await w.drain(); assert.equal(w.queue.length, 0); assert.equal(w.blocked, true); assert.equal(w.accepting, false);
 });
 test('wire metrics resolve speech and restore ready state', () => {
-  const r = Object.create(SoftVoiceRuntime.prototype); r.pending = new Map();
+  const r = Object.create(SoftVoiceRuntime.prototype); r.pending = new Map(); r.cfg={};
   let resolved = false; r.pending.set('s1', { receivedAt: Date.now(), resolve: () => { resolved = true; } });
   r.message({ type: 'status', stage: 'playing', id: 's1', synthesisMs: 900 });
-  r.message({ type: 'done', id: 's1', underrunMs: 0, firstDeviceCallbackMs: 1100 });
+  r.message({ type: 'done', id: 's1', underrunMs: 0, firstDeviceCallbackMs: 1100, processMemory:{privateMiB:2300,residentMiB:2500,peakResidentMiB:2600} });
   assert.equal(r.state.phase, 'ready'); assert.equal(r.lastSpeech.underrunMs, 0); assert.equal(resolved, true);
+  assert.equal(r.status().processMemory.privateMiB,2300);
+});
+
+test('runtime memory guard follows the actual model layout and keeps fallback protection', async () => {
+  const {mkdtempSync,writeFileSync,rmSync}=await import('node:fs');
+  const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+  const dir=mkdtempSync(join(tmpdir(),'voice-policy-'));
+  const r=Object.create(SoftVoiceRuntime.prototype);r.profile=()=>({runtime:dir});
+  try {
+    assert.equal(r.memoryPolicy().minimumGiB,4);
+    const file=join(dir,'native-runtime.json');
+    writeFileSync(file,JSON.stringify({compactGraphs:true,kvContext:1024,speechOnly:{format:1}}));
+    assert.deepEqual(r.memoryPolicy(),{minimumGiB:3.5,recoveryGiB:4,layout:'compact'});
+    writeFileSync(file,JSON.stringify({compactGraphs:false,kvContext:1024,speechOnly:{format:1}}));
+    assert.equal(r.memoryPolicy().recoveryGiB,4.5);
+  } finally {rmSync(dir,{recursive:true});}
 });
 test('panels have separate mounts and read-only status rejects mutations', async () => {
   const w=world();
   assert.deepEqual(w.console().panels.map(p=>p.id),['controls','status','config','voices']);
   await assert.rejects(w.console().invoke('status','disable'),/未知/);
   await assert.rejects(w.console().invoke('config','test'),/未知/);
-  const ui=(await import('../dist/console-0.3.1.js')).default;
+  const ui=(await import('../dist/console-0.3.4.js')).default;
   assert.equal(new Set(Object.values(ui.panels).map(p=>p.mount)).size,4);
 });
 test('future voice is unavailable and cannot become a filesystem path', async () => {

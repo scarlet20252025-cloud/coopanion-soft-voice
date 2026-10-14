@@ -78,7 +78,7 @@ def settings(runtime, *, cached_verification=False):
 class NativeEngine:
     sample_rate = 24000
 
-    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True, buffer_mode='adaptive'):
+    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True, buffer_mode='adaptive', on_stage=None):
         started = time.perf_counter()
         self.startup_timings = {}
         self.ctx = None; self.voice = Voice(); self.dirs = []
@@ -91,6 +91,8 @@ class NativeEngine:
             from .voice_pack import load
             self.reference_path, pack = load(voice_pack)
             self.reference_text = pack['referenceText']
+        report = on_stage or (lambda name, detail: None)
+        report('validate_model','正在校验模型文件并检查核显')
         config = settings(runtime, cached_verification=True)
         self.startup_timings['validationMs'] = round((time.perf_counter()-started)*1000)
         class MemoryStatus(C.Structure):
@@ -98,8 +100,10 @@ class NativeEngine:
                 (n, C.c_uint64) for n in ('total', 'available', 'pageTotal', 'pageAvailable',
                                          'virtualTotal', 'virtualAvailable', 'extended')]
         memory = MemoryStatus(); memory.length = C.sizeof(memory)
-        if not C.windll.kernel32.GlobalMemoryStatusEx(C.byref(memory)) or memory.available < 4*1024**3:
-            raise RuntimeError('Native voice needs at least 4 GiB free RAM before loading; keeping text only')
+        from .memory_policy import loading_requirement
+        minimum = loading_requirement(config)
+        if not C.windll.kernel32.GlobalMemoryStatusEx(C.byref(memory)) or memory.available < minimum*1024**3:
+            raise RuntimeError(f'Native voice needs at least {minimum:g} GiB free RAM before loading; keeping text only')
         os.environ['GGML_BACKEND'] = 'Vulkan0'
         os.environ['GGML_VK_VISIBLE_DEVICES'] = str(config['deviceIndex'])
         os.environ['QWEN_CPU_THREADS'] = '4'
@@ -135,10 +139,12 @@ class NativeEngine:
             init.talker_path = config['model'].encode(); init.codec_path = config['codec'].encode()
             init.max_batch = 1; init.use_fa = False
             loading = time.perf_counter()
+            report('load_model','正在加载模型权重与推理缓存')
             self.ctx = self.dll.qt_init(C.byref(init))
             self.startup_timings['modelInitMs'] = round((time.perf_counter()-loading)*1000)
             if not self.ctx:
                 raise RuntimeError(self.dll.qt_last_error().decode())
+            report('prepare_voice','正在准备已确认的音色特征')
             from . import reference_cache
             cache = reference_cache.cache_path(runtime, config, self.reference_path)
             fixed = config.get('speechOnly')

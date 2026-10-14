@@ -1,0 +1,41 @@
+{
+  "initialFreeGiB": 5.3278350830078125,
+  "cycles": [
+    {
+      "beforeLoadFreeGiB": 3.6856536865234375,
+      "loadMs": 2009,
+      "afterLoadFreeGiB": 3.9097328186035156,
+      "samples": [
+        {
+          "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+          "freeGiB": 4.241062164306641
+        },
+        {
+          "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+          "freeGiB": 4.673881530761719
+        }
+      ],
+      "afterSleepFreeGiB": 6.951450347900391
+    },
+    {
+      "beforeLoadFreeGiB": 6.951446533203125,
+      "loadMs": 1605,
+      "afterLoadFreeGiB": 4.637359619140625,
+      "samples": [
+        {
+          "sha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+          "freeGiB": 4.3042144775390625
+        },
+        {
+          "sha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+          "freeGiB": 4.8318328857421875
+        }
+      ],
+      "afterSleepFreeGiB": 7.2473602294921875
+    }
+  ],
+  "safetyReleased": false,
+  "ballastMiB": 1664,
+  "minFreeGiB": 3.6608352661132812,
+  "endFreeGiB": 7.247898101806641
+}

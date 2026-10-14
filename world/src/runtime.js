@@ -26,6 +26,13 @@ export class SoftVoiceRuntime {
     try { const p = this.profile(); return existsSync(p.python) && existsSync(join(p.runtime, 'native-runtime.json')); }
     catch { return false; }
   }
+  memoryPolicy() {
+    try {
+      const c=JSON.parse(readFileSync(join(this.profile().runtime,'native-runtime.json'),'utf8'));
+      if(c.compactGraphs===true && c.kvContext===1024 && c.speechOnly?.format===1) return {minimumGiB:3.5,recoveryGiB:4,layout:'compact'};
+    } catch { /* Unconfigured or older layouts retain their existing guard. */ }
+    return {minimumGiB:4,recoveryGiB:4.5,layout:'standard'};
+  }
   assertVoiceSupported(key) {
     const config = JSON.parse(readFileSync(join(this.profile().runtime, 'native-runtime.json'), 'utf8'));
     if (config.speechOnly && key !== BUILTIN) {
@@ -34,10 +41,10 @@ export class SoftVoiceRuntime {
   }
   stage(phase, detail) { this.state = { phase, stage: phase, detail }; }
   status() {
-    return { ...this.state, initializing: !!this.readyPromise, workerPid: this.worker?.pid ?? null,
+    return { ...this.state, initializing: !!this.readyPromise, loadingSince:this.readyPromise ? this.loadingAt : null, workerPid: this.worker?.pid ?? null,
       engine: 'Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显', voice: this.cfg.voiceId || BUILTIN,
       history: this.history, loadMs: this.loadMs ?? null,
-      sampleRate: 24000, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
+      sampleRate: 24000, processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
   }
   record(text) {
     const file = join(this.root, 'worker.log');
@@ -101,6 +108,7 @@ export class SoftVoiceRuntime {
     this.pending.clear();
   }
   message(msg) {
+    if(msg.processMemory) this.workerMemory=msg.processMemory;
     if (msg.type === 'slept') {
       const p=this.pending.get('__sleep__'); this.pending.delete('__sleep__');
       this.stage('sleeping','低占用休眠：保留进程与播放器，模型已释放。'); p?.resolve(msg); return;
@@ -164,8 +172,9 @@ export class SoftVoiceRuntime {
   }
   async stop() {
     ++this.generation;
-    const child = this.worker; this.worker = null;
+    const child = this.worker; this.worker = null; this.workerMemory=null;
     this.fail(new Error('语音已停止'));
+    this.stage('stopping','正在停止并释放语音模型');
     await this.terminateWorker(child);
     this.stage('stopped', '已停止并释放模型');
   }

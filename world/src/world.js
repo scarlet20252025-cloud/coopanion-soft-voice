@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const LOADING_PHASES = new Set(['check_environment', 'installed', 'bootstrap_uv', 'bootstrap_python', 'create_venv',
   'bootstrap_source', 'bootstrap_matcha', 'install_torch', 'install_dependencies', 'preflight',
-  'download_reference', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'synthesizing', 'playing']);
+  'download_reference', 'validate_model', 'download_model', 'load_model', 'prepare_voice', 'prepare_audio', 'stopping', 'synthesizing', 'playing']);
 
 export class SoftVoiceWorld {
   constructor(opts) {
@@ -71,7 +71,7 @@ export class SoftVoiceWorld {
       invoke: async (panel, method, args = []) => {
         if (!['controls','status','config','voices'].includes(panel)) throw new Error('未知语音面板');
         if (method === 'state') return { ...this.status(), values: configValues(this.opts.cfg),
-          memory: { freeGiB: freemem()/1024**3, totalGiB: totalmem()/1024**3, minimumGiB: 4, recoveryGiB: 4.5 },
+          memory: { freeGiB: freemem()/1024**3, totalGiB: totalmem()/1024**3, ...(this.runtime?.memoryPolicy?.() ?? {minimumGiB:4,recoveryGiB:4.5,layout:'standard'}) },
           voices: listVoices(this.runtime.root), selectedVoice: this.opts.cfg.voiceId || BUILTIN, tutorial: TUTORIAL };
         if (panel === 'voices') {
           if (method === 'import') return importVoice(this.runtime, args[0]);
@@ -131,7 +131,7 @@ export class SoftVoiceWorld {
     this.tick = () => {
       void this.maybeUnload().catch(err => host.log.warn(`空闲卸载失败: ${err.message}`));
       if (this.speechEnabled && this.active && !this.accepting && !this.initialization &&
-          this.opts.cfg.autoRecover && this.runtime?.state?.phase === 'waiting_memory' && freemem() >= 4.5*1024**3 &&
+          this.opts.cfg.autoRecover && this.runtime?.state?.phase === 'waiting_memory' && freemem() >= (this.runtime?.memoryPolicy?.().recoveryGiB ?? 4.5)*1024**3 &&
           Date.now() - (this.lastMemoryRetry || 0) >= 60000) {
         this.lastMemoryRetry = Date.now();
         void this.initialize(false).catch(err => host.log.warn(`内存恢复后语音重试：${err.message}`));
@@ -219,7 +219,10 @@ export class SoftVoiceWorld {
   }
 
   async setSpeechEnabled(enabled) {
-    if (this.togglePromise) return this.togglePromise;
+    if (this.togglePromise) {
+      await this.togglePromise;
+      if (this.speechEnabled === enabled) return this.status();
+    }
     this.togglePromise = (async () => {
       this.writeSettings({ ...this.settings, speechEnabled: enabled, config: configValues(this.opts.cfg) });
       this.speechEnabled = enabled;
@@ -262,7 +265,7 @@ export class SoftVoiceWorld {
     })().catch(err => {
       if (this.active && this.runtime === runtime) {
         this.blocked = true;
-        if (/4 GiB free RAM|keeping text only/.test(err.message)) runtime.stage('waiting_memory', '内存不足，暂用文字；可用内存达到 4.5 GiB 后自动恢复。也可在语音控制页重试。');
+        if (/GiB free RAM|keeping text only/.test(err.message)) runtime.stage('waiting_memory', `内存不足，暂用文字；可用内存达到 ${runtime.memoryPolicy().recoveryGiB} GiB 后自动恢复。也可在语音控制页重试。`);
       }
       throw err;
     }).finally(() => { this.initialization = null; });
@@ -315,7 +318,7 @@ export class SoftVoiceWorld {
           this.host?.log.warn(`本地语音助手 朗读失败: ${err.message}`);
           // Never repeat a partially spoken sentence automatically.
           this.blocked = true; this.accepting = false;
-          if (/4 GiB free RAM|keeping text only/.test(err.message)) this.runtime?.stage('waiting_memory', '内存不足，暂用文字；达到 4.5 GiB 后可自动恢复。');
+          if (/GiB free RAM|keeping text only/.test(err.message)) this.runtime?.stage('waiting_memory', `内存不足，暂用文字；达到 ${this.runtime.memoryPolicy().recoveryGiB} GiB 后可自动恢复。`);
         }
       }
     } finally {

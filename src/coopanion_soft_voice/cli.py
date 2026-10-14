@@ -22,11 +22,11 @@ def doctor(runtime,mode='gpu'):
     return {'ok':True,'cuda':True,'device':torch.cuda.get_device_name(0),'torch':torch.__version__,
             'engine':'Qwen3-TTS 0.6B Base','voice':'soft-child-design-2','sampleRate':24000}
 
-def load(runtime,mode='gpu',voice_pack=None,register_exit=True):
+def load(runtime,mode='gpu',voice_pack=None,register_exit=True,on_stage=None):
     if mode=='igpu':
         from .native_engine import NativeEngine
         import atexit
-        model=NativeEngine(runtime,voice_pack=voice_pack)
+        model=NativeEngine(runtime,voice_pack=voice_pack,on_stage=on_stage)
         # The verified native path builds graphs on the first real sentence.
         # Do not make the user wait for an extra discarded utterance on every wake.
         if register_exit:atexit.register(model.close)
@@ -44,6 +44,7 @@ def worker(runtime,mode='gpu',voice_pack=None):
         from .cache_worker import worker as cache_worker
         return cache_worker()
     protocol=sys.stdout;sys.stdout=sys.stderr
+    from .memory_metrics import snapshot
     def emit(obj):print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
     def stage(name,detail,**extra):emit(dict(type='status',stage=name,detail=detail,**extra))
     stage('load_model','加载语音模型')
@@ -53,10 +54,11 @@ def worker(runtime,mode='gpu',voice_pack=None):
     from importlib import import_module
     with ThreadPoolExecutor(max_workers=1) as imports:
         playback_future=imports.submit(import_module, '.playback', __package__)
-        model=load(runtime,mode,voice_pack,register_exit=False)
+        model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage)
+        stage('prepare_audio','正在检查播放器，完成后即可发声')
         try:speak=playback_future.result().speak
         except BaseException:model.close();raise
-    emit({'type':'ready','device':('本地语音 / 核显 / streaming' if mode=='igpu' else '本地语音 / CUDA / streaming'),'sampleRate':24000})
+    emit({'type':'ready','device':('本地语音 / 核显 / streaming' if mode=='igpu' else '本地语音 / CUDA / streaming'),'sampleRate':24000,'processMemory':snapshot()})
     import math
     for line in sys.stdin:
         request_id=None
@@ -67,11 +69,11 @@ def worker(runtime,mode='gpu',voice_pack=None):
                 if model is not None:model.close();model=None
                 import gc
                 gc.collect()
-                emit({'type':'slept'})
+                emit({'type':'slept','processMemory':snapshot()})
                 continue
             if msg.get('type')=='wake':
-                if model is None:model=load(runtime,mode,voice_pack,register_exit=False)
-                emit({'type':'ready','sampleRate':24000})
+                if model is None:model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage)
+                emit({'type':'ready','sampleRate':24000,'processMemory':snapshot()})
                 continue
             request_id=str(msg.get('id',''))
             if not request_id:raise ValueError('Missing request id')
@@ -83,7 +85,8 @@ def worker(runtime,mode='gpu',voice_pack=None):
             if supplied and Path(supplied).resolve()!=reference():raise ValueError('Reference voice is locked')
             stage('synthesizing','正在生成固定参考声线')
             if model is None:model=load(runtime,mode,voice_pack,register_exit=False)
-            emit(speak(model,text,'accepted',volume,float(msg.get('speed',1)),request_id,stage,runtime))
+            result=speak(model,text,'accepted',volume,float(msg.get('speed',1)),request_id,stage,runtime)
+            emit({**result,'processMemory':snapshot()})
         except Exception as exc:
             emit({'type':'error','id':request_id,'stage':'synthesizing','error':str(exc),'trace':traceback.format_exc()})
 
