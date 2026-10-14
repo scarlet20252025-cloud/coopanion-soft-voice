@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "coopanion-soft-voice"
-version = "0.4.10"
+version = "0.4.11"
 description = "Fixed-reference Qwen3-TTS speech with continuous PCM playback for Coopanion"
 readme = "README.md"
-requires-python = ">=3.10,<3.11"
+requires-python = ">=3.10,<3.13"
 license = {text = "MIT"}
-authors = [{name = "scarlet20252025-cloud"}]
+authors = [{name = "Asryto"}]
 
 [project.scripts]
 soft-voice = "coopanion_soft_voice.cli:main"

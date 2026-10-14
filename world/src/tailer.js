@@ -46,7 +46,7 @@ export class ToolCallTailer {
         this.skipPartial = byte[0] !== 10;
       }
       this.initialized = true;
-      this.log?.info?.('本地语音助手 正在监听 ' + file);
+      this.log?.info?.('轻量化本地语音引擎 正在监听 ' + file);
       this.save();
     }
     if (!existsSync(file)) return;

@@ -76,6 +76,9 @@ def run(*args, **kwargs):
 def setup(runtime, cache, device_name, build_only=False):
     if sys.platform != 'win32':
         raise RuntimeError('Windows x64 is required')
+    if not build_only:
+        from coopanion_soft_voice.native_engine import select_integrated_name
+        device_name=select_integrated_name(device_name)
     runtime = Path(runtime).resolve()
     runtime.mkdir(parents=True, exist_ok=True)
     cache = Path(cache).resolve() if cache else runtime / 'downloads'
@@ -159,7 +162,7 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--runtime', required=True)
     p.add_argument('--cache')
-    p.add_argument('--device-name', default='AMD Radeon(TM) Graphics')
+    p.add_argument('--device-name')
     p.add_argument('--build-only', action='store_true')
     a = p.parse_args()
     setup(a.runtime, a.cache, a.device_name, a.build_only)

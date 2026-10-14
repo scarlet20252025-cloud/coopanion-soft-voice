@@ -64,10 +64,10 @@ export class SoftVoiceWorld {
     const st = this.runtime?.status?.() ?? { phase: 'idle', detail: '未启动' };
     const lampState = st.phase === 'ready' ? 'online' : st.phase === 'error' ? 'error' : LOADING_PHASES.has(st.phase) ? 'loading' : 'offline';
     return {
-      label: '本地语音助手',
+      label: '轻量化本地语音引擎',
       promptDocs: [{
         key: 'worlds.soft-voice.envPrompt',
-        title: '本地语音助手环境提示词',
+        title: '轻量化本地语音引擎环境提示词',
         description: '说明自动朗读能力与当前状态；由 Cortico 合入系统提示词。',
         path: fileURLToPath(new URL('./ENV_PROMPT.md', import.meta.url)),
         role: 'envPrompt',
@@ -146,7 +146,7 @@ export class SoftVoiceWorld {
         this.lastMemoryRetry = Date.now();
         void this.initialize(false).catch(err => host.log.warn(`内存恢复后语音重试：${err.message}`));
       }
-      try { this.tailer?.poll(); } catch (err) { host.log.warn(`本地语音助手 监听失败: ${err.message}`); }
+      try { this.tailer?.poll(); } catch (err) { host.log.warn(`轻量化本地语音引擎 监听失败: ${err.message}`); }
     };
     this.tick();
     this.timer = setInterval(this.tick, Math.max(80, Number(this.opts.cfg.pollMs) || 180));
@@ -155,7 +155,7 @@ export class SoftVoiceWorld {
     // Activation never grants download permission, including legacy autoInstall=true.
     if (!this.speechEnabled) this.runtime.stage('disabled', '语音已停用；安装完成不代表启用。');
     else if (this.runtime.hasLocalFiles()) void this.initialize(false).catch(err => {
-      host.log.warn(`本地语音助手 本机环境启动失败: ${err.message}`);
+      host.log.warn(`轻量化本地语音引擎 本机环境启动失败: ${err.message}`);
     });
     else this.runtime.stage('waiting_user', '运行环境未配置，请按独立扩展安装指南安装。');
   }
@@ -198,7 +198,7 @@ export class SoftVoiceWorld {
   }
 
   writeSettings(settings) {
-    if (!this.settingsFile) throw new Error('本地语音助手 尚未启动');
+    if (!this.settingsFile) throw new Error('轻量化本地语音引擎 尚未启动');
     mkdirSync(dirname(this.settingsFile), { recursive: true });
     writeFileSync(this.settingsFile + '.tmp', JSON.stringify(settings), 'utf8');
     renameSync(this.settingsFile + '.tmp', this.settingsFile);
@@ -259,7 +259,7 @@ export class SoftVoiceWorld {
         await this.initialization?.catch(() => {});
         this.runtime.stage('disabled', '语音已停用；模型与环境保留，worker 已停止。');
       } else if (this.runtime.hasLocalFiles()) {
-        void this.initialize(false).catch(err => this.host?.log.warn(`本地语音助手 启用失败: ${err.message}`));
+        void this.initialize(false).catch(err => this.host?.log.warn(`轻量化本地语音引擎 启用失败: ${err.message}`));
       } else this.runtime.stage('waiting_user', '已开启语音，但本机环境未完整；请手动安装／修复。');
     })().finally(() => { this.togglePromise = null; });
     await this.togglePromise;
@@ -343,13 +343,13 @@ export class SoftVoiceWorld {
           if(this.removeBubbleBridge)await this.bubbleSync.waitUntilShown(item.key);
           if(!this.active||!this.speechEnabled||this.blocked||!this.runtime){this.bubbleSync.finish(item.key,'cancelled');break;}
           if(this.opts.cfg.volume===0){this.bubbleSync.finish(item.key,'skipped');continue;}
-          this.host?.log.info(`本地语音助手: ${item.text}`);
+          this.host?.log.info(`轻量化本地语音引擎: ${item.text}`);
           await this.runtime.speak(item.text, { receivedAt: item.receivedAt });
           this.bubbleSync.finish(item.key);
         } catch (err) {
           this.bubbleSync.finish(item.key,'failed');
           for(const waiting of this.queue)this.bubbleSync.finish(waiting.key,'cancelled');
-          this.host?.log.warn(`本地语音助手 朗读失败: ${err.message}`);
+          this.host?.log.warn(`轻量化本地语音引擎 朗读失败: ${err.message}`);
           // Never repeat a partially spoken sentence automatically.
           this.blocked = true; this.accepting = false;
           if (/GiB free RAM|keeping text only/.test(err.message)) this.runtime?.stage('waiting_memory', `内存不足，暂用文字；达到 ${this.runtime.memoryPolicy().recoveryGiB} GiB 后可自动恢复。`);

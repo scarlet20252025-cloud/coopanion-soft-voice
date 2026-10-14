@@ -1,7 +1,7 @@
 param(
     [string]$Python = 'py',
     [string]$Runtime,
-    [string]$DeviceName = 'AMD Radeon(TM) Graphics',
+    [string]$DeviceName,
     [string]$Cache,
     [switch]$BuildOnly
 )
@@ -16,11 +16,12 @@ if (-not (Test-Path $pythonExe)) {
     else { & $Python -m venv (Join-Path $Runtime 'venv') }
     if ($LASTEXITCODE -ne 0) { throw 'Install Python 3.10 x64 and Git, then retry.' }
 }
-& $pythonExe -c "import sys,struct; assert sys.version_info[:2]==(3,10) and struct.calcsize('P')==8, 'Python 3.10 x64 required'"
-if ($LASTEXITCODE -ne 0) { throw 'Python 3.10 x64 required.' }
+& $pythonExe -c "import sys,struct; assert (3,10)<=sys.version_info[:2]<(3,13) and struct.calcsize('P')==8, 'Python 3.10-3.12 x64 required'"
+if ($LASTEXITCODE -ne 0) { throw 'Python 3.10-3.12 x64 required.' }
 & $pythonExe -m pip install -r (Join-Path $project 'requirements-native.txt') cmake==4.4.4 ninja==1.13.2 $project
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
-$options = @('--runtime', $Runtime, '--device-name', $DeviceName)
+$options = @('--runtime', $Runtime)
+if ($DeviceName) { $options += @('--device-name', $DeviceName) }
 if ($Cache) { $options += @('--cache', [IO.Path]::GetFullPath($Cache)) }
 if ($BuildOnly) { $options += '--build-only' }
 & $pythonExe (Join-Path $PSScriptRoot 'setup_native.py') @options

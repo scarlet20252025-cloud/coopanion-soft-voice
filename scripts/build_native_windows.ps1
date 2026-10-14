@@ -6,7 +6,8 @@
     [Parameter(Mandatory=$true)][string]$VulkanHeaders,
     [Parameter(Mandatory=$true)][string]$VulkanLibrary,
     [Parameter(Mandatory=$true)][string]$Glslc,
-    [Parameter(Mandatory=$true)][string]$SpirvPrefix
+    [Parameter(Mandatory=$true)][string]$SpirvPrefix,
+    [switch]$Portable
 )
 $ErrorActionPreference = 'Stop'
 $revision = git -C $Source rev-parse HEAD
@@ -69,15 +70,17 @@ try {
     $env:CC = 'x86_64-w64-mingw32-clang.exe'
     $env:CXX = 'x86_64-w64-mingw32-clang++.exe'
     $build = Join-Path $Source 'build-vulkan'
+    $nativeFlags = if ($Portable) { 'OFF' } else { 'ON' }
     & $CMake -S $Source -B $build -G Ninja `
         "-DCMAKE_MAKE_PROGRAM=$NinjaDirectory/ninja.exe" `
         "-DCMAKE_C_COMPILER=$Toolchain/x86_64-w64-mingw32-clang.exe" `
         "-DCMAKE_CXX_COMPILER=$Toolchain/x86_64-w64-mingw32-clang++.exe" `
         -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=OFF -DGGML_VULKAN=ON -DGGML_BLAS=OFF `
-        -DGGML_OPENMP=OFF -DGGML_NATIVE=ON -DQWEN_SHARED=ON `
+        -DGGML_OPENMP=OFF "-DGGML_NATIVE=$nativeFlags" -DQWEN_SHARED=ON `
         "-DVulkan_INCLUDE_DIR=$VulkanHeaders" "-DVulkan_LIBRARY=$VulkanLibrary" `
         "-DVulkan_GLSLC_EXECUTABLE=$Glslc" "-DCMAKE_PREFIX_PATH=$SpirvPrefix" `
-        "-DCMAKE_CXX_FLAGS=-I`"$SpirvPrefix/include`""
+        "-DCMAKE_CXX_FLAGS=-I`"$SpirvPrefix/include`" -ffile-prefix-map=`"$Source`"=." `
+        "-DCMAKE_C_FLAGS=-ffile-prefix-map=`"$Source`"=."
     if ($LASTEXITCODE -ne 0) { throw 'Native configure failed.' }
     & $CMake --build $build --target qwen -j4
     if ($LASTEXITCODE -ne 0) { throw 'Native build failed.' }

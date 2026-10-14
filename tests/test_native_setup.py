@@ -37,7 +37,9 @@ class SetupTests(unittest.TestCase):
             self.assertFalse((root/'outside').exists())
 
     def test_published_setup_has_no_author_machine_paths(self):
-        for name in ('setup_native.py', 'setup-native.ps1', 'preview_native.py'):
+        for name in ('setup_native.py', 'setup-native.ps1', 'preview_native.py', 'deploy.ps1',
+                     'prepare_speech_profile.py', 'verify_deployment.py', 'install_world.py',
+                     'activate_portable.py','install-portable.ps1','find-coopanion.ps1','build_portable.py'):
             text = (ROOT/'scripts'/name).read_text(encoding='utf-8')
             self.assertNotIn('63526', text)
             self.assertNotIn('coopanion-native-trial', text)

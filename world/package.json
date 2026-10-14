@@ -1,9 +1,10 @@
 {
   "name": "cortico-world-soft-voice",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "type": "module",
-  "description": "本地语音助手：核显流式合成、性能监测与 ZIP 音色包",
+  "description": "轻量化本地语音引擎：核显流式合成、性能监测与 ZIP 音色包",
   "license": "MIT",
+  "author": "Asryto",
   "keywords": [
     "cortico-world",
     "coopanion",
@@ -25,8 +26,8 @@
   "cortico": {
     "kind": "world",
     "api": 5,
-    "displayName": "本地语音助手",
-    "consoleClient": "dist/console-0.3.9.js",
-    "consoleStyle": "dist/console-0.3.9.css"
+    "displayName": "轻量化本地语音引擎",
+    "consoleClient": "dist/console-0.3.10.js",
+    "consoleStyle": "dist/console-0.3.10.css"
   }
 }

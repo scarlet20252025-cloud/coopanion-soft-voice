@@ -1,61 +1,41 @@
-# 本地语音助手 · Coopanion Local Voice Assistant
+# 轻量化本地语音引擎 · Coopanion
 
-为 Windows Coopanion 提供核显流式语音。**0.4.9 / World 0.3.6** 提供独立的本地语音助手：四个独立面板、真实延迟图表、内存要求提示和 ZIP 音色包导入。默认保留已确认的 `soft-child-design-2`，新版默认音色标为“待更新”。工具链、原生引擎源码、模型下载地址与校验值均已公开，无需作者电脑上的任何文件。
+作者：**Asryto** · Python **0.4.11** / World **0.3.10**
 
-0.4.1 使用参考音色特征缓存，实测合成后提交内存减少约 288 MiB，三次对照输出逐字节一致。见[内存优化与复现记录](docs/MEMORY_OPTIMIZATION.md)。0.4.2 另提供可选的[固定音色精简模型构建器](docs/SPEECH_ONLY.md)，无损删除 221 个参考分析张量，模型文件再减少 108.6 MiB；内存基本不变。World 0.2.1 增加可选空闲卸载：配置中设置秒数，默认 0 保持常驻，建议 300；下一句自动唤醒但会增加首句等待。
+Windows Coopanion 的独立核显语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，并提供 GitHub 安装入口。
 
-- [独立扩展安装与控制](docs/STANDALONE_WORLD.md)
-- [音色制作、ZIP 打包和导入教程](docs/VOICE_PACKS.md)
-- [Cortico 官方接口依据与兼容边界](docs/CORTICO_COMPATIBILITY.md)
+## 最简安装
 
-Q8 核显版音色已于 **2026-10-12** 通过用户试听并接入正式桌宠。使用 Qwen3-TTS 0.6B Base、固定参考音频和种子，不做变调；明确选择集成显卡，失败时不会改用 NVIDIA 独显或其他声音。不需要云端语音账号、付费服务、PyTorch 或 CUDA。
+1. 从 [GitHub Releases 下载完整 Windows 安装包](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest)，解压到英文路径，例如 `D:\CoopanionVoice`。
+2. 双击 **`install.cmd`**。自动寻找正在运行的桌宠、快捷方式、安装记录与常见目录；找不到或有多个副本时再选择路径。
+3. 安装器校验模型、执行真实合成和静音播放测试，接入 World 并重启桌宠。进入 **轻量化本地语音引擎** 即可使用。
 
-0.4.9 的文字词表按需加载实测减少约 **248–316 MiB 私有提交内存**，7 条长短及混合文本 PCM 与原版一致；模型权重精度不变。构建脚本包含原生补丁，新安装默认启用。
+**完整包自带固定音色精简版 Qwen3-TTS 0.6B Base Q8、音频解码模型、Vulkan DLL、Python 3.12 和播放器依赖。无需安装 Python、Git、Node、PyTorch、CUDA 或编译工具，无需语音 API key。** 解压目录就是运行目录，请保留。
 
-## 从零部署
+仍需要 Windows 10/11 x64、支持 Vulkan 的核显及厂商驱动、至少 **3 GiB 系统可用内存**和约 **4 GB 可用磁盘**。桌宠应先安装并初始化一次；本包不提供桌宠角色、聊天模型账号或账号额度。只使用核显，不自动切换独显或默认声音。其他硬件需验证驱动与实际性能。
 
-先安装 **Windows 10/11 x64、Python 3.10 x64、Git 和显卡厂商驱动（含 Vulkan）**，准备至少 **8 GB 可用磁盘**。核显实测平台为 Ryzen 7 7735H / AMD Radeon(TM) Graphics / 16 GB RAM；其他核显的性能和兼容性需自行验证。启动前常规运行时要求至少 4 GiB 系统可用内存；固定音色 + KV 1024 + compactGraphs 的精简运行时降为 3.25 GiB，自动恢复为 3.75 GiB。启用新版 `streamTextEmbedding` 后，该精简布局加载线为 **3 GiB**、自动恢复为 **3.5 GiB**，旧布局仍保留原保护线。游戏仍与核显共享系统资源。
+详细步骤、迁移及排错见 [便携安装指南](docs/PORTABLE_INSTALL.md)。作者和上游许可证均保留，见 [第三方说明](THIRD_PARTY_NOTICES.md)。
 
-```powershell
-git clone https://github.com/scarlet20252025-cloud/coopanion-soft-voice.git
-cd coopanion-soft-voice
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-native.ps1
-```
+## 让 AI 完整部署
 
-脚本创建独立 `.runtime-native/venv`，下载带 SHA256 校验的工具链和 Q8 模型，检出固定源码与子模块、应用仓库补丁、编译 DLL、生成本机配置并检查。需要访问 GitHub、PyPI、Google Storage、Hugging Face；下载失败会停止，不会换模型。它不会修改桌宠、注册开机自启或自动播放声音。
-
-**完整操作、设备名选择、试听、插件接入、回滚与故障排查：[核显部署指南](docs/DEPLOY_NATIVE.md)。**
+把本仓库链接交给 AI，先读 [AGENTS.md](AGENTS.md) 和 [AI 部署指南](docs/AI_DEPLOYMENT.md)。仓库默认入口自动下载并校验同一个免编译包：
 
 ```powershell
-# 生成试听文件，不自动播放
-.runtime-native\venv\Scripts\python.exe scripts/preview_native.py --output preview.wav
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1
 ```
 
-参考音频已包含在 [仓库资源](src/coopanion_soft_voice/assets/soft-child-design-2.wav) 和 wheel 中。它是合成音频，不是演员录音；其他人不需要从视频提取音源。不同驱动和硬件不保证逐采样一致，请先试听。
+可指定 `-CoopanionRoot '你的桌宠目录'`、`-Runtime '英文安装路径'`、`-BotId 'Bot目录名'`；`-RuntimeOnly` 仅验证语音，`-NoLaunch` 安装后不打开桌宠。包内安装器也支持这些操作。多块核显用 `-DeviceName '核显名称'`。
 
-## 接入桌宠
+[源码重建](docs/DEPLOY_NATIVE.md) 是开发者备用路线，入口 `scripts/deploy-source.ps1`。不再作为普通用户默认安装步骤。模型、源码、补丁及固定下载校验公开；不依赖作者电脑的虚拟环境、模型路径或 DLL。单个 Python wheel 包含代码和音色，但不包含全部模型；**完整离线部署请使用 Release ZIP**。
 
-当前推荐独立的 **本地语音助手 World**（Coopanion 0.1.24 已验证），不需要旧 CosyVoice 扩展。完整安装、控制选项和回退见 [独立扩展指南](docs/STANDALONE_WORLD.md)。模型仍使用已确认的 Q8 核显声线。
+## 功能与证据
 
-## 实测与限制
+- [独立扩展与官方 Cortico 接口](docs/STANDALONE_WORLD.md)：提示词按官方 `envPrompt` 注入，让桌宠知道真实语音状态。气泡同步首次默认启用，可独立关闭并记住选择。
+- [音色制作与 ZIP 导入](docs/VOICE_PACKS.md)：当前精简模型锁定已确认音色；自定义音色需完整运行时。未来默认音色标为“待更新”。
+- [内存优化](docs/MEMORY_OPTIMIZATION.md)、[固定音色精简模型](docs/SPEECH_ONLY.md)：预计算参考特征、KV 1024、紧凑计算图、文字词表按需加载。低功耗模式在空闲时释放模型，下一句自动唤醒；不改变运行中模型需求。
+- [长回复音色稳定性](docs/VOICE_STABILITY.md)：自然句界最多 32 字，逐段锁定完整参考特征；不换模型精度、种子或声线，不回退默认声音。
+- [核显及 CS2 验证记录](docs/NATIVE_TRIAL.md)：先前暖机首次设备回调约 1.18–1.43 秒；短时共存通过，不代表所有游戏和负载的性能保证。
 
-CS2 Dust II 离线机器人练习中，暖机后首次音频设备回调约 **1.18–1.43 秒**，两句无断流或设备欠载，游戏未崩溃。冷启动及预热约 13.8 秒。计时不包含聊天模型回复、排队及扬声器延迟；这不是整场竞技稳定性或 FPS 保证。
+历史文字词表优化减少约 248–316 MiB **私有提交内存**，7 条测试 PCM 与原版一致。这不是总显存指标。新便携包的验证记录见 `evidence/2026-10-14-portable/`；无真人重新试听的测试不得宣称新的听感验收。
 
-固定声线不保证任意句子的语气、音高完全一致。核显仍消耗内存、带宽和功耗；加载时内存不足会拒绝启动。0.4.10 在自然语句边界将核显长回复拆为最多 32 字的片段，每段重新使用完整参考音色；不改变已确认的参考 WAV、模型权重、种子或采样参数。帧数耗尽、空音频或参考特征变化会报错，不回退默认声音。详见 [长回复音色稳定性](docs/VOICE_STABILITY.md)。
-
-- [核显、插件和 CS2 验证记录](docs/NATIVE_TRIAL.md)
-- [原 CUDA 后端安装](docs/CUDA.md)：使用独显，不适合游戏隔离目标。
-- [CPU 试验及缓存模式](docs/CPU_TRIAL.md)：CPU 实时方案未采用；`cache` 只读打包的固定短语，不支持自由对话。
-
-## 构建与分享
-
-```powershell
-.runtime-native\venv\Scripts\python.exe -m pip install build==1.2.2.post1
-.runtime-native\venv\Scripts\python.exe -m build
-```
-
-分享本仓库或源码包即可按指南重建。wheel 包含 Python 代码、参考声音、缓存和许可证；源码包额外包含安装脚本、固定下载清单、原生补丁及文档。**单个 wheel 不包含第三方 DLL 和 1.28 GB 权重**，不是完整离线安装包。
-
-GitHub Actions 执行 Windows 测试、构建 wheel/源码包；原生安装脚本变化时，还会从干净 runner 下载工具并构建 DLL，也支持手动运行。无 GPU 的 CI 验证构建，不能代替核显推理和真人试听。
-
-这是语音组件，不是整个桌宠或聊天模型服务。角色素材、桌宠程序、聊天模型账号需自行配置。无密钥、聊天记录或作者本机路径依赖。代码 MIT；模型和第三方工具各遵循其许可证，详见 [第三方说明](THIRD_PARTY_NOTICES.md)。
+源码构建：`python -m build`。Windows CI 检查 Python/World 测试及打包内容；原生构建从固定源码应用补丁。无 GPU 的 CI 不能代替真实核显合成。

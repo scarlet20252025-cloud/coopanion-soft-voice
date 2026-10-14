@@ -23,8 +23,29 @@ export class SoftVoiceRuntime {
     return { ...p, python: resolve(this.root, p.python), runtime: resolve(this.root, p.runtime) };
   }
   hasLocalFiles() {
-    try { const p = this.profile(); return existsSync(p.python) && existsSync(join(p.runtime, 'native-runtime.json')); }
-    catch { return false; }
+    return this.deploymentStatus().installed;
+  }
+  deploymentStatus() {
+    const url='https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest';
+    let installed=false, problem='';
+    try {
+      const p=this.profile();
+      if (!existsSync(p.python)) throw new Error('Python 运行环境缺失');
+      const configFile=join(p.runtime,'native-runtime.json');
+      const c=JSON.parse(readFileSync(configFile,'utf8'));
+      for (const [key,label] of [['dll','推理引擎'],['model','Qwen3-TTS 模型'],['codec','音频解码模型']]) {
+        if (!c[key] || !statSync(resolve(p.runtime,c[key])).isFile() || statSync(resolve(p.runtime,c[key])).size===0) throw new Error(label+'文件缺失');
+      }
+      if (c.speechOnly && !existsSync(join(p.runtime,'voice-features.json'))) throw new Error('固定音色特征缺失');
+      installed=true;
+    } catch(err) { problem=err.code==='ENOENT'?'模型、引擎或运行配置文件缺失':err.message; }
+    const phase=this.state?.phase||'idle';
+    const connected=installed && !!this.worker && ['ready','playing','synthesizing'].includes(phase);
+    const loading=installed && (!!this.readyPromise || ['load_model','validate_model','prepare_voice','prepare_audio','check_memory'].includes(phase));
+    const state=!installed?'missing':phase==='error'?'error':phase==='waiting_memory'?'waiting_memory':connected?'connected':loading?'loading':phase==='sleeping'?'sleeping':'installed';
+    return {installed,connected,state,url,model:'Qwen3-TTS 0.6B Base Q8',
+      detail:!installed?problem:state==='error'?(this.workerError||this.state.detail):this.state?.detail||'运行文件已就位',
+      verification:connected?'启动校验已通过':'文件存在检查；完整校验在开启语音时执行'};
   }
   memoryPolicy() {
     try {
@@ -47,7 +68,7 @@ export class SoftVoiceRuntime {
     return { ...this.state, initializing: !!this.readyPromise, loadingSince:this.readyPromise ? this.loadingAt : null, workerPid: this.worker?.pid ?? null,
       engine: 'Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显', voice: this.cfg.voiceId || BUILTIN,
       history: this.history, loadMs: this.loadMs ?? null,
-      sampleRate: 24000, processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
+      sampleRate: 24000, deployment:this.deploymentStatus(), processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
   }
   record(text) {
     const file = join(this.root, 'worker.log');

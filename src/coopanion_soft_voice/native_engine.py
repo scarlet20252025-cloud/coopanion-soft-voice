@@ -14,7 +14,7 @@ MODEL_HASHES = {
 }
 
 
-def integrated_device(name):
+def integrated_devices():
     """Enumerate without creating a GPU device; never silently select a discrete GPU."""
     class Create(C.Structure):
         _fields_ = [('sType', C.c_uint32), ('next', C.c_void_p), ('flags', C.c_uint32),
@@ -42,13 +42,27 @@ def integrated_device(name):
             v.vkGetPhysicalDeviceProperties(device, buf)
             kind = int.from_bytes(buf.raw[16:20], 'little')
             actual = buf.raw[20:276].split(b'\0')[0].decode('utf-8')
-            if kind == 1 and actual == name:
-                matches.append(i)
-        if len(matches) != 1:
-            raise RuntimeError('Expected exactly one matching integrated GPU; no discrete GPU fallback')
-        return matches[0]
+            if kind == 1:
+                matches.append({'index':i,'name':actual})
+        return matches
     finally:
         v.vkDestroyInstance(instance, None)
+
+
+def integrated_device(name):
+    matches=[d['index'] for d in integrated_devices() if d['name']==name]
+    if len(matches)!=1:
+        raise RuntimeError('Expected exactly one matching integrated GPU; no discrete GPU fallback')
+    return matches[0]
+
+
+def select_integrated_name(name=None):
+    devices=integrated_devices()
+    if name:
+        if len([d for d in devices if d['name']==name])==1:return name
+    elif len(devices)==1:return devices[0]['name']
+    raise RuntimeError('Select one integrated Vulkan GPU with -DeviceName; no discrete GPU fallback. Available: '+
+                       json.dumps(devices,ensure_ascii=False))
 
 
 def settings(runtime, *, cached_verification=False):

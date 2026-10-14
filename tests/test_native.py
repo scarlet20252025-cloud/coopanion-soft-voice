@@ -30,6 +30,14 @@ def fake_engine():
 
 
 class NativeValidationTests(unittest.TestCase):
+    def test_auto_device_selection_never_chooses_discrete_or_ambiguous_devices(self):
+        with patch.object(native_engine,'integrated_devices',return_value=[{'index':1,'name':'Intel Integrated'}]):
+            self.assertEqual(native_engine.select_integrated_name(),'Intel Integrated')
+            self.assertEqual(native_engine.integrated_device('Intel Integrated'),1)
+            with self.assertRaises(RuntimeError):native_engine.select_integrated_name('NVIDIA Discrete')
+        for devices in [[],[{'index':0,'name':'A'},{'index':1,'name':'B'}]]:
+            with patch.object(native_engine,'integrated_devices',return_value=devices):
+                with self.assertRaises(RuntimeError):native_engine.select_integrated_name()
     def test_trailing_whitespace_does_not_create_an_empty_synthesis_piece(self):
         from coopanion_soft_voice import playback
         import numpy as np

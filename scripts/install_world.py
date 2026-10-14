@@ -7,8 +7,38 @@ import shutil
 import subprocess
 import sys
 import importlib.util
+import os
+import uuid
 
 NAME = 'cortico-world-soft-voice'
+
+
+def package_target(extensions):
+    extensions=Path(extensions).resolve()
+    alias=extensions/'node_modules'/NAME
+    if not alias.is_symlink():return alias
+    target=alias.resolve(strict=True)
+    virtual_store=extensions/'node_modules/.pnpm'
+    if not target.is_relative_to(virtual_store.resolve()) or target.name!=NAME:
+        raise ValueError('Extension link points outside its pnpm virtual store; refusing to change it')
+    return target
+
+
+def copy_package(source,target):
+    """Replace individual files atomically so pnpm hardlinks never mutate shared store bytes."""
+    source,target=Path(source).resolve(),Path(target).resolve()
+    target.mkdir(parents=True,exist_ok=True)
+    for part in ['src','dist','package.json','LICENSE','README.md']:
+        item=source/part
+        files=[item] if item.is_file() else [p for p in item.rglob('*') if p.is_file()]
+        for file in files:
+            if '__pycache__' in file.parts or file.suffix=='.pyc':continue
+            dest=target/file.relative_to(source)
+            if not dest.resolve().is_relative_to(target):raise ValueError('Package file target escapes extension directory')
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            temp=dest.with_name(dest.name+'.install-'+uuid.uuid4().hex)
+            shutil.copyfile(file,temp)
+            os.replace(temp,dest)
 
 def install(extensions, bot, runtime, enable=False):
     extensions, bot, runtime = map(lambda p: Path(p).resolve(), (extensions, bot, runtime))
@@ -23,16 +53,13 @@ def install(extensions, bot, runtime, enable=False):
     backup.mkdir(parents=True)
     shutil.copy2(ep, backup / 'extensions-package.json')
     shutil.copy2(bp, backup / 'bot-config.json')
-    dest = extensions / 'node_modules' / NAME
-    if dest.is_symlink():
-        raise ValueError('Target is a symlink; use a physical standalone package directory')
+    dest = package_target(extensions)
+    local = extensions / 'local-soft-voice'
+    if local.is_symlink():raise ValueError('local-soft-voice must be a physical package directory')
     if dest.exists():
         shutil.copytree(dest, backup / 'previous-package')
-    dest.mkdir(parents=True, exist_ok=True)
-    for name in ['src', 'dist']:
-        shutil.copytree(source / name, dest / name, dirs_exist_ok=True)
-    for name in ['package.json', 'LICENSE', 'README.md']:
-        shutil.copy2(source / name, dest / name)
+    if local.exists():shutil.copytree(local,backup/'previous-local-package')
+    copy_package(source,dest)
     data = bot / 'data' / 'soft-voice'
     profile = {'python': sys.executable, 'runtime': str(runtime), 'mode': 'igpu'}
     for name in ['runtime-profile.json', 'settings.json']:
@@ -40,10 +67,10 @@ def install(extensions, bot, runtime, enable=False):
     (data / 'runtime-profile.json').write_text(json.dumps(profile, indent=2), encoding='utf-8')
     settings = data / 'settings.json'
     saved = json.loads(settings.read_text(encoding='utf-8')) if settings.exists() else {'config': {'volume': 65}}
-    saved['speechEnabled'] = bool(enable)
+    if enable:saved['speechEnabled'] = True
+    else:saved.setdefault('speechEnabled',False)
     settings.write_text(json.dumps(saved, indent=2), encoding='utf-8')
-    local = extensions / 'local-soft-voice'
-    shutil.copytree(dest, local, dirs_exist_ok=True)
+    copy_package(source,local)
     ext.setdefault('dependencies', {})[NAME] = 'file:./local-soft-voice'
     # Unregister legacy package without deleting its files or personal backups.
     ext['dependencies'].pop('cortico-world-cosyvoice-tts', None)
