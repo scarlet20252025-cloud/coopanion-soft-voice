@@ -2,6 +2,7 @@ import { freemem, totalmem } from 'node:os';
 import { listVoices, voicePath, importVoice, TUTORIAL, BUILTIN } from './voices.js';
 import { CONFIG_GROUP, DEFAULTS, ID, volumePercent, configValues, validateConfigPatch } from './config.js';
 import { petSayFromEntry } from './parser.js';
+import { rememberReply, restoreReplies, replyProgress } from './reply-receipts.js';
 import { ToolCallTailer } from './tailer.js';
 import { SoftVoiceRuntime } from './runtime.js';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
@@ -23,6 +24,7 @@ export class SoftVoiceWorld {
     this.dropped = 0;
     this.speaking = false;
     this.lastSeen = {};
+    this.recentReplies = [];
     this.active = false;
     this.blocked = false;
     this.draining = null;
@@ -38,6 +40,9 @@ export class SoftVoiceWorld {
   }
 
   envPromptVars() {
+    // Catch the final receipt before a handoff rebuilds the system prefix.
+    // Polling keeps the existing audio cursor: it never replays skipped history.
+    try { this.tailer?.poll(); } catch (err) { this.host?.log.warn(`无法同步近期回复回执: ${err.message}`); }
     const phase = this.runtime?.status?.().phase;
     let state = '语音正在准备，暂不能保证发声。';
     if (!this.active || !this.speechEnabled) state = '语音已停用，目前只显示文字。';
@@ -47,7 +52,7 @@ export class SoftVoiceWorld {
     else if (phase === 'waiting_user') state = '语音运行环境尚未配置完整，目前只显示文字。';
     else if (phase === 'sleeping') state = '语音省内存待机中，下一次 pet_say 会自动加载模型并朗读，首句需要额外等待。';
     else if (this.accepting) state = '语音已启用且已就绪，你已经可以开口说话；pet_say 的可朗读文字会自动合成并播放。';
-    return { 'softVoice.state': state };
+    return { 'softVoice.state': state, 'softVoice.recentReplies': replyProgress(this.recentReplies) };
   }
   tools() { return []; }
 
@@ -62,7 +67,8 @@ export class SoftVoiceWorld {
         description: '说明自动朗读能力与当前状态；由 Cortico 合入系统提示词。',
         path: fileURLToPath(new URL('./ENV_PROMPT.md', import.meta.url)),
         role: 'envPrompt',
-        vars: [{ name: 'softVoice.state', description: '当前语音能力、静音或异常状态' }],
+        vars: [{ name: 'softVoice.state', description: '当前语音能力、静音或异常状态' },
+          { name: 'softVoice.recentReplies', description: '近期已成功输出的回复与实际回执，防止交接后重答' }],
       }],
       lamps: [{ label: 'TTS', state: lampState, hint: st.detail ?? st.phase }],
       panels: [{ id: 'controls', title: '语音控制', description: '试听、静音、音量、释放内存和恢复。' }, { id: 'status', title: '运行状态', description: '引擎、音色、延迟和异常诊断。' },
@@ -123,7 +129,7 @@ export class SoftVoiceWorld {
     this.cursorFile = join(this.runtime.root, 'cache', 'toolcall-cursor.json');
     let saved = null;
     if (existsSync(this.cursorFile)) {
-      try { saved = JSON.parse(readFileSync(this.cursorFile, 'utf8')); this.lastSeen = saved.lastSeen || {}; }
+      try { saved = JSON.parse(readFileSync(this.cursorFile, 'utf8')); this.lastSeen = saved.lastSeen || {}; this.recentReplies = restoreReplies(saved.recentReplies); }
       catch (err) { host.log.warn(`无法读取 TTS 游标: ${err.message}`); }
     }
     this.tailer = new ToolCallTailer(this.opts.dataDir, entry => this.onToolCall(entry), host.log,
@@ -289,6 +295,8 @@ export class SoftVoiceWorld {
   }
 
   onToolCall(entry) {
+    // Preserve completed text output even when audio is muted, loading or disabled.
+    this.recentReplies = rememberReply(this.recentReplies, entry);
     const item = petSayFromEntry(entry);
     if (!item || item.seq <= (this.lastSeen[item.run] || 0)) return true;
     if (!this.speechEnabled || !this.accepting || this.opts.cfg.volume === 0) { ++this.skippedBeforeReady; return true; }
@@ -330,7 +338,7 @@ export class SoftVoiceWorld {
   saveCursor(cursor) {
     if (!this.cursorFile || !this.active) return;
     mkdirSync(dirname(this.cursorFile), { recursive: true });
-    writeFileSync(this.cursorFile + '.tmp', JSON.stringify({ ...cursor, lastSeen: this.lastSeen }), 'utf8');
+    writeFileSync(this.cursorFile + '.tmp', JSON.stringify({ ...cursor, lastSeen: this.lastSeen, recentReplies: this.recentReplies }), 'utf8');
     renameSync(this.cursorFile + '.tmp', this.cursorFile);
   }
 }

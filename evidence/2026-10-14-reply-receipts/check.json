@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-14T18:55:18.9616611+08:00",
+  "rootCause": "Handoff note kept the old user question but omitted the last pet_say before its soft-threshold boundary",
+  "singleOriginalInput": true,
+  "fix": "Bounded successful reply receipt ledger via official World environment prompt API",
+  "scope": "Independent voice extension, no desktop core changes",
+  "tests": 23,
+  "modelRegression": {
+    "status": "completed",
+    "chosenTool": "end_turn",
+    "receiptRetained": true,
+    "repeatAnswer": false,
+    "model": "gpt-6-luna",
+    "oldHandoffLostAnswer": true
+  },
+  "installedPrefix": {
+    "hasReplyReceiptSection": true,
+    "unresolvedPlaceholder": false,
+    "hasProgressGuard": true
+  }
+}

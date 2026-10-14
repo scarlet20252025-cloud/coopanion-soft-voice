@@ -1,5 +1,7 @@
 # 本地语音助手 World
 
+扩展保留最近 10 分钟内最多 3 条成功的 `pet_say` 文本输出回执，通过 Cortico 的 `envPromptVars` 与 `role: envPrompt` 合入系统提示词。上下文交接可能省略旧台词，这些回执用于说明哪些回复已输出，避免把旧问题重新回答。记录独立于音频队列，静音或停用语音时也有效；失败调用不计入，不据此宣称音频已播放或用户已听见。用户再次询问、纠正或要求更新时仍应正常回答。
+
 独立的 Coopanion API 5 World 扩展。无需安装 CosyVoice 或其他语音扩展。
 依赖本仓库提供的 Qwen3-TTS 核显 Python 运行环境，保留固定 soft-child-design-2 音色。
 

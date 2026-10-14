@@ -1,6 +1,6 @@
 {
   "name": "cortico-world-soft-voice",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "type": "module",
   "description": "本地语音助手：核显流式合成、性能监测与 ZIP 音色包",
   "license": "MIT",
