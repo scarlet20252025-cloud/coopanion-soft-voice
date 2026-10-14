@@ -1,0 +1,276 @@
+{
+  "workerIds": [
+    10624,
+    45972,
+    30784
+  ],
+  "initialLoadMs": 1704,
+  "loadedMemory": [
+    {
+      "Id": 45972,
+      "PrivateMemorySize64": 1228800,
+      "WorkingSet64": 7860224
+    },
+    {
+      "Id": 10624,
+      "PrivateMemorySize64": 839680,
+      "WorkingSet64": 4423680
+    },
+    {
+      "Id": 30784,
+      "PrivateMemorySize64": 2311888896,
+      "WorkingSet64": 2579259392
+    }
+  ],
+  "sleeping": {
+    "phase": "sleeping",
+    "stage": "sleeping",
+    "detail": "低占用休眠，保留进程与播放器；模型已释放，下一句话自动唤醒。",
+    "initializing": false,
+    "workerPid": 10624,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 874,
+        "queueWaitMs": 1600,
+        "startDelayMs": 2475,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2576,
+        "firstChunkMs": 874,
+        "firstDeviceCallbackMs": 893,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "at": 1791956123139,
+        "totalStartMs": 2493
+      },
+      {
+        "id": "s2",
+        "synthesisMs": 855,
+        "queueWaitMs": 1242,
+        "startDelayMs": 2098,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2579,
+        "firstChunkMs": 855,
+        "firstDeviceCallbackMs": 865,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "at": 1791956135778,
+        "totalStartMs": 2107
+      }
+    ],
+    "loadMs": 1704,
+    "sampleRate": 24000,
+    "lastSpeech": null,
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  },
+  "sleepingMemory": [
+    {
+      "Id": 45972,
+      "PrivateMemorySize64": 1228800,
+      "WorkingSet64": 7860224
+    },
+    {
+      "Id": 10624,
+      "PrivateMemorySize64": 839680,
+      "WorkingSet64": 4423680
+    },
+    {
+      "Id": 30784,
+      "PrivateMemorySize64": 600801280,
+      "WorkingSet64": 100667392
+    }
+  ],
+  "remainingWorkerIds": [
+    45972,
+    10624,
+    30784
+  ],
+  "wakeAndPlaybackMs": 6107,
+  "afterWake": {
+    "phase": "ready",
+    "stage": "ready",
+    "detail": "所选音色已就绪",
+    "initializing": false,
+    "workerPid": 10624,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 874,
+        "queueWaitMs": 1600,
+        "startDelayMs": 2475,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2576,
+        "firstChunkMs": 874,
+        "firstDeviceCallbackMs": 893,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "at": 1791956123139,
+        "totalStartMs": 2493
+      },
+      {
+        "id": "s2",
+        "synthesisMs": 855,
+        "queueWaitMs": 1242,
+        "startDelayMs": 2098,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2579,
+        "firstChunkMs": 855,
+        "firstDeviceCallbackMs": 865,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "at": 1791956135778,
+        "totalStartMs": 2107
+      }
+    ],
+    "loadMs": 1600,
+    "sampleRate": 24000,
+    "lastSpeech": {
+      "id": "s1",
+      "synthesisMs": 874,
+      "queueWaitMs": 1600,
+      "startDelayMs": 2475,
+      "type": "done",
+      "seconds": 3.52,
+      "totalSynthesisMs": 2576,
+      "firstChunkMs": 874,
+      "firstDeviceCallbackMs": 893,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "startupBufferMode": "adaptive",
+      "nextBufferMode": "adaptive",
+      "at": 1791956123139,
+      "totalStartMs": 2493
+    },
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  },
+  "sleepingAfterSpeechMemory": [
+    {
+      "Id": 45972,
+      "PrivateMemorySize64": 1228800,
+      "WorkingSet64": 7860224
+    },
+    {
+      "Id": 10624,
+      "PrivateMemorySize64": 839680,
+      "WorkingSet64": 4423680
+    },
+    {
+      "Id": 30784,
+      "PrivateMemorySize64": 619347968,
+      "WorkingSet64": 117305344
+    }
+  ],
+  "secondWake": {
+    "phase": "ready",
+    "stage": "ready",
+    "detail": "所选音色已就绪",
+    "initializing": false,
+    "workerPid": 10624,
+    "engine": "Qwen3-TTS 0.6B Base / Q8_0 / Vulkan 核显",
+    "voice": "builtin",
+    "history": [
+      {
+        "id": "s1",
+        "synthesisMs": 874,
+        "queueWaitMs": 1600,
+        "startDelayMs": 2475,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2576,
+        "firstChunkMs": 874,
+        "firstDeviceCallbackMs": 893,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "at": 1791956123139,
+        "totalStartMs": 2493
+      },
+      {
+        "id": "s2",
+        "synthesisMs": 855,
+        "queueWaitMs": 1242,
+        "startDelayMs": 2098,
+        "type": "done",
+        "seconds": 3.52,
+        "totalSynthesisMs": 2579,
+        "firstChunkMs": 855,
+        "firstDeviceCallbackMs": 865,
+        "underrunMs": 0,
+        "deviceUnderflows": 0,
+        "playbackMode": "continuous_pcm",
+        "startupBufferMode": "adaptive",
+        "nextBufferMode": "adaptive",
+        "at": 1791956135778,
+        "totalStartMs": 2107
+      }
+    ],
+    "loadMs": 1242,
+    "sampleRate": 24000,
+    "lastSpeech": {
+      "id": "s2",
+      "synthesisMs": 855,
+      "queueWaitMs": 1242,
+      "startDelayMs": 2098,
+      "type": "done",
+      "seconds": 3.52,
+      "totalSynthesisMs": 2579,
+      "firstChunkMs": 855,
+      "firstDeviceCallbackMs": 865,
+      "underrunMs": 0,
+      "deviceUnderflows": 0,
+      "playbackMode": "continuous_pcm",
+      "startupBufferMode": "adaptive",
+      "nextBufferMode": "adaptive",
+      "at": 1791956135778,
+      "totalStartMs": 2107
+    },
+    "workerError": null,
+    "queueLength": 0,
+    "speaking": false,
+    "volume": 65,
+    "speechEnabled": true,
+    "toggling": false,
+    "dropped": 0,
+    "accepting": true,
+    "skippedBeforeReady": 0
+  }
+}

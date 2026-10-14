@@ -10,10 +10,16 @@ class PCMPlayer:
         self.queue=deque();self.lock=threading.Lock();self.finished=threading.Event()
         self.producer_done=False;self.stream=None;self.underrun_frames=0;self.device_underflows=0
         self.first_audio_at=None;self.samples=0
+        self.notified=False
+        # Open the device before entering native generation. The producer callback
+        # must only enqueue samples, never initialize drivers on the compute thread.
+        self.stream=sd.OutputStream(samplerate=self.rate,channels=1,dtype='float32',blocksize=480,latency='low',callback=self._callback,finished_callback=self.finished.set)
+        try:self.stream.start()
+        except BaseException:self.stream.close();self.stream=None;raise
 
     def _callback(self,out,frames,timing,status):
         out.fill(0)
-        if status.output_underflow:self.device_underflows+=1
+        if status.output_underflow and self.first_audio_at is not None:self.device_underflows+=1
         written=0
         with self.lock:
             while written<frames and self.queue:
@@ -22,9 +28,9 @@ class PCMPlayer:
                 if n==len(a):self.queue.popleft()
                 else:self.queue[0]=a[n:]
                 written+=n
-            ended=self.producer_done and not self.queue
+            ended=self.producer_done and not self.queue and self.samples>0
         if written and self.first_audio_at is None:self.first_audio_at=time.perf_counter()
-        if written<frames and not self.producer_done:self.underrun_frames+=frames-written
+        if written<frames and not self.producer_done and self.first_audio_at is not None:self.underrun_frames+=frames-written
         if ended:raise sd.CallbackStop
 
     def push(self,a,rate):
@@ -32,9 +38,8 @@ class PCMPlayer:
         a=np.asarray(a,dtype=np.float32)
         if not np.isfinite(a).all():raise ValueError('音频包含无效采样')
         with self.lock:self.queue.append(np.clip(a*self.volume,-1,1));self.samples+=len(a)
-        if self.stream is None:
-            self.stream=sd.OutputStream(samplerate=self.rate,channels=1,dtype='float32',blocksize=480,latency='low',callback=self._callback,finished_callback=self.finished.set)
-            self.stream.start()
+        if not self.notified:
+            self.notified=True
             if self.on_start:self.on_start()
 
     def finish(self):

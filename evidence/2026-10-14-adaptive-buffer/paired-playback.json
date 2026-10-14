@@ -1,0 +1,88 @@
+[
+  {
+    "type": "done",
+    "id": "bench-0",
+    "seconds": 3.52,
+    "totalSynthesisMs": 2767,
+    "firstChunkMs": 1364,
+    "firstDeviceCallbackMs": 1371,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "startupBufferMode": "fixed",
+    "nextBufferMode": "fixed",
+    "pcmSha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+    "policy": "fixed",
+    "buffer": {
+      "chunks": 4,
+      "bufferSeconds": 1.2,
+      "targetSeconds": 1.2,
+      "maxGap": 0.4016048999983468
+    }
+  },
+  {
+    "type": "done",
+    "id": "bench-1",
+    "seconds": 3.52,
+    "totalSynthesisMs": 2267,
+    "firstChunkMs": 911,
+    "firstDeviceCallbackMs": 917,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "startupBufferMode": "adaptive",
+    "nextBufferMode": "adaptive",
+    "pcmSha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+    "maxAbsoluteDifference": 0.0,
+    "policy": "adaptive",
+    "buffer": {
+      "chunks": 4,
+      "bufferSeconds": 1.2,
+      "targetSeconds": 0.9399269999959506,
+      "maxGap": 0.3899634999979753
+    }
+  },
+  {
+    "type": "done",
+    "id": "bench-2",
+    "seconds": 10.56,
+    "totalSynthesisMs": 6282,
+    "firstChunkMs": 822,
+    "firstDeviceCallbackMs": 836,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "startupBufferMode": "fixed",
+    "nextBufferMode": "fixed",
+    "pcmSha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+    "policy": "fixed",
+    "buffer": {
+      "chunks": 4,
+      "bufferSeconds": 1.2,
+      "targetSeconds": 1.2,
+      "maxGap": 0.3566735999993398
+    }
+  },
+  {
+    "type": "done",
+    "id": "bench-3",
+    "seconds": 10.56,
+    "totalSynthesisMs": 5982,
+    "firstChunkMs": 437,
+    "firstDeviceCallbackMs": 455,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "startupBufferMode": "adaptive",
+    "nextBufferMode": "adaptive",
+    "pcmSha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+    "maxAbsoluteDifference": 0.0,
+    "policy": "adaptive",
+    "buffer": {
+      "chunks": 3,
+      "bufferSeconds": 0.56,
+      "targetSeconds": 0.5161846000084188,
+      "maxGap": 0.1780923000042094
+    }
+  }
+]

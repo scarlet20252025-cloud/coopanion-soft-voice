@@ -76,11 +76,13 @@ def settings(runtime, *, cached_verification=False):
 class NativeEngine:
     sample_rate = 24000
 
-    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True):
+    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True, buffer_mode='adaptive'):
         started = time.perf_counter()
         self.startup_timings = {}
         self.ctx = None; self.voice = Voice(); self.dirs = []
         self.cached_arrays = None
+        if buffer_mode not in ('fixed', 'adaptive'): raise ValueError('Unknown startup buffer mode')
+        self.buffer_mode = buffer_mode
         self.reference_path = reference()
         self.reference_text = REFERENCE_TEXT
         if voice_pack:
@@ -193,6 +195,8 @@ class NativeEngine:
         p.temperature = .9; p.top_k = 50; p.top_p = 1; p.repetition_penalty = 1.05
         p.subtalker_temperature = .9; p.subtalker_top_k = 50; p.subtalker_top_p = 1
         pending = []; count = 0; total_samples = 0; opened = False; errors = []; started = time.perf_counter()
+        from .start_buffer import StartBuffer
+        gate = StartBuffer(fixed=getattr(self, 'buffer_mode', 'adaptive') == 'fixed')
         @Cancel
         def cancel(user): return time.perf_counter()-started > 60
         @Chunk
@@ -206,7 +210,9 @@ class NativeEngine:
                     receive(data, 24000)
                 else:
                     pending.append(data); count += n
-                    if count >= 28800:
+                    if gate.feed(n, time.perf_counter()):
+                        self.last_start_buffer = {'chunks':gate.chunks,'bufferSeconds':count/24000,
+                                                  'targetSeconds':gate.target_seconds,'maxGap':gate.max_gap}
                         receive(np.concatenate(pending), 24000); pending.clear(); opened = True
                 return True
             except Exception as exc:

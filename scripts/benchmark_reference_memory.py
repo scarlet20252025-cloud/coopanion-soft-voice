@@ -29,13 +29,15 @@ def main():
     p.add_argument('--variant', choices=['baseline', 'cached'], required=True)
     p.add_argument('--output', required=True)
     p.add_argument('--no-prewarm', action='store_true', help='Measure the first real sentence without a discarded warmup')
+    p.add_argument('--buffer-mode', choices=['fixed','adaptive'], default='adaptive')
     args = p.parse_args()
     started = time.perf_counter()
-    model = NativeEngine(args.runtime, use_reference_cache=args.variant == 'cached')
+    model = NativeEngine(args.runtime, use_reference_cache=args.variant == 'cached', buffer_mode=args.buffer_mode)
     report = dict(variant=args.variant, cacheHit=model.reference_cache_hit,
                   loadSeconds=round(time.perf_counter()-started, 3), loaded=memory())
     report['startupTimings'] = model.startup_timings
     report['prewarm'] = not args.no_prewarm
+    report['bufferMode'] = args.buffer_mode
     try:
         if not args.no_prewarm:
             model.synthesize_stream('准备好了。', 'warm', lambda a, s: None)
@@ -52,6 +54,7 @@ def main():
             report['samples'].append(dict(text=text, samples=len(pcm),
                 sha256=hashlib.sha256(pcm.tobytes()).hexdigest(),
                 firstChunkSeconds=round(first[0], 3), seconds=round(time.perf_counter()-start, 3),
+                startBuffer=getattr(model,'last_start_buffer',None),
                 memory=memory()))
         Path(args.output).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
         print(json.dumps(report, ensure_ascii=False))

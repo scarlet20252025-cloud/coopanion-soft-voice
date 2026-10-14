@@ -31,6 +31,13 @@ def speak(model,text,key,volume,speed,request_id,stage,root):
                 'firstDeviceCallbackMs':round((player.first_audio_at-started)*1000) if player.first_audio_at else None,
                 'underrunMs':round(player.underrun_frames/player.rate*1000),
                 'deviceUnderflows':player.device_underflows,'playbackMode':'continuous_pcm'}
+        mode=getattr(model,'buffer_mode',None)
+        result['startupBufferMode']=mode if isinstance(mode,str) else 'backend-default'
+        if mode in ('fixed','adaptive') and (player.underrun_frames or player.device_underflows):
+            # A real device starvation event overrides optimistic cadence estimates.
+            # Keep the conservative policy for the rest of this worker lifetime.
+            model.buffer_mode='fixed'
+        result['nextBufferMode']=getattr(model,'buffer_mode') if isinstance(mode,str) else 'backend-default'
         cache=Path(root)/'cache';cache.mkdir(parents=True,exist_ok=True)
         (cache/'last-stream-metrics.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
         return result
