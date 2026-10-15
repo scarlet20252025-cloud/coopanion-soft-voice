@@ -233,7 +233,7 @@ export class SoftVoiceWorld {
 
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
-      diagnostics:this.reports?.status(),updates:this.updates?.status(),switchingDevice:!!this.switchingDevice,updating:!!this.updating,
+      diagnostics:this.reports?.status(),updates:this.updates?.status(),switchingDevice:!!(this.switchingDevice||this.deviceChecking),deviceChange:this.deviceChange||null,selectedDeviceName:this.opts.cfg.deviceName||'',updating:!!this.updating,
       bubbleSync: this.bubbleSyncStatus(),
       volume: volumePercent(this.opts.cfg.volume),
       speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
@@ -285,30 +285,40 @@ export class SoftVoiceWorld {
   }
 
   assertIdleOperation() {
-    if (!this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.updating || this.updates?.status().busy || this.reports?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
+    if (!this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.deviceChecking || this.updating || this.updates?.status().busy || this.reports?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
   }
 
   async selectDevice(name) {
     this.assertIdleOperation();
     const patch=validateConfigPatch({deviceName:name});
     if(name===(this.opts.cfg.deviceName||''))return this.status();
-    if(name){const result=await this.runtime.devices();if(result.devices.filter(d=>d.name===name).length!==1)throw new Error('设备不存在或名称不唯一；不会自动切换到其他显卡');}
-    this.assertIdleOperation();this.switchingDevice=true;
     const previous=this.opts.cfg.deviceName||'',enabled=this.speechEnabled;
+    const change=this.deviceChange={state:'checking',target:name,previous,startedAt:Date.now(),detail:'正在检查所选设备…'};
+    let mutated=false;this.deviceChecking=true;
     try {
+      if(name){const result=await this.runtime.devices();if(result.devices.filter(d=>d.name===name).length!==1)throw new Error('设备不存在或名称不唯一；不会自动切换到其他显卡');}
+      this.deviceChecking=false;this.assertIdleOperation();this.switchingDevice=true;mutated=true;
+      Object.assign(change,{state:'loading',detail:'正在释放原设备并加载所选设备…'});
       await this.setSpeechEnabled(false);
       Object.assign(this.opts.cfg,patch);this.opts.persist?.(patch);
       this.writeSettings({...this.settings,config:configValues(this.opts.cfg)});
       this.runtime.history=[];this.runtime.lastSpeech=null;
       if(enabled){await this.setSpeechEnabled(true);await this.initialization;}
-      return this.status();
+      Object.assign(change,{state:'success',detail:'已选择并保存：'+(name||'按安装配置选择')+(enabled?'；语音已重新加载。':'；下次开启语音时使用。'),finishedAt:Date.now()});
     } catch(error) {
-      await this.setSpeechEnabled(false);
-      this.opts.cfg.deviceName=previous;this.opts.persist?.({deviceName:previous});
-      this.writeSettings({...this.settings,config:configValues(this.opts.cfg)});
-      if(enabled){await this.setSpeechEnabled(true);await this.initialization?.catch(()=>{});}
-      throw new Error('设备切换失败，已恢复原设备配置：'+error.message);
-    } finally {this.switchingDevice=false;}
+      let detail='设备未切换：'+error.message;
+      if(mutated){
+        try {
+          await this.setSpeechEnabled(false);
+          this.opts.cfg.deviceName=previous;this.opts.persist?.({deviceName:previous});
+          this.writeSettings({...this.settings,config:configValues(this.opts.cfg)});
+          if(enabled){await this.setSpeechEnabled(true);await this.initialization;}
+          detail='设备切换失败，已恢复原设备配置：'+error.message;
+        } catch(restoreError){detail='设备切换失败：'+error.message+'；恢复也失败：'+restoreError.message+'。请检查运行状态后重试。';}
+      }
+      Object.assign(change,{state:'error',detail,finishedAt:Date.now()});throw new Error(detail);
+    } finally {this.switchingDevice=false;this.deviceChecking=false;}
+    return this.status();
   }
 
   async applyUpdate() {

@@ -74,7 +74,7 @@ export class SoftVoiceRuntime {
   status() {
     return { ...this.state, initializing: !!this.readyPromise, loadingSince:this.readyPromise ? this.loadingAt : null, workerPid: this.worker?.pid ?? null,
       engine: 'Qwen3-TTS 0.6B Base / Q8_0 / Vulkan GPU', voice: this.cfg.voiceId || BUILTIN,
-      deviceName:this.deviceName||this.cfg.deviceName||null,deviceType:this.deviceType||null,engineVersion:this.engineVersion||null,
+      deviceName:this.deviceName||this.cfg.deviceName||null,deviceType:this.deviceType||null,engineVersion:this.engineVersion||null,availableDevices:this.deviceInventory||[],
       history: this.history, loadMs: this.loadMs ?? null, nativeSettings:this.nativeSettings??null,startupTimings:this.startupTimings??null,
       sampleRate: 24000, deployment:this.deploymentStatus(), processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
   }

@@ -1,6 +1,6 @@
 # 轻量化本地语音引擎：不依赖扩展市场的安装教程
 
-作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.5.0 / World 0.4.0。
+作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.5.0 / World 0.4.1。
 
 **下载完整 ZIP → 解压 → 双击 `install.cmd` → 在桌宠中试听。** 安装器会同时安装语音扩展、模型和运行环境，不需要扩展市场、npm 账号，也不用单独安装 Python、Git、Node、PyTorch、CUDA 或编译工具。
 

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "version": "0.5.0",
-  "worldVersion": "0.4.0",
+  "worldVersion": "0.4.1",
   "minimumVersion": "0.4.11",
   "platform": "windows-x64",
   "runtimeHashes": {
@@ -11,8 +11,8 @@
   },
   "patch": {
     "file": "coopanion-voice-update-0.5.0.zip",
-    "bytes": 854048,
-    "sha256": "6f34c9e1c60389b279d2ad9779978252ace34f0a4877f6652e9f615543cdca38",
+    "bytes": 874395,
+    "sha256": "443709cf03102f954df7e06c4b73b21b1052f07ea5fe9e40f8b7d14f02afd0bd",
     "url": "https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/updates-v0.5.0/coopanion-voice-update-0.5.0.zip"
   }
 }

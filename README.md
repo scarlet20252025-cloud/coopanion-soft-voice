@@ -1,6 +1,6 @@
 # 轻量化本地语音引擎 · Coopanion
 
-作者：**Asryto** · Python **0.5.0** / World **0.4.0**
+作者：**Asryto** · Python **0.5.0** / World **0.4.1**
 
 0.5.0 已验证本机 AMD 核显与 RTX 4050；Intel UHD 提速、其他显卡和能效提升仍在 [验证与优化计划](docs/OPTIMIZATION_PLAN.md) 中，不作为已通过承诺。
 

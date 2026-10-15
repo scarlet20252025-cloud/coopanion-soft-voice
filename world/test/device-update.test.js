@@ -18,6 +18,7 @@ test('explicit discrete hot switch stops the old worker and preserves other pref
   const {w,events}=fixture();w.opts.cfg.syncBubbles=false;w.opts.cfg.volume=27;
   await w.selectDevice('NVIDIA');assert.deepEqual(events,['stop','start']);
   assert.equal(w.opts.cfg.deviceName,'NVIDIA');assert.equal(w.opts.cfg.syncBubbles,false);assert.equal(w.opts.cfg.volume,27);assert.equal(w.switchingDevice,false);
+  assert.equal(w.status().selectedDeviceName,'NVIDIA');assert.equal(w.status().switchingDevice,false);assert.equal(w.status().deviceChange.state,'success');
 });
 test('busy or absent GPU cannot trigger a device switch',async()=>{
   const {w,events}=fixture();w.speaking=true;await assert.rejects(w.selectDevice('NVIDIA'),/等当前/);w.speaking=false;
@@ -27,6 +28,28 @@ test('failed GPU initialization restores the previous choice and enabled state',
   const {w}=fixture();w.opts.cfg.deviceName='AMD';
   w.setSpeechEnabled=async enabled=>{w.speechEnabled=enabled;if(enabled&&w.opts.cfg.deviceName==='NVIDIA')throw Error('GPU unavailable');};
   await assert.rejects(w.selectDevice('NVIDIA'),/已恢复原设备配置/);assert.equal(w.opts.cfg.deviceName,'AMD');assert.equal(w.speechEnabled,true);
+  assert.equal(w.status().selectedDeviceName,'AMD');assert.equal(w.status().deviceChange.state,'error');assert.match(w.status().deviceChange.detail,/GPU unavailable/);
+});
+
+test('validation progress is visible and concurrent speech is never interrupted',async()=>{
+  const {w,events}=fixture();let resolveDevices;
+  w.runtime.devices=()=>new Promise(resolve=>{resolveDevices=resolve;});
+  const switching=w.selectDevice('NVIDIA');assert.equal(w.status().switchingDevice,true);assert.equal(w.status().deviceChange.state,'checking');
+  await assert.rejects(w.selectDevice('AMD'),/等当前/);
+  w.speaking=true;resolveDevices({devices:[{name:'NVIDIA'}]});await assert.rejects(switching,/设备未切换/);
+  assert.deepEqual(events,[]);assert.equal(w.speechEnabled,true);assert.equal(w.status().switchingDevice,false);
+});
+
+test('selection with speech disabled persists without starting the model',async()=>{
+  const {w,events}=fixture();w.speechEnabled=false;
+  await w.selectDevice('NVIDIA');assert.deepEqual(events,['stop']);
+  assert.equal(w.settings.config.deviceName,'NVIDIA');assert.match(w.status().deviceChange.detail,/下次开启/);
+});
+
+test('restore failure is reported rather than claiming rollback succeeded',async()=>{
+  const {w}=fixture();w.opts.cfg.deviceName='AMD';
+  w.setSpeechEnabled=async enabled=>{w.speechEnabled=enabled;if(enabled)throw Error('driver lost');};
+  await assert.rejects(w.selectDevice('NVIDIA'),/恢复也失败/);assert.equal(w.status().deviceChange.state,'error');
 });
 test('playback choices are validated and device changes cannot bypass reload',()=>{
   assert.equal(validateConfigPatch({playbackMode:'buffered'}).playbackMode,'buffered');

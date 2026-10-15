@@ -13,10 +13,10 @@ npm login --auth-type=web --browser=false --registry https://registry.npmjs.org
 cd world
 npm test
 npm pack
-npm publish cortico-world-soft-voice-0.4.0.tgz --access public --registry https://registry.npmjs.org
+npm publish cortico-world-soft-voice-0.4.1.tgz --access public --registry https://registry.npmjs.org
 ```
 
-发布后用 `npm view cortico-world-soft-voice@0.4.0 version dist.integrity --registry https://registry.npmjs.org` 核对包。再按 `keywords:cortico-world` 查询并确认官方市场收录；索引未更新时可在桌宠手动填写包名安装。仅 dry-run 不算发布成功。
+发布后用 `npm view cortico-world-soft-voice@0.4.1 version dist.integrity --registry https://registry.npmjs.org` 核对包。再按 `keywords:cortico-world` 查询并确认官方市场收录；索引未更新时可在桌宠手动填写包名安装。仅 dry-run 不算发布成功。
 
 ## 包和模型
 
