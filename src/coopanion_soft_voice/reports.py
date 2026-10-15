@@ -172,7 +172,7 @@ def main():
     elif a.action == 'detail': result = reports.detail(a.id)
     elif a.action == 'export': result = reports.export(a.id)
     else: result = reports.submit(a.id, a.authorized, a.automatic)
-    print(json.dumps(result, ensure_ascii=False, allow_nan=False))
+    print(json.dumps(result, ensure_ascii=True, allow_nan=False))
 
 
 if __name__ == '__main__': main()

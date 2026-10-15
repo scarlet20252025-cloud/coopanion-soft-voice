@@ -79,7 +79,7 @@ def run(path,analysis=None,submit=False,issue_number=None,skip_duplicate=False):
     with zipfile.ZipFile(destination,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,data in files.items():z.writestr(name,data)
         z.writestr('manifest.json',json.dumps({'schema':1,'files':{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}},indent=2))
-    print(json.dumps({**result,'archive':str(destination)},ensure_ascii=False));return result,destination
+    print(json.dumps({**result,'archive':str(destination)},ensure_ascii=True));return result,destination
 
 if __name__=='__main__':
     sys.stdout.reconfigure(encoding='utf-8')

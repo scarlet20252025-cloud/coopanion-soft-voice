@@ -231,7 +231,7 @@ def collect(runtime,output,data_dir=None,seconds=0,interval=2,log_file=None,worl
     output.mkdir(parents=True,exist_ok=True);archive=output/('voice-diagnostics-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')+'.zip')
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,content in payloads.items():z.writestr(name,content)
-    print(json.dumps({'ok':True,'archive':str(archive),'bytes':archive.stat().st_size,'samples':len(samples),'uploadPerformed':False},ensure_ascii=False))
+    print(json.dumps({'ok':True,'archive':str(archive),'bytes':archive.stat().st_size,'samples':len(samples),'uploadPerformed':False},ensure_ascii=True))
     return archive
 
 def main():

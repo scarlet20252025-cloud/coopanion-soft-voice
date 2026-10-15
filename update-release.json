@@ -11,8 +11,8 @@
   },
   "patch": {
     "file": "coopanion-voice-update-0.5.0.zip",
-    "bytes": 854037,
-    "sha256": "04974041c568b072d94153640dfd5abe92609c219f1803e894ddb928dce8d3b3",
+    "bytes": 854048,
+    "sha256": "6f34c9e1c60389b279d2ad9779978252ace34f0a4877f6652e9f615543cdca38",
     "url": "https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/updates-v0.5.0/coopanion-voice-update-0.5.0.zip"
   }
 }

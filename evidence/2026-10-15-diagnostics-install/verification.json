@@ -84,8 +84,9 @@
       "kvAllocatedMiB": 56
     }
   },
-  "pythonTests": 97,
+  "pythonTests": 98,
   "worldTests": 50,
   "publicTestIssueCreated": false,
-  "scope": "Real portable worker lifecycle and local report capture; UI interactions use a fixture. Other hardware, game coexistence and Intel UHD speed are pending."
+  "scope": "Real portable worker lifecycle and local report capture; UI interactions use a fixture. Other hardware, game coexistence and Intel UHD speed are pending.",
+  "nonChineseWindowsCodepage": true
 }

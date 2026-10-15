@@ -1,4 +1,4 @@
-import hashlib,importlib.util,json,tempfile,unittest,zipfile
+import contextlib,hashlib,importlib.util,io,json,tempfile,unittest,zipfile
 from pathlib import Path
 from unittest.mock import patch
 from coopanion_soft_voice import diagnostics as d
@@ -6,6 +6,18 @@ from coopanion_soft_voice import diagnostics as d
 from coopanion_soft_voice import issue_reporting as reporter
 
 class DiagnosticsTests(unittest.TestCase):
+    def test_machine_output_is_valid_on_a_non_chinese_windows_codepage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.fixture(root)
+            raw=io.BytesIO();stream=io.TextIOWrapper(raw,encoding='cp1252')
+            with contextlib.redirect_stdout(stream):
+                archive=self.collect(root,root/'out')
+                result,_=reporter.run(archive)
+                stream.flush()
+            lines=raw.getvalue().decode('ascii').splitlines()
+            self.assertEqual(json.loads(lines[-1])['reason'],result['reason'])
+            stream.detach()
+
     def fixture(self,root):
         (root/'cache').mkdir()
         (root/'native-runtime.json').write_text(json.dumps({'deviceName':'NVIDIA','deviceType':'discrete','kvContext':1024,'apiKey':'secret-not-collectable','model':'C:/Users/Alice/Private/model.gguf','speechOnly':{'format':1}}))
