@@ -1,4 +1,4 @@
-# 轻量化本地语音引擎
+# 轻核语音 · Qwen3-TTS 超轻量高速语音引擎
 
 作者：**Asryto** · npm 包 `cortico-world-soft-voice` · Cortico World API 5
 
@@ -21,7 +21,7 @@ Coopanion 的独立本地 TTS 扩展，使用 Qwen3-TTS 0.6B Base Q8、Vulkan �
 
 1. 下载 [完整 Windows 便携安装包](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest)，解压到英文路径，双击 `install.cmd`。自带小模型、Vulkan 引擎、Python 3.12 和依赖；自动寻找 Coopanion，找不到或多个副本时再选择。
 2. 完整包会自动安装 World 并登记语音路径；无需扩展市场、npm 账号，也不需要再安装 TGZ。
-3. 打开 **轻量化本地语音引擎 → 语音控制**。播放状态在左、模型部署检测在右；窄窗口上下排列。
+3. 打开 **轻核语音 · Qwen3-TTS 超轻量高速语音引擎 → 语音控制**。播放状态在左、模型部署检测在右；窄窗口上下排列。
 
 要求 **Windows 10/11 x64、厂商 Vulkan 显卡驱动**。核显加载前至少 3 GiB 系统可用内存，自动恢复线 3.5 GiB；已验证渐进 FP32 KV 布局的 NVIDIA 独显为 2.75 / 3.25 GiB，旧运行时或未识别设备不套用降低后的门槛。默认自动选择核显，独显需用户明确选择；缺驱动或加载失败会报错，不自动回退其他显卡。AMD 核显及 NVIDIA RTX 4050 Laptop GPU 已实测，Intel 核显尚未作者实机验证。其他硬件的兼容性与性能需实际检查。
 

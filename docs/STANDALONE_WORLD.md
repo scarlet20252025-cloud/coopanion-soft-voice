@@ -1,8 +1,8 @@
 > 普通安装推荐 [免编译完整包](PORTABLE_INSTALL.md)。本页保留开发者源码与接口说明。
 
-# 独立轻量化本地语音引擎扩展
+# 独立轻核语音 · Qwen3-TTS 超轻量高速语音引擎扩展
 
-World ID：`soft-voice`。npm 包：`cortico-world-soft-voice`。界面名称：**轻量化本地语音引擎**。
+World ID：`soft-voice`。npm 包：`cortico-world-soft-voice`。界面名称：**轻核语音 · Qwen3-TTS 超轻量高速语音引擎**。
 已在 Coopanion 0.1.24 接入；不再加载 `cortico-world-cosyvoice-tts`。
 
 ## 安装
@@ -16,7 +16,7 @@ $bot = Read-Host '当前 Bot 目录（含 config.json）'
 ```
 
 脚本检查核显运行环境及输出设备，创建独立扩展与本机配置。会取消旧 CosyVoice 扩展注册，保留旧文件。
-省略 `--enable` 时安装后保持语音关闭。重启桌宠后在 World 中打开 **轻量化本地语音引擎**。
+省略 `--enable` 时安装后保持语音关闭。重启桌宠后在 World 中打开 **轻核语音 · Qwen3-TTS 超轻量高速语音引擎**。
 Python 必须独立安装；安装器会拒绝使用位于旧插件目录中的 Python 本体。
 
 ## 功能与边界
