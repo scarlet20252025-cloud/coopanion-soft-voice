@@ -119,7 +119,12 @@ def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
                          playback_mode=msg.get('playbackMode','auto'))
             emit({**result,'processMemory':snapshot()})
         except Exception as exc:
-            emit({'type':'error','id':request_id,'stage':'synthesizing','error':str(exc),'errorKind':type(exc).__name__,'trace':traceback.format_exc()})
+            from .native_engine import GenerationLimitError
+            limited = isinstance(exc, GenerationLimitError)
+            emit({'type':'error','id':request_id,'stage':'synthesizing','error':str(exc),
+                  'errorKind':type(exc).__name__,'errorCode':'generation_limit' if limited else 'worker_error',
+                  'recoverable':limited,'processMemory':snapshot(),
+                  'nativeSettings':getattr(model,'runtime_parameters',None),'trace':traceback.format_exc()})
 
 def main(argv=None):
     parser=argparse.ArgumentParser()

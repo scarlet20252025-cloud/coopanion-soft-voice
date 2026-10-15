@@ -140,6 +140,26 @@ test('wire metrics resolve speech and restore ready state', () => {
   assert.equal(r.status().processMemory.privateMiB,2300);
 });
 
+test('generation cap only rejects that request and leaves the worker ready', () => {
+  const r=Object.create(SoftVoiceRuntime.prototype);r.pending=new Map();r.cfg={};
+  let failure,otherRejected=false;
+  r.pending.set('s1',{reject:e=>{failure=e;}});
+  r.pending.set('other',{reject:()=>{otherRejected=true;}});
+  r.message({type:'error',id:'s1',errorCode:'generation_limit',recoverable:true});
+  assert.equal(failure.code,'generation_limit');assert.equal(failure.recoverable,true);
+  assert.equal(r.state.phase,'ready');assert.equal(r.workerError,null);
+  assert.equal(r.lastRequestFailure.code,'generation_limit');assert.equal(otherRejected,false);
+  assert.equal(r.pending.has('s1'),false);assert.equal(r.pending.has('other'),true);
+});
+
+test('generation cap does not replay partial audio or block the next message', async () => {
+  const w=world();w.speaking=false;const spoken=[];
+  w.queue=[{key:'a',text:'partial',receivedAt:Date.now()},{key:'b',text:'next',receivedAt:Date.now()}];
+  w.runtime={speak:async text=>{spoken.push(text);if(text==='partial')throw Object.assign(new Error('cap'),{code:'generation_limit',recoverable:true});}};
+  await w.drain();assert.deepEqual(spoken,['partial','next']);
+  assert.equal(w.blocked,false);assert.equal(w.accepting,true);assert.equal(w.queue.length,0);
+});
+
 test('runtime memory guard follows the actual model layout and keeps fallback protection', async () => {
   const {mkdtempSync,writeFileSync,rmSync}=await import('node:fs');
   const {tmpdir}=await import('node:os');const {join}=await import('node:path');

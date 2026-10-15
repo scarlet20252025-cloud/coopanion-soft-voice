@@ -1,0 +1,514 @@
+{
+  "baseline-a": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "sampleIntervalMs": 100,
+    "loadMs": 3352,
+    "cases": [
+      {
+        "index": 0,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 1150,
+            "samples": 76800
+          }
+        ],
+        "ok": true,
+        "ms": 1150,
+        "firstChunkMs": 365,
+        "seconds": 3.2,
+        "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2"
+      },
+      {
+        "index": 1,
+        "characters": 99,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 19,
+            "ok": true,
+            "ms": 1202,
+            "samples": 96000
+          },
+          {
+            "index": 1,
+            "characters": 23,
+            "ok": false,
+            "error": "Speech reached the generation limit; output may be incomplete",
+            "ms": 8575,
+            "samples": 691200
+          }
+        ],
+        "ok": false,
+        "ms": 9778,
+        "firstChunkMs": 193,
+        "seconds": 32.8,
+        "pcmSha256": "a1a0374177342bda89d148d417dfafdba6a0505825e1a6cd15e7db0619794a98"
+      },
+      {
+        "index": 2,
+        "characters": 53,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 20,
+            "ok": true,
+            "ms": 1323,
+            "samples": 103680
+          },
+          {
+            "index": 1,
+            "characters": 29,
+            "ok": true,
+            "ms": 1484,
+            "samples": 119040
+          },
+          {
+            "index": 2,
+            "characters": 4,
+            "ok": true,
+            "ms": 272,
+            "samples": 17280
+          }
+        ],
+        "ok": true,
+        "ms": 3079,
+        "firstChunkMs": 200,
+        "seconds": 10.0,
+        "pcmSha256": "c7d84b3f2dedb4d68dc35074bea8724666098dbc3dfb68506dc58945349c38dc"
+      },
+      {
+        "index": 3,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 975,
+            "samples": 76800
+          }
+        ],
+        "ok": true,
+        "ms": 976,
+        "firstChunkMs": 195,
+        "seconds": 3.2,
+        "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2"
+      }
+    ],
+    "peaks": {
+      "privateMiB": 1715.3,
+      "residentMiB": 1071.6,
+      "peakResidentMiB": 1089.4,
+      "dedicatedMiB": 1101.809,
+      "sharedMiB": 96.332
+    },
+    "sleep": {
+      "privateMiB": 479.5,
+      "residentMiB": 28.9,
+      "peakResidentMiB": 1089.4
+    }
+  },
+  "candidate-b": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "sampleIntervalMs": 100,
+    "loadMs": 1968,
+    "cases": [
+      {
+        "index": 0,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 1123,
+            "samples": 76800
+          }
+        ],
+        "ok": true,
+        "ms": 1123,
+        "firstChunkMs": 363,
+        "seconds": 3.2,
+        "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2"
+      },
+      {
+        "index": 1,
+        "characters": 99,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 19,
+            "ok": true,
+            "ms": 1175,
+            "samples": 96000
+          },
+          {
+            "index": 1,
+            "characters": 23,
+            "ok": true,
+            "ms": 989,
+            "samples": 80640
+          },
+          {
+            "index": 2,
+            "characters": 16,
+            "ok": true,
+            "ms": 930,
+            "samples": 76800
+          },
+          {
+            "index": 3,
+            "characters": 12,
+            "ok": true,
+            "ms": 731,
+            "samples": 57600
+          },
+          {
+            "index": 4,
+            "characters": 29,
+            "ok": true,
+            "ms": 1963,
+            "samples": 163200
+          }
+        ],
+        "ok": true,
+        "ms": 5789,
+        "firstChunkMs": 194,
+        "seconds": 19.76,
+        "pcmSha256": "3a258c5469d95b805e11e1f5c098ebfee73e0721a445b3fe600aeed5c2dd8695"
+      },
+      {
+        "index": 2,
+        "characters": 53,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 20,
+            "ok": true,
+            "ms": 1289,
+            "samples": 103680
+          },
+          {
+            "index": 1,
+            "characters": 29,
+            "ok": true,
+            "ms": 1507,
+            "samples": 119040
+          },
+          {
+            "index": 2,
+            "characters": 4,
+            "ok": true,
+            "ms": 257,
+            "samples": 17280
+          }
+        ],
+        "ok": true,
+        "ms": 3054,
+        "firstChunkMs": 196,
+        "seconds": 10.0,
+        "pcmSha256": "c7d84b3f2dedb4d68dc35074bea8724666098dbc3dfb68506dc58945349c38dc"
+      },
+      {
+        "index": 3,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 980,
+            "samples": 76800
+          }
+        ],
+        "ok": true,
+        "ms": 980,
+        "firstChunkMs": 198,
+        "seconds": 3.2,
+        "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2"
+      }
+    ],
+    "peaks": {
+      "privateMiB": 1733.9,
+      "residentMiB": 1070.8,
+      "peakResidentMiB": 1088.6,
+      "dedicatedMiB": 1044.922,
+      "sharedMiB": 96.332
+    },
+    "sleep": {
+      "privateMiB": 479.3,
+      "residentMiB": 28.5,
+      "peakResidentMiB": 1088.6
+    }
+  },
+  "scratch-candidate": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "sampleIntervalMs": 100,
+    "loadMs": 3371,
+    "cases": [
+      {
+        "index": 0,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 1203,
+            "samples": 76800
+          }
+        ],
+        "ok": true,
+        "ms": 1203,
+        "firstChunkMs": 399,
+        "seconds": 3.2,
+        "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2"
+      },
+      {
+        "index": 1,
+        "characters": 99,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 19,
+            "ok": true,
+            "ms": 1227,
+            "samples": 96000
+          },
+          {
+            "index": 1,
+            "characters": 23,
+            "ok": true,
+            "ms": 1087,
+            "samples": 80640
+          },
+          {
+            "index": 2,
+            "characters": 16,
+            "ok": true,
+            "ms": 1069,
+            "samples": 76800
+          },
+          {
+            "index": 3,
+            "characters": 12,
+            "ok": true,
+            "ms": 1022,
+            "samples": 57600
+          },
+          {
+            "index": 4,
+            "characters": 29,
+            "ok": true,
+            "ms": 2168,
+            "samples": 163200
+          }
+        ],
+        "ok": true,
+        "ms": 6573,
+        "firstChunkMs": 206,
+        "seconds": 19.76,
+        "pcmSha256": "3a258c5469d95b805e11e1f5c098ebfee73e0721a445b3fe600aeed5c2dd8695"
+      },
+      {
+        "index": 2,
+        "characters": 53,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 20,
+            "ok": true,
+            "ms": 1269,
+            "samples": 103680
+          },
+          {
+            "index": 1,
+            "characters": 29,
+            "ok": true,
+            "ms": 1451,
+            "samples": 119040
+          },
+          {
+            "index": 2,
+            "characters": 4,
+            "ok": true,
+            "ms": 248,
+            "samples": 17280
+          }
+        ],
+        "ok": true,
+        "ms": 2969,
+        "firstChunkMs": 195,
+        "seconds": 10.0,
+        "pcmSha256": "c7d84b3f2dedb4d68dc35074bea8724666098dbc3dfb68506dc58945349c38dc"
+      },
+      {
+        "index": 3,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 940,
+            "samples": 76800
+          }
+        ],
+        "ok": true,
+        "ms": 940,
+        "firstChunkMs": 194,
+        "seconds": 3.2,
+        "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2"
+      }
+    ],
+    "peaks": {
+      "privateMiB": 1777.1,
+      "residentMiB": 1070.5,
+      "peakResidentMiB": 1089.0,
+      "dedicatedMiB": 1042.035,
+      "sharedMiB": 96.332
+    },
+    "sleep": {
+      "privateMiB": 478.8,
+      "residentMiB": 29.3,
+      "peakResidentMiB": 1089.0
+    }
+  },
+  "fp16-candidate": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "sampleIntervalMs": 100,
+    "loadMs": 2971,
+    "cases": [
+      {
+        "index": 0,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 1217,
+            "samples": 82560
+          }
+        ],
+        "ok": true,
+        "ms": 1217,
+        "firstChunkMs": 376,
+        "seconds": 3.44,
+        "pcmSha256": "f8568a824343896db0244e553337103ee69625d56e1bf9b2590a5fe6318d6915"
+      },
+      {
+        "index": 1,
+        "characters": 99,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 19,
+            "ok": true,
+            "ms": 1089,
+            "samples": 90240
+          },
+          {
+            "index": 1,
+            "characters": 23,
+            "ok": true,
+            "ms": 1081,
+            "samples": 88320
+          },
+          {
+            "index": 2,
+            "characters": 16,
+            "ok": true,
+            "ms": 1066,
+            "samples": 86400
+          },
+          {
+            "index": 3,
+            "characters": 12,
+            "ok": true,
+            "ms": 727,
+            "samples": 55680
+          },
+          {
+            "index": 4,
+            "characters": 29,
+            "ok": true,
+            "ms": 1777,
+            "samples": 149760
+          }
+        ],
+        "ok": true,
+        "ms": 5739,
+        "firstChunkMs": 189,
+        "seconds": 19.6,
+        "pcmSha256": "c6538504a664d56526e8a57d93a4f45fc6e85a7724d5ca71be94f426ff896932"
+      },
+      {
+        "index": 2,
+        "characters": 53,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 20,
+            "ok": true,
+            "ms": 1228,
+            "samples": 101760
+          },
+          {
+            "index": 1,
+            "characters": 29,
+            "ok": true,
+            "ms": 1700,
+            "samples": 142080
+          },
+          {
+            "index": 2,
+            "characters": 4,
+            "ok": true,
+            "ms": 244,
+            "samples": 17280
+          }
+        ],
+        "ok": true,
+        "ms": 3173,
+        "firstChunkMs": 183,
+        "seconds": 10.88,
+        "pcmSha256": "4752b6191d29a068cd2658b8f6635002ffe0a79ba27df78d52c51014f1f1a230"
+      },
+      {
+        "index": 3,
+        "characters": 16,
+        "pieces": [
+          {
+            "index": 0,
+            "characters": 16,
+            "ok": true,
+            "ms": 991,
+            "samples": 82560
+          }
+        ],
+        "ok": true,
+        "ms": 992,
+        "firstChunkMs": 187,
+        "seconds": 3.44,
+        "pcmSha256": "f8568a824343896db0244e553337103ee69625d56e1bf9b2590a5fe6318d6915"
+      }
+    ],
+    "peaks": {
+      "privateMiB": 1597.7,
+      "residentMiB": 1080.1,
+      "peakResidentMiB": 1089.1,
+      "dedicatedMiB": 1016.355,
+      "sharedMiB": 94.332
+    },
+    "sleep": {
+      "privateMiB": 479.9,
+      "residentMiB": 27.4,
+      "peakResidentMiB": 1089.1
+    }
+  }
+}

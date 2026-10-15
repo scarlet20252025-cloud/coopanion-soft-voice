@@ -76,7 +76,8 @@ export class SoftVoiceRuntime {
       engine: 'Qwen3-TTS 0.6B Base / Q8_0 / Vulkan GPU', voice: this.cfg.voiceId || BUILTIN,
       deviceName:this.deviceName||this.cfg.deviceName||null,deviceType:this.deviceType||null,engineVersion:this.engineVersion||null,availableDevices:this.deviceInventory||[],
       history: this.history, loadMs: this.loadMs ?? null, nativeSettings:this.nativeSettings??null,startupTimings:this.startupTimings??null,
-      sampleRate: 24000, deployment:this.deploymentStatus(), processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null };
+      sampleRate: 24000, deployment:this.deploymentStatus(), processMemory:this.workerMemory ?? null, lastSpeech: this.lastSpeech ?? null, workerError: this.workerError ?? null,
+      lastRequestFailure:this.lastRequestFailure??null };
   }
   record(text) {
     const file = join(this.root, 'worker.log');
@@ -172,7 +173,18 @@ export class SoftVoiceRuntime {
         this.history.push({ ...this.lastSpeech }); if (this.history.length > 30) this.history.shift();
       }
       this.stage('ready', '所选音色已就绪'); p?.resolve(msg);
-    } else if (msg.type === 'error') this.fail(new Error(msg.error || '语音合成失败'),msg.errorCode==='memory_guard'?'memory_guard':'worker_error');
+    } else if (msg.type === 'error') {
+      // A bounded utterance can fail while the native worker remains healthy.
+      // Never replay partially heard audio or reject unrelated pending requests.
+      if(msg.errorCode==='generation_limit' && msg.recoverable===true && msg.id && this.pending.has(msg.id)) {
+        const pending=this.pending.get(msg.id);this.pending.delete(msg.id);
+        const detail='上一段朗读达到生成上限，未完整读完；已跳过，后续消息可继续朗读。';
+        this.lastRequestFailure={code:'generation_limit',at:Date.now(),detail};
+        const error=Object.assign(new Error(detail),{code:'generation_limit',recoverable:true});
+        this.workerError=null;this.stage('ready',detail);
+        this.diagnostic({code:'generation_limit'});pending.reject(error);
+      } else this.fail(new Error(msg.error || '语音合成失败'),msg.errorCode==='memory_guard'?'memory_guard':'worker_error');
+    }
   }
   async speak(text, { receivedAt = Date.now() } = {}) {
     await this.ensure();

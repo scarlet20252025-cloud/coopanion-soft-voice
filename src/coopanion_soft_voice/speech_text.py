@@ -5,6 +5,27 @@ _SENTENCE = re.compile(r'(?<=[。！？!?；;])')
 _CLAUSE = re.compile(r'[，,：:。！？!?；;]|——|…{2,}')
 
 
+def complete_native_piece(text):
+    """Terminate independently conditioned clauses without changing spoken words.
+
+    A dangling comma on a mixed-language clause can make the fixed-reference
+    model continue generating after its text is exhausted. Completed sentences
+    (including the approved short sample) remain byte-for-byte unchanged.
+    """
+    # Limit this remediation to the reproduced mixed-language failure. Keep
+    # established Chinese-only phrase boundaries and their PCM unchanged.
+    if not re.search(r'[A-Za-z]', text):
+        return text
+    value = text.rstrip()
+    if not value:
+        return value
+    if value[-1] in '，,：:；;':
+        return value[:-1] + '。'
+    if value[-1] not in '。！？!?.…—':
+        return value + '。'
+    return value
+
+
 def split_speech_text(text, max_chars=60, target_chars=None):
     if type(max_chars) is not int or max_chars < 1:
         raise ValueError('max_chars must be a positive integer')
