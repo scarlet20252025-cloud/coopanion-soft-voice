@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 
 const WORLD_VERSION=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version;
 
-const CODES=new Set(['worker_error','worker_exit','startup_timeout','speech_timeout','protocol_error','memory_guard','slow_synthesis','playback_underflow']);
+const CODES=new Set(['worker_error','worker_exit','startup_timeout','speech_timeout','protocol_error','memory_guard','slow_synthesis','playback_underflow','generation_limit']);
 
 // Runs outside the audio path; a report must never fail or pause speech.
 export class VoiceReports {

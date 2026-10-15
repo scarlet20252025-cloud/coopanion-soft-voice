@@ -14,6 +14,10 @@ MODEL_HASHES = {
 }
 
 
+class GenerationLimitError(RuntimeError):
+    """Only this request failed; the synchronous native context is reusable."""
+
+
 def vulkan_devices():
     """Enumerate hardware GPUs without loading a model or silently selecting one."""
     class Create(C.Structure):
@@ -314,7 +318,8 @@ class NativeEngine:
             if on_complete: on_complete()
             return
         p = Params(); self.dll.qt_tts_default_params(C.byref(p))
-        p.text = text.encode(); p.lang = b'Chinese'; p.ref_text = self.reference_text.encode()
+        from .speech_text import complete_native_piece
+        p.text = complete_native_piece(text).encode(); p.lang = b'Chinese'; p.ref_text = self.reference_text.encode()
         p.speaker = None  # Always use the full reference, never a native preset.
         p.ref_spk_emb = self.voice.ref_spk_emb; p.ref_spk_dim = self.voice.ref_spk_dim
         p.ref_codes = self.voice.ref_codes; p.ref_T = self.voice.ref_T
@@ -360,7 +365,8 @@ class NativeEngine:
         # The native API reports success even when generation hits its frame cap.
         # Do not label a potentially truncated utterance as complete.
         if total_samples >= p.max_new_tokens * 1920:
-            raise RuntimeError('Speech reached the generation limit; output may be incomplete')
+            self.update_cache_state()
+            raise GenerationLimitError('Speech reached the generation limit; output may be incomplete')
         if not total_samples:
             raise RuntimeError('Native engine returned no audio')
         self.update_cache_state()

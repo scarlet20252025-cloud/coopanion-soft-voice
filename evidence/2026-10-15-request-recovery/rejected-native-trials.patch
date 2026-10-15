@@ -1,0 +1,31 @@
+--- a/src/pipeline-tts.cpp
++++ b/src/pipeline-tts.cpp
+@@ -1022,6 +1022,13 @@
+     }
+     s.perf.prefill_ms = t_prefill.ms();
+     s.logits          = std::move(fw.logits_last);
++    // Opt-in experiment: prefill results now live in persistent KV/hidden
++    // buffers and host logits. Do not retain its scheduler scratch for decode.
++    if (std::getenv("QWEN_TTS_RELEASE_PREFILL_SCRATCH")) {
++        ggml_backend_synchronize(pt->backend);
++        ggml_backend_sched_free(pt->sched);
++        pt->sched = backend_sched_new(pt->bp, 4096);
++    }
+     qt_log(QT_LOG_INFO, "[Batch] Admit slot=%d T_ctx=%d prefill=%.1f ms build=%.1f ms (stall for %d active slots)",
+            slot_idx, s.prompt.T_ctx, s.perf.prefill_ms, s.perf.build_ms, slot_idx);
+     return true;
+--- a/src/kv-cache.h
++++ b/src/kv-cache.h
+@@ -88,9 +88,10 @@
+         return false;
+     }
+ 
++    const auto cache_type = max_seq_len >= 256 && std::getenv("QWEN_TTS_TRIAL_FP16_KV") ? GGML_TYPE_F16 : GGML_TYPE_F32;
+     for (int l = 0; l < n_layers; l++) {
+-        kv->k4[(size_t) l] = ggml_new_tensor_4d(kv->ctx, GGML_TYPE_F32, head_dim, max_seq_len, n_kv_heads, n_sets);
+-        kv->v4[(size_t) l] = ggml_new_tensor_4d(kv->ctx, GGML_TYPE_F32, head_dim, max_seq_len, n_kv_heads, n_sets);
++        kv->k4[(size_t) l] = ggml_new_tensor_4d(kv->ctx, cache_type, head_dim, max_seq_len, n_kv_heads, n_sets);
++        kv->v4[(size_t) l] = ggml_new_tensor_4d(kv->ctx, cache_type, head_dim, max_seq_len, n_kv_heads, n_sets);
+         char name[64];
+         snprintf(name, sizeof(name), "kv_k_l%d", l);
+         ggml_set_name(kv->k4[(size_t) l], name);

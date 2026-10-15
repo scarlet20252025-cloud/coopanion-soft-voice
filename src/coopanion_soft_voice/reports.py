@@ -18,6 +18,7 @@ CODES = {
     'startup_timeout': '语音加载超时', 'speech_timeout': '语音播放超时',
     'protocol_error': '语音通信异常', 'memory_guard': '内存保护阻止加载',
     'slow_synthesis': '连续两次合成慢于实时', 'playback_underflow': '连续两次播放欠载',
+    'generation_limit': '单段达到生成上限；后续消息可继续朗读',
 }
 MAX_REPORTS = 20
 COOLDOWN = 86400

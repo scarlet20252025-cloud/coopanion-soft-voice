@@ -446,6 +446,10 @@ export class SoftVoiceWorld {
           this.bubbleSync.finish(item.key);
         } catch (err) {
           this.bubbleSync.finish(item.key,'failed');
+          if(err.code==='generation_limit' && err.recoverable===true) {
+            this.host?.log.warn(`轻量化本地语音引擎 单句未完成，继续后续消息: ${err.message}`);
+            continue;
+          }
           for(const waiting of this.queue)this.bubbleSync.finish(waiting.key,'cancelled');
           this.host?.log.warn(`轻量化本地语音引擎 朗读失败: ${err.message}`);
           // Never repeat a partially spoken sentence automatically.
