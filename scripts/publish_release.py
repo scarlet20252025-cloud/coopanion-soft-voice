@@ -9,6 +9,9 @@ p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=[
 REPO='scarlet20252025-cloud/coopanion-soft-voice';API='https://api.github.com/repos/'+REPO
 folder=a.directory;report=json.loads((ROOT/'portable-release.json').read_text(encoding='utf-8'));update=json.loads((ROOT/'update-release.json').read_text(encoding='utf-8'))
 version=report['version'];assert version==update['version']
+world=json.loads((ROOT/'world/package.json').read_text(encoding='utf-8'))
+if report.get('worldVersion')!=world['version'] or update.get('worldVersion')!=world['version']:
+ raise RuntimeError('Full installer, code update and marketplace source must contain the same World version')
 if not re.fullmatch(r'\d+\.\d+\.\d+',version):raise ValueError('Invalid release version')
 token=credentials()
 if not token:raise RuntimeError('GitHub credentials unavailable; sign in yourself, never paste tokens into chat')

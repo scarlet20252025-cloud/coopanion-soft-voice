@@ -110,3 +110,50 @@ class UpdateTests(unittest.TestCase):
             root=Path(d);site,archive,release=self.fixture(root);ext,pkg=self.market(root,'9.0.0')
             with self.assertRaisesRegex(ValueError,'downgrade'):updates.install_archive(root,archive,release,ext,verify=lambda:None)
             self.assertEqual(updates.installed_world_version(root,ext),'9.0.0')
+
+class ChannelTests(unittest.TestCase):
+    def result(self,world='0.4.3',market='0.4.5',error=None,engine='0.5.2',release_engine='0.5.2',release_world='0.4.3'):
+        return updates.compare_channels(engine,world,{'version':release_engine,'worldVersion':release_world},market,error)
+
+    def test_reported_market_ahead_bug(self):
+        r=self.result()
+        self.assertEqual(r['stage'],'market_only')
+        self.assertTrue(r['available']);self.assertFalse(r['patchAvailable'])
+        self.assertTrue(r['requiresMarketUpdate'])
+
+    def test_network_failure_is_not_latest(self):
+        r=self.result(market=None,error='offline')
+        self.assertEqual(r['stage'],'partial');self.assertFalse(r['checkComplete'])
+
+    def test_both_channels_current(self):
+        self.assertEqual(self.result(world='0.4.5')['stage'],'current')
+
+    def test_new_engine_cannot_downgrade_world(self):
+        r=self.result(world='0.4.5',release_engine='0.5.3')
+        self.assertEqual(r['stage'],'blocked');self.assertFalse(r['patchAvailable'])
+
+    def test_synchronized_update(self):
+        r=self.result(market='0.4.6',release_engine='0.5.3',release_world='0.4.6')
+        self.assertEqual(r['stage'],'available');self.assertTrue(r['patchAvailable'])
+
+    def test_market_can_lead_an_available_patch(self):
+        r=self.result(market='0.4.7',release_engine='0.5.3',release_world='0.4.6')
+        self.assertTrue(r['marketplaceAhead']);self.assertTrue(r['patchAvailable'])
+
+    def test_check_reads_disk_world_instead_of_bundled_version(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);fixture=UpdateTests();_,_,release=fixture.fixture(root)
+            release.update(version='0.5.2',worldVersion='0.4.3')
+            release['patch']['url']=release['patch']['url'].replace('/v0.5.0/','/v0.5.2/')
+            ext,_=fixture.market(root,'0.4.5')
+            with patch.object(updates,'__version__','0.5.2'),patch.object(updates.urllib.request,'urlopen') as url,patch.object(updates,'marketplace_version',return_value='0.4.5'),patch.object(updates,'emit') as emit:
+                url.return_value.__enter__.return_value.read.return_value=json.dumps(release).encode()
+                updates.check(root,ext)
+                self.assertEqual(emit.call_args.kwargs['currentWorldVersion'],'0.4.5')
+                self.assertEqual(emit.call_args.kwargs['stage'],'current')
+
+    def test_market_metadata_identity_and_version_validation(self):
+        for data in [[],{'name':'other','version':'0.4.6'},{'name':'cortico-world-soft-voice','version':'0.0.0-stage'}]:
+            with self.subTest(data=data),patch.object(updates.urllib.request,'urlopen') as url:
+                url.return_value.__enter__.return_value.read.return_value=json.dumps(data).encode()
+                with self.assertRaises(ValueError):updates.marketplace_version()
