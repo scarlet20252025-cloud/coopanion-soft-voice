@@ -102,7 +102,7 @@ test('official environment prompt declares template and reports real capability'
 });
 test('standalone identity and validated effective controls', () => {
   assert.equal(world().id, 'soft-voice');
-  assert.equal(world().console().label, '轻量化本地语音引擎');
+  assert.equal(world().console().label, '轻核语音 · Qwen3-TTS 超轻量高速语音引擎');
   assert.throws(() => validateConfigPatch({ speed: 1.2 }));
   assert.throws(() => validateConfigPatch({ volume: 101 }));
   assert.throws(() => validateConfigPatch({ autoRecover: 'true' }));

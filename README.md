@@ -1,6 +1,6 @@
-# 轻量化本地语音引擎 · Coopanion
+# 轻核语音 · Qwen3-TTS 超轻量高速语音引擎 · Coopanion
 
-作者：**Asryto** · Python **0.5.1** / World **0.4.2**
+作者：**Asryto** · 语音引擎 **0.5.2** / World **0.4.5**
 
 0.5.0 原生模型已验证本机 AMD 核显与 RTX 4050；0.5.1 的缓存和线程池改进另经 RTX 4050 实测。Intel UHD 提速、其他显卡和能效提升仍在 [验证与优化计划](docs/OPTIMIZATION_PLAN.md) 中，不作为已通过承诺。
 
@@ -14,7 +14,7 @@ Windows Coopanion 的独立 Vulkan 语音扩展。保留已确认的 `soft-child
 
 1. 从 [GitHub Releases 下载完整 Windows 安装包](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest)，解压到英文路径，例如 `D:\CoopanionVoice`。
 2. 双击 **`install.cmd`**。自动寻找正在运行的桌宠、快捷方式、安装记录与常见目录；找不到或有多个副本时再选择路径。
-3. 安装器校验模型、执行真实合成和静音播放测试，接入 World 并重启桌宠。进入 **轻量化本地语音引擎** 即可使用。
+3. 安装器校验模型、执行真实合成和静音播放测试，接入 World 并重启桌宠。进入 **轻核语音 · Qwen3-TTS 超轻量高速语音引擎** 即可使用。
 
 默认自动选择核显。安装时可用 `-DeviceName 'Vulkan 设备名称'` 明确指定独显；面板中“检测设备 → 切换设备”可在空闲时重载模型，不重启桌宠。独显与游戏共享显存，错误不会导致自动切换到别的 GPU。
 
