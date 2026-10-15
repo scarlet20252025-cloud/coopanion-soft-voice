@@ -52,6 +52,12 @@ export class SoftVoiceRuntime {
     try {
       const c=JSON.parse(readFileSync(join(this.profile().runtime,'native-runtime.json'),'utf8'));
       if(c.compactGraphs===true && c.kvContext===1024 && c.speechOnly?.format===1) {
+        const selected=this.cfg?.deviceName||c.deviceName;
+        const devices=(this.deviceInventory||[]).filter(d=>d.name===selected);
+        const device=devices.length===1?devices[0]:this.deviceName===selected?{kind:this.deviceType,vendorId:this.deviceVendorId}:null;
+        if(c.streamTextEmbedding===true && c.adaptiveKv===true && device?.kind==='discrete' && device.vendorId===0x10de) {
+          return {minimumGiB:2.75,recoveryGiB:3.25,layout:'progressive-kv',deviceType:'discrete',deviceName:selected};
+        }
         return c.streamTextEmbedding===true ? {minimumGiB:3,recoveryGiB:3.5,layout:'text-rows'} :
           {minimumGiB:3.25,recoveryGiB:3.75,layout:'compact'};
       }
@@ -79,7 +85,7 @@ export class SoftVoiceRuntime {
       appendFileSync(file, text);
     } catch { /* Logging must not interrupt playback. */ }
   }
-  async devices() {const p=this.profile();return pythonJson(p,'coopanion_soft_voice.cli',['--runtime',p.runtime,'devices']);}
+  async devices() {const p=this.profile();const result=await pythonJson(p,'coopanion_soft_voice.cli',['--runtime',p.runtime,'devices']);this.deviceInventory=result.devices;return result;}
   async prepare() { if (!this.hasLocalFiles()) throw new Error('运行环境未安装，请运行 setup-native.ps1 和 install_world.py'); }
   async ensure() {
     if (this.stopPromise) await this.stopPromise;
@@ -123,21 +129,26 @@ export class SoftVoiceRuntime {
     child.once('close', code => {
       if (generation !== this.generation) return;
       this.worker = null;
-      this.fail(new Error(errorTail.trim() || `语音进程退出 (${code})`));
+      this.fail(new Error(errorTail.trim() || `语音进程退出 (${code})`),'worker_exit');
     });
-    const timer = setTimeout(() => { this.fail(new Error('语音预热超过 120 秒')); void this.terminateWorker(child).catch(err=>this.fail(err)); }, 120000);
+    const timer = setTimeout(() => { this.fail(new Error('语音预热超过 120 秒'),'startup_timeout'); void this.terminateWorker(child).catch(err=>this.fail(err)); }, 120000);
     try { await ready; }
     catch (err) { await this.terminateWorker(child); throw err; }
     finally { clearTimeout(timer); }
   }
-  fail(err) {
+  diagnostic(event) {
+    try { this.onDiagnosticEvent?.(event); } catch { /* Report failure never interrupts speech. */ }
+  }
+  fail(err,code='worker_error') {
+    if(code)this.diagnostic({code:/GiB free RAM|keeping text only/.test(err.message)?'memory_guard':code});
     this.workerError = err.message; this.stage('error', err.message);
     for (const p of this.pending.values()) p.reject(err);
     this.pending.clear();
   }
   message(msg) {
     if(msg.processMemory) this.workerMemory=msg.processMemory;
-    if(msg.type==='ready') {this.deviceName=msg.device;this.deviceType=msg.deviceType;this.engineVersion=msg.engineVersion;this.nativeSettings=msg.nativeSettings;this.startupTimings=msg.startupTimings;}
+    if(msg.nativeSettings) this.nativeSettings=msg.nativeSettings;
+    if(msg.type==='ready') {this.deviceName=msg.device;this.deviceType=msg.deviceType;this.deviceVendorId=msg.deviceVendorId;this.engineVersion=msg.engineVersion;this.nativeSettings=msg.nativeSettings;this.startupTimings=msg.startupTimings;}
     if (msg.type === 'slept') {
       const p=this.pending.get('__sleep__'); this.pending.delete('__sleep__');
       this.stage('sleeping','低占用休眠：保留进程与播放器，模型已释放。'); p?.resolve(msg); return;
@@ -157,17 +168,18 @@ export class SoftVoiceRuntime {
         this.lastSpeech = { ...this.lastSpeech, ...msg, at: Date.now() };
         this.lastSpeech.totalStartMs = (this.lastSpeech.queueWaitMs || 0) + (msg.firstDeviceCallbackMs ?? msg.firstChunkMs ?? 0);
         this.history ??= [];
+        this.diagnostic({type:'playback',seconds:msg.seconds,realTimeFactor:msg.realTimeFactor,totalSynthesisMs:msg.totalSynthesisMs,underrunMs:msg.underrunMs,deviceUnderflows:msg.deviceUnderflows});
         this.history.push({ ...this.lastSpeech }); if (this.history.length > 30) this.history.shift();
       }
       this.stage('ready', '所选音色已就绪'); p?.resolve(msg);
-    } else if (msg.type === 'error') this.fail(new Error(msg.error || '语音合成失败'));
+    } else if (msg.type === 'error') this.fail(new Error(msg.error || '语音合成失败'),msg.errorCode==='memory_guard'?'memory_guard':'worker_error');
   }
   async speak(text, { receivedAt = Date.now() } = {}) {
     await this.ensure();
     if (!this.worker?.stdin?.writable) throw new Error('语音进程不可用');
     const id = 's' + (++this.seq);
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.fail(new Error('语音生成或播放超时，请恢复语音')); void this.terminateWorker(this.worker).catch(err=>this.fail(err)); }, 180000);
+      const timer = setTimeout(() => { this.fail(new Error('语音生成或播放超时，请恢复语音'),'speech_timeout'); void this.terminateWorker(this.worker).catch(err=>this.fail(err)); }, 180000);
       this.pending.set(id, { resolve: result => { clearTimeout(timer); resolve(result); },
         reject: err => { clearTimeout(timer); reject(err); }, receivedAt, queueWaitMs: Date.now() - receivedAt });
       this.worker.stdin.write(JSON.stringify({ id, text, speed: 1, volume: this.cfg.volume, playbackMode:this.cfg.playbackMode||'auto' }) + '\n', err => { if (err) this.fail(err); });
@@ -208,7 +220,7 @@ export class SoftVoiceRuntime {
   async stopWorker() {
     ++this.generation;
     const child = this.worker;
-    this.fail(new Error('语音已停止'));
+    this.fail(new Error('语音已停止'),null);
     this.stage('stopping','正在停止并释放语音模型');
     try {await this.terminateWorker(child);}
     catch(err){this.fail(err);throw err;}

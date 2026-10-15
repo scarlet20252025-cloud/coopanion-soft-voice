@@ -9,7 +9,7 @@ PERF=re.compile(r'^\[Perf\] (PromptBuild|Prefill|TTFA|TalkerDecode|CodePredictor
 METRICS=('atUtc','seconds','totalSynthesisMs','realTimeFactor','firstChunkMs','firstDeviceCallbackMs','underrunMs','deviceUnderflows','pieceCount','startupBufferMode','requestedPlaybackMode','effectivePlaybackMode','smoothPlayback','engineVersion','deviceName','deviceType')
 CONFIG=('volume','maxQueue','maxAgeSec','pollMs','lowPowerMode','idleUnloadSec','keepWorker','lowMemoryMiB','autoRecover','syncBubbles','playbackMode','deviceName')
 MEMORY_FIELDS=('pid','privateMiB','residentMiB','peakResidentMiB')
-NATIVE_FIELDS=('memoryPolicy','disableHostVisibleVram','cpuThreads','kvContext','compactGraphs','streamTextEmbedding','maxNodesPerSubmit')
+NATIVE_FIELDS=('memoryPolicy','disableHostVisibleVram','cpuThreads','kvContext','compactGraphs','streamTextEmbedding','maxNodesPerSubmit','adaptiveKv','kvPrecision','kvCapacity','kvAllocatedMiB','minimumFreeGiB')
 STARTUP_FIELDS=('validationMs','modelInitMs','totalMs','availableBeforeLoadGiB')
 
 def subset(value,fields):
@@ -131,6 +131,17 @@ def nvidia_sample():
         return [dict(zip(fields,[redact(value.strip()) for value in row])) for row in csv.reader(result.stdout.splitlines())]
     except Exception:return []
 
+
+def process_gpu_memory(pids):
+    try:
+        try:from .gpu_memory import GpuMemory
+        except ImportError:from gpu_memory import GpuMemory
+        out=[]
+        for pid in pids:
+            with GpuMemory(pid) as gpu:out.append({'pid':pid,**gpu.snapshot()})
+        return out
+    except (ImportError,OSError):return []
+
 def selected_metrics(value):
     out={key:clean(value[key]) for key in METRICS if key in value}
     for key,fields in [('processMemory',MEMORY_FIELDS),('nativeSettings',NATIVE_FIELDS)]:
@@ -161,8 +172,9 @@ def perf_tail(file):
         return '\n'.join(rows)[-48*1024:]
     except OSError:return ''
 
-def collect(runtime,output,data_dir=None,seconds=0,interval=2,log_file=None):
+def collect(runtime,output,data_dir=None,seconds=0,interval=2,log_file=None,world_version=None):
     if type(seconds) is not int or type(interval) is not int or not 0<=seconds<=300 or not 1<=interval<=30:raise ValueError('Monitor duration must be 0–300 seconds; interval 1–30 seconds')
+    if world_version is not None and not re.fullmatch(r'\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?',world_version):raise ValueError('Invalid World version')
     root=Path(runtime).resolve();output=Path(output).resolve()
     if not root.is_dir():raise ValueError('--runtime must be a directory')
     if output.exists() and not output.is_dir():raise ValueError('--output must be a directory')
@@ -182,11 +194,11 @@ def collect(runtime,output,data_dir=None,seconds=0,interval=2,log_file=None):
             if previous_at is not None and m['pid'] in previous and 'cpuSeconds' in m:
                 m['cpuPercentTotal']=round(max(0,m['cpuSeconds']-previous[m['pid']])/(now-previous_at)/max(1,os.cpu_count() or 1)*100,2)
         previous={m['pid']:m['cpuSeconds'] for m in processes if 'cpuSeconds' in m};previous_at=now
-        stage=subset(status,('type','stage','atUtc','engineVersion','device','deviceType','errorKind'))
+        stage=subset(status,('type','stage','atUtc','engineVersion','device','deviceType','errorKind','errorCode'))
         for key,fields in [('processMemory',MEMORY_FIELDS),('startupTimings',STARTUP_FIELDS),('nativeSettings',NATIVE_FIELDS)]:
             if key in status:stage[key]=subset(status[key],fields)
         samples.append({'atUtc':datetime.now(timezone.utc).isoformat(),'systemMemory':system_memory(),
-            'voiceProcesses':processes,
+            'voiceProcesses':processes,'voiceGpuMemory':process_gpu_memory(pids),
             'gpuSystemWide':nvidia_sample(),'voiceStage':stage,
             'recentPlayback':selected_metrics(metrics)})
         elapsed=time.monotonic()-started
@@ -194,9 +206,9 @@ def collect(runtime,output,data_dir=None,seconds=0,interval=2,log_file=None):
         if elapsed>=seconds:break
         time.sleep(min(interval,max(0,seconds-elapsed)))
         pids=owned_workers(root)
-    native={k:clean(cfg[k]) for k in ('deviceName','deviceType','deviceSelectedExplicitly','kvContext','compactGraphs','streamTextEmbedding','dllSha256') if k in cfg}
+    native={k:clean(cfg[k]) for k in ('deviceName','deviceType','deviceSelectedExplicitly','kvContext','compactGraphs','streamTextEmbedding','adaptiveKv','dllSha256') if k in cfg}
     report={'schema':SCHEMA,'createdAtUtc':datetime.now(timezone.utc).isoformat(),'author':'Asryto','repository':REPO,
-        'collectorVersion':'1.0','installedPythonPackageVersion':package_version,'portableVersion':marker.get('version'),'worldVersion':marker.get('worldVersion'),
+        'collectorVersion':'1.1','installedPythonPackageVersion':package_version,'portableVersion':marker.get('version'),'worldVersion':world_version or marker.get('worldVersion'),
         'hardware':hardware,'runtime':native,'preferences':{k:clean(preferences.get('config',{}).get(k)) for k in CONFIG if k in preferences.get('config',{})},
         'samples':samples,'warnings':warnings,'limitations':['GPU samples cover all applications, not only TTS.','Private process memory is not total VRAM.','Matching process count may include a Windows venv launcher; it is not a count of loaded models.','Recent playback may be historical or offline; compare timestamps and matching worker presence.','No chat, account config, environment dump, raw command lines, model weights or audio is collected.']}
     model=cfg.get('speechOnly',{});report['runtime']['fixedVoiceProfile']=model.get('format')==1
@@ -204,15 +216,19 @@ def collect(runtime,output,data_dir=None,seconds=0,interval=2,log_file=None):
     if rtf is None and last.get('seconds',0)>0:rtf=round(last.get('totalSynthesisMs',0)/1000/last['seconds'],3)
     report['summary']={'realTimeFactor':rtf,'underrunMs':last.get('underrunMs'),'deviceUnderflows':last.get('deviceUnderflows'),'effectivePlaybackMode':last.get('effectivePlaybackMode'),'matchingWorkers':len(samples[-1]['voiceProcesses'])}
     markdown='# 轻量化本地语音引擎诊断报告\n\n作者 Asryto · '+report['createdAtUtc']+'\n\n仓库：'+REPO+'\n\n'
-    markdown+='## 关键读数\n\n'+ '\n'.join('- '+k+': '+str(v) for k,v in report['summary'].items())+'\n\n'
+    labels={'realTimeFactor':'合成耗时 / 音频时长（小于 1 表示快于实时）','underrunMs':'播放断流（毫秒）','deviceUnderflows':'设备欠载（次数）','effectivePlaybackMode':'实际播放策略','matchingWorkers':'匹配到的语音进程数'}
+    markdown+='## 关键读数\n\n'+ '\n'.join('- '+labels[k]+': '+str(v if v is not None else '未测') for k,v in report['summary'].items())+'\n\n'
+    stage=samples[-1]['voiceStage']
+    markdown+='## 故障与采集范围\n\n- 当前阶段：'+str(stage.get('stage',stage.get('type','未知')))+'\n- 错误类型：'+str(stage.get('errorKind','未记录'))+'\n- 监测时长 / 样本数：'+str(seconds)+' 秒 / '+str(len(samples))+'\n- 采集不加载模型、不额外合成；近期播放时间见 diagnostics.json。\n\n'
+
     markdown+='## 分析要求\n\n先区分合成吞吐、首次出声、播放欠载与加载耗时；RTF>1 不能靠固定小缓冲保证连续。比较真实设备、驱动、显存分配和阶段耗时；冷/暖启动、背景 GPU 负载与测试代码版本要分别记录。不要把 GPU 系统总占用当成 TTS 占用，也不要把历史 JSON 当作当前会话。\n\n'
     markdown+='## 提交或交回作者\n\n按照 docs/AI_BUG_REPORTS.md 去重并提交 Issue，附 diagnostics.json 和 perf.log 的必要脱敏内容。当前用户未授权公开报障或 GitHub 无法提交时，保留这个 ZIP 和分析稿交回用户，不假装已提交。\n'
-    prompt='仓库 '+REPO+'。请分析随附诊断包，结合复现现象核对性能与错误。我授权向该仓库提交脱敏 Issue（先查重），附相关诊断与关键日志；不能自主提交时，把诊断、分析和 Issue 草稿打包给我。不要上传聊天、密钥、完整配置、原始路径或音频。\n'
+    prompt='仓库 '+REPO+'。请分析随附诊断包，结合复现现象核对性能与错误。当前用户已授权向该仓库公开报障时，先查重，再提交脱敏 Issue 和必要诊断日志；未获授权或不能自主提交时，把诊断、分析和 Issue 草稿打包交回用户。不要上传聊天、密钥、完整配置、原始路径或音频。\n'
     log=perf_tail(log_file or (data/'worker.log' if data else root/'worker.log'))
     payloads={'REPORT.md':markdown.encode('utf-8'),'diagnostics.json':json.dumps(clean(report),ensure_ascii=False,indent=2,allow_nan=False).encode('utf-8'),'perf.log':log.encode('utf-8'),'AI_PROMPT.txt':prompt.encode('utf-8')}
     manifest={'schema':SCHEMA,'files':{name:hashlib.sha256(content).hexdigest() for name,content in payloads.items()}}
     payloads['manifest.json']=json.dumps(manifest,indent=2).encode('utf-8')
-    output.mkdir(parents=True,exist_ok=True);archive=output/('voice-diagnostics-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'.zip')
+    output.mkdir(parents=True,exist_ok=True);archive=output/('voice-diagnostics-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')+'.zip')
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,content in payloads.items():z.writestr(name,content)
     print(json.dumps({'ok':True,'archive':str(archive),'bytes':archive.stat().st_size,'samples':len(samples),'uploadPerformed':False},ensure_ascii=False))

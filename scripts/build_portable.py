@@ -46,10 +46,16 @@ def build(args):
         extract(wheel,site)
     extract(args.package_wheel,site)
     (out/'python/python312._pth').write_text('python312.zip\n.\nLib/site-packages\nimport site\n',encoding='utf-8')
-    shutil.copytree(ROOT/'world',out/'world',ignore=shutil.ignore_patterns('__pycache__','*.pyc','test'))
+    from coopanion_soft_voice.world_package import pack
+    world_archive, world_files = pack(ROOT/'world', out/'packages', getattr(args,'world_package',None))
+    for name,data in world_files.items():
+        target=out/'world'/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+    if world_archive.parent != out/'packages':shutil.copyfile(world_archive,out/'packages'/world_archive.name)
     scripts=out/'scripts';scripts.mkdir()
     for file in ['activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','report_issue.py']:
         shutil.copyfile(ROOT/'scripts'/file,scripts/file)
+    shutil.copyfile(ROOT/'src/coopanion_soft_voice/gpu_memory.py',scripts/'gpu_memory.py')
+    shutil.copyfile(ROOT/'src/coopanion_soft_voice/issue_reporting.py',scripts/'issue_reporting.py')
     shutil.copyfile(ROOT/'src/coopanion_soft_voice/diagnostics.py',scripts/'collect_diagnostics.py')
     shutil.copyfile(ROOT/'collect-diagnostics.cmd',out/'collect-diagnostics.cmd')
     (out/'install.cmd').write_text('@echo off\r\npowershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\\install-portable.ps1" %*\r\nif errorlevel 1 pause\r\n',encoding='ascii')
@@ -61,7 +67,8 @@ def build(args):
     (out/'README.md').write_text((ROOT/'docs/PORTABLE_INSTALL.md').read_text(encoding='utf-8').replace('(INSTALL_WITHOUT_MARKET.md)','(docs/INSTALL_WITHOUT_MARKET.md)'),encoding='utf-8')
     from coopanion_soft_voice import __version__
     meta={'format':1,'version':__version__,'worldVersion':json.loads((ROOT/'world/package.json').read_text(encoding='utf-8'))['version'],'author':'Asryto','python':'3.12.10','nativeCPU':'generic',
-          'nativeSource':'51512f129a7419567f4b8abfb06801451789b8f1','dependencies':dependencies,'runtime':cfg}
+          'nativeSource':'51512f129a7419567f4b8abfb06801451789b8f1','dependencies':dependencies,'runtime':cfg,
+          'worldPackage':{'file':world_archive.name,'sha256':digest(world_archive)}}
     (out/'portable-manifest.json').write_text(json.dumps(meta,indent=2),encoding='utf-8')
     archive=out.parent/(out.name+'.zip')
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=1) as z:
@@ -74,4 +81,5 @@ def build(args):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for name in ['profile','dll','dll-dir','python-zip','wheels','package-wheel','licenses','output']:p.add_argument('--'+name,required=True)
+    p.add_argument('--world-package',help='Reuse the exact npm TGZ that will be published')
     build(p.parse_args())

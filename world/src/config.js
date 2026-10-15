@@ -1,10 +1,12 @@
 export const ID = 'soft-voice';
 const K = `worlds.${ID}`;
 
-export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, lowPowerMode: false, idleUnloadSec: 300, keepWorker: true, lowMemoryMiB: 1536, syncBubbles: true, playbackMode: 'auto', deviceName: '', autoCheckUpdates:true });
+export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, lowPowerMode: false, idleUnloadSec: 300, keepWorker: true, lowMemoryMiB: 1536, syncBubbles: true, playbackMode: 'auto', deviceName: '', autoCheckUpdates:true, autoDiagnostics:true, autoSubmitIssues:false });
 export const CONFIG_GROUP = {
   id: `world:${ID}`, owner: `world:${ID}`,
   schema: { type: 'object', title: '轻量化本地语音引擎', properties: {
+    [`${K}.autoDiagnostics`]: {type:'boolean',title:'自动保存故障与连续性能瓶颈报告（仅本地）',default:true,'x-hot':true},
+    [`${K}.autoSubmitIssues`]: {type:'boolean',title:'自动提交脱敏 Issue 到 Asryto 仓库（需本机 GitHub 登录）',default:false,'x-hot':true},
     [`${K}.autoCheckUpdates`]: { type:'boolean',title:'自动检查更新（启动后检查，每 24 小时一次）',default:true,'x-hot':true },
     [`${K}.deviceName`]: { type: 'string', title: 'Vulkan 推理设备（空值为自动核显）', default: '', maxLength: 256 },
     [`${K}.playbackMode`]: { type: 'string', title: '播放策略（自动 / 优先连续 / 优先开口）', enum: ['auto','buffered','stream'], default: 'auto', 'x-hot': true },

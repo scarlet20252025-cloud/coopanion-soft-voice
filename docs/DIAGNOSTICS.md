@@ -1,8 +1,22 @@
 # 收集诊断与交回作者
 
-作者 **Asryto**。反馈仓库：[coopanion-soft-voice](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/issues)。这是本地诊断工具，收集后生成 ZIP，**不自动联网上传，不加载模型**。
+作者 **Asryto**。反馈仓库：[coopanion-soft-voice](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/issues)。诊断采集不加载模型。命令行默认仅生成本地 ZIP；扩展内可单独开启自动提交脱敏 Issue。
 
-## 普通用户
+## 扩展内直接查看与导出
+
+打开“轻量化本地语音引擎 → 日志与诊断”：
+
+- **立即生成报告**：保存当前设备、驱动、内存、工作进程、启动阶段、错误类型与最近播放指标。
+- **监测 60 秒**：点击后正常使用语音，记录这一分钟的进程 RAM/CPU、独立/共享 GPU 内存和系统 GPU 负载。只观察，不自动发起合成。
+- **查看报告 / 导出 ZIP**：可在界面阅读摘要与阶段日志，或把完整 ZIP 交给 AI。未知指标显示未测，不当作零占用或无故障。
+- **自动记录故障与性能瓶颈**：默认开启，仅保存在本机。错误、意外退出和超时会记录；性能需连续两次（至少 3 秒音频）RTF > 1.25，或连续两次明显欠载。内存保护是可预期的资源限制，记录后不自动作为 Bug 提交。
+- **自动提交脱敏 Issue**：独立开关，默认关闭。用户开启后授权向本仓库公开提交必要诊断摘要与阶段日志。需要当前机器已有 GitHub 登录凭据（Git Credential Manager、GH_TOKEN 或 GITHUB_TOKEN）；扩展不保存密钥，不使用作者的凭据，也不注册账号。未登录或失败时保留 `*-for-author.zip` 和真实原因，用户可导出或稍后重试。
+
+同类问题 24 小时仅自动记录一份，每天最多三份；同一 Issue 指纹不会反复自动发帖，未登录/失败不循环请求。只保留最近 20 份报告，个人音色、设置与模型不在清理范围。手动采集不受自动记录频率限制。
+
+报告保存在当前 Bot 的 `data/soft-voice/diagnostics`，包含 `REPORT.md`、`diagnostics.json`、`perf.log`、`AI_PROMPT.txt`、`issue-draft.md` 与提交状态。公开 Issue 只附脱敏摘要和必要日志；完整 ZIP 保留本机，界面显示实际 Issue 链接或未提交原因。自动检测只能发现现象，不能替代 AI/作者核实根因。
+
+## 普通用户（命令行备用）
 
 1. 在完整语音安装包中双击 `collect-diagnostics.cmd`。它会寻找 Coopanion，读取语音环境路径；找不到时选择包含 `python/python.exe` 的语音安装目录。
 2. 等待完成，在 `diagnostics` 目录找到 `voice-diagnostics-时间.zip`。
@@ -23,9 +37,9 @@
 | 文件 | 用途 |
 | --- | --- |
 | `REPORT.md` | 指标摘要、分析要求与提交方法 |
-| `diagnostics.json` | 版本、Windows/CPU、GPU/驱动、Vulkan 内存类型、可用 RAM、语音进程内存和 CPU、近期播放指标 |
+| `diagnostics.json` | 版本、Windows/CPU、GPU/驱动、Vulkan 内存类型、可用 RAM、语音进程 RAM/CPU、按 PID 区分的独立/共享 GPU 内存、近期播放指标 |
 | `perf.log` | 从语音日志中重建的性能阶段与数字，不复制原始日志正文 |
-| `AI_PROMPT.txt` | 用户可自行发送给 AI 的报障授权文本 |
+| `AI_PROMPT.txt` | 供 AI 分析的入口文本；公开报障仍需当前用户授权 |
 | `manifest.json` | 文件 SHA256，便于核对报告是否完整 |
 
 新版本 worker 会写入不含聊天文本的状态侧文件，记录启动阶段、真实设备和显存分配策略。旧版本没有这些字段时保留空值，不能编造。近期播放数据可能来自上一次会话，分析时要核对时间和存活的 worker；`nvidia-smi` 是整张 GPU 的统计，不能全归为语音占用。

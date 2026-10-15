@@ -62,6 +62,17 @@ if (-not $rowsPatched) {
     git -C $Source apply $rowsPatch
     if ($LASTEXITCODE -ne 0) { throw 'Cannot apply text-row streaming patch.' }
 }
+$vramPatch = Join-Path $PSScriptRoot '../evidence/2026-10-15-vram/qwentts-progressive-kv.patch'
+$ErrorActionPreference = 'Continue'
+git -C $Source apply --reverse --check $vramPatch 2>$null
+$vramPatched = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $vramPatched) {
+    git -C $Source apply --check $vramPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Source does not match progressive KV patch.' }
+    git -C $Source apply $vramPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot apply progressive KV patch.' }
+}
 $oldPath = $env:Path
 $oldCC = $env:CC
 $oldCXX = $env:CXX

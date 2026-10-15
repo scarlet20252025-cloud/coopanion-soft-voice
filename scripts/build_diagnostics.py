@@ -6,6 +6,8 @@ ROOT=Path(__file__).resolve().parents[1]
 def build(output):
     target=Path(output);target.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(target,'w',compression=zipfile.ZIP_DEFLATED) as z:
+        z.write(ROOT/'src/coopanion_soft_voice/issue_reporting.py','scripts/issue_reporting.py')
+        z.write(ROOT/'src/coopanion_soft_voice/gpu_memory.py','scripts/gpu_memory.py')
         z.write(ROOT/'src/coopanion_soft_voice/diagnostics.py','scripts/collect_diagnostics.py')
         for name in ('collect-diagnostics.ps1','find-coopanion.ps1','report_issue.py'):z.write(ROOT/'scripts'/name,'scripts/'+name)
         z.write(ROOT/'docs/DIAGNOSTICS.md','README.md');z.write(ROOT/'LICENSE','LICENSE')

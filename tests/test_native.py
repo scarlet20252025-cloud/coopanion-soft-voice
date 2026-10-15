@@ -30,6 +30,15 @@ def fake_engine():
 
 
 class NativeValidationTests(unittest.TestCase):
+    def test_progressive_cache_is_opt_in_and_clears_stale_process_environment(self):
+        import os
+        config={'deviceType':'integrated','kvContext':1024,'adaptiveKv':True}
+        with patch.dict(os.environ,{},clear=True):
+            self.assertTrue(native_engine.configure_vulkan(config)['adaptiveKv'])
+            self.assertEqual(os.environ['QWEN_TTS_ADAPTIVE_KV'],'1')
+            self.assertFalse(native_engine.configure_vulkan({**config,'adaptiveKv':False})['adaptiveKv'])
+            self.assertNotIn('QWEN_TTS_ADAPTIVE_KV',os.environ)
+
     def test_nvidia_uses_device_local_without_changing_uma_default(self):
         import os
         config={'deviceType':'discrete','vendorId':0x10de,'kvContext':1024,'compactGraphs':True,'streamTextEmbedding':True}

@@ -95,6 +95,8 @@ def settings(runtime, *, cached_verification=False, device_name=None):
         raise ValueError('compactGraphs must be boolean')
     if type(config.get('streamTextEmbedding', False)) is not bool:
         raise ValueError('streamTextEmbedding must be boolean')
+    if type(config.get('adaptiveKv', False)) is not bool:
+        raise ValueError('adaptiveKv must be boolean')
     reference()
     explicit=device_name or (config['deviceName'] if config.get('deviceSelectedExplicitly') is True else None)
     if explicit:
@@ -112,10 +114,13 @@ def configure_vulkan(config):
         os.environ['GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM']='1'
         os.environ.pop('GGML_VK_PREFER_HOST_MEMORY',None)
         os.environ.pop('GGML_VK_ALLOW_SYSMEM_FALLBACK',None)
+    if config.get('adaptiveKv', False): os.environ['QWEN_TTS_ADAPTIVE_KV']='1'
+    else: os.environ.pop('QWEN_TTS_ADAPTIVE_KV',None)
     return {'memoryPolicy':'device-local' if nvidia else 'backend-default',
             'disableHostVisibleVram':os.environ.get('GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM')=='1',
             'cpuThreads':4,'kvContext':config['kvContext'],
-            'compactGraphs':config.get('compactGraphs',False),'streamTextEmbedding':config.get('streamTextEmbedding',False)}
+            'compactGraphs':config.get('compactGraphs',False),'streamTextEmbedding':config.get('streamTextEmbedding',False),
+            'adaptiveKv':config.get('adaptiveKv',False),'kvPrecision':'FP32'}
 
 
 class NativeEngine:
@@ -172,6 +177,10 @@ class NativeEngine:
             for folder in [str(Path(config['dll']).parent)] + config['dllDirectories']:
                 self.dirs.append(os.add_dll_directory(folder))
             self.dll = C.CDLL(config['dll'])
+            self.adaptive_kv = config.get('adaptiveKv', False)
+            if self.adaptive_kv:
+                from .native_capabilities import require_adaptive_kv
+                require_adaptive_kv(self.dll)
             if config.get('streamTextEmbedding', False):
                 from .native_capabilities import require_text_stream
                 require_text_stream(self.dll)
@@ -244,13 +253,26 @@ class NativeEngine:
                         raise RuntimeError(self.dll.qt_last_error().decode())
             self.device_name = config['deviceName']
             self.device_type = config['deviceType']
+            self.vendor_id = config.get('vendorId')
+            self.runtime_parameters['minimumFreeGiB'] = minimum
             self._conditioning_signature = self.conditioning_signature()
             self.voice_conditioning = {'referenceSha256':hashlib.sha256(self.reference_path.read_bytes()).hexdigest(),
                                        'conditioningSha256':self._conditioning_signature,
                                        'mode':'full-icl', 'pieceLimit':self.speech_piece_limit}
+            self.update_cache_state()
             self.startup_timings['totalMs'] = round((time.perf_counter()-started)*1000)
         except BaseException:
             self.close(); raise
+
+    def update_cache_state(self):
+        # Called only after initialization / completed synchronous synthesis.
+        # Never query mutable native state while a request is in flight.
+        if getattr(self, 'adaptive_kv', False) and self.ctx:
+            capacity, limit, size = C.c_int(), C.c_int(), C.c_uint64()
+            if not self.dll.qt_adaptive_kv_state(self.ctx, C.byref(capacity), C.byref(limit), C.byref(size)):
+                raise RuntimeError('Native progressive KV state unavailable')
+            self.runtime_parameters.update(kvCapacity=capacity.value, kvContext=limit.value,
+                                           kvAllocatedMiB=round(size.value/1024**2, 3))
 
     def conditioning_signature(self):
         voice = self.voice
@@ -316,6 +338,7 @@ class NativeEngine:
             raise RuntimeError('Speech reached the generation limit; output may be incomplete')
         if not total_samples:
             raise RuntimeError('Native engine returned no audio')
+        self.update_cache_state()
         if pending: receive(np.concatenate(pending), 24000)
         # Queue the final (possibly shorter than the start buffer) chunk before
         # telling the audio thread it can stop. Otherwise a drained previous

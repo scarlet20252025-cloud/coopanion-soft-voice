@@ -30,12 +30,13 @@ def main():
     p.add_argument('--target-free', type=float, default=3.70)
     p.add_argument('--max-ballast-mib', type=int, default=2560)
     p.add_argument('--cycles', type=int, default=2)
+    p.add_argument('--device-name', help='Explicit GPU for the bounded loading trial')
     a = p.parse_args()
-    if not 3.0 <= a.target_free <= 8 or not 0 <= a.max_ballast_mib <= 6144 or not 1 <= a.cycles <= 3:
-        p.error('Target 3–8 GiB; ballast 0–6144 MiB; cycles 1–3')
+    if not 2.5 <= a.target_free <= 8 or not 0 <= a.max_ballast_mib <= 6144 or not 1 <= a.cycles <= 3:
+        p.error('Target 2.5–8 GiB; ballast 0–6144 MiB; cycles 1–3')
     ballast = []
     report = {'initialFreeGiB': free(), 'targetFreeGiB': a.target_free,
-              'maxBallastMiB': a.max_ballast_mib, 'cycles': [], 'safetyReleased': False}
+              'maxBallastMiB': a.max_ballast_mib, 'deviceName': a.device_name, 'cycles': [], 'safetyReleased': False}
     report['minFreeGiB'] = report['initialFreeGiB']
     stop = threading.Event()
     def watch():
@@ -61,7 +62,7 @@ def main():
                     raise RuntimeError('Safety threshold triggered; trial aborted')
                 row.update(beforeLoadFreeGiB=free(), ballastMiB=len(ballast)*16)
                 row['loadStarted'] = time.perf_counter()
-            model = NativeEngine(a.runtime, on_stage=prepare)
+            model = NativeEngine(a.runtime, on_stage=prepare, device_name=a.device_name)
             start = row.pop('loadStarted')
             row.update(loadMs=round((time.perf_counter()-start)*1000),
                        startupTimings=model.startup_timings, afterLoadFreeGiB=free(),

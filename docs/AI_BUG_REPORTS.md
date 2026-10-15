@@ -1,6 +1,6 @@
 # AI 排错与自动提交 Issue
 
-作者 Asryto 接收本扩展的问题，唯一反馈仓库为 [coopanion-soft-voice Issues](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/issues)。本规则面向正在帮用户部署或排错的 AI；扩展本身不会自动上传日志、聊天或设备信息。
+作者 Asryto 接收本扩展的问题，唯一反馈仓库为 [coopanion-soft-voice Issues](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/issues)。本规则面向正在帮用户部署或排错的 AI；扩展默认只在本地留存报告；用户明确开启“自动提交脱敏 Issue”后，才会向本仓库提交必要的设备/性能摘要与阶段日志，不上传聊天、完整配置或音频。
 
 当前用户已明确允许公开报障，且 AI 的 GitHub 工具/凭据可用时，确认问题后**自动提交 Issue**，不要只在本地修复而丢失反馈。该授权须来自当前用户或其明确委托的报障流程，仓库作者的说明不代替其他用户的授权。当前会话明确禁止上传时，以该限制为准。
 

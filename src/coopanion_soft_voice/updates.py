@@ -21,8 +21,11 @@ def descriptor(data):
     patch=data['patch'];name=patch['file']
     if not re.fullmatch(r'coopanion-voice-update-\d+\.\d+\.\d+\.zip',name):raise ValueError('Invalid update filename')
     expected=f'https://github.com/{REPO}/releases/download/v{data["version"]}/{name}'
-    if patch['url']!=expected or not re.fullmatch(r'[0-9a-f]{64}',patch['sha256']):raise ValueError('Untrusted update URL/checksum')
+    technical=f'https://github.com/{REPO}/releases/download/updates-v{data["version"]}/{name}'
+    if patch['url'] not in (expected,technical) or not re.fullmatch(r'[0-9a-f]{64}',patch['sha256']):raise ValueError('Untrusted update URL/checksum')
     if type(patch['bytes']) is not int or not 0<patch['bytes']<=MAX_ZIP:raise ValueError('Update exceeds size limit')
+    if 'runtimeHashes' in data:
+        if set(data['runtimeHashes'])!={'dll','model','codec'} or any(not re.fullmatch(r'[0-9a-f]{64}',v) for v in data['runtimeHashes'].values()):raise ValueError('Invalid runtime hashes')
     return data
 
 def portable(root):
@@ -31,7 +34,7 @@ def portable(root):
     if Path(sys.executable).resolve()!=root/'python/python.exe':raise ValueError('Run the portable package Python for hot update')
     return root
 
-def check(root):
+def check(root,extensions=None):
     root=Path(root).resolve()
     emit('checking','Checking the official GitHub release descriptor')
     with urllib.request.urlopen(urllib.request.Request(POINTER,headers={'User-Agent':'Asryto-local-voice-updater'}),timeout=20) as response:
@@ -42,9 +45,13 @@ def check(root):
     current=__version__
     if supported:current=json.loads((root/'portable-manifest.json').read_text(encoding='utf-8'))['version']
     recovery=(root/'updates/pending.json').exists()
-    available=version(release['version'])>version(current) or recovery
+    current_world=installed_world_version(root,extensions)
+    cfg=json.loads((root/'native-runtime.json').read_text(encoding='utf-8')) if (root/'native-runtime.json').is_file() else {}
+    actual={'dll':cfg.get('dllSha256'),**cfg.get('speechOnly',{}).get('hashes',{})}
+    requires_full='runtimeHashes' in release and actual!=release['runtimeHashes']
+    available=version(release['version'])>version(current) or version(release['worldVersion'])>version(current_world) or recovery
     emit('available' if available else 'current','Update available' if available else 'Already current',
-         release=release,currentVersion=current,available=available,supported=supported,needsRecovery=recovery,
+         release=release,currentVersion=current,currentWorldVersion=current_world,available=available,supported=supported and not requires_full,requiresFullInstall=requires_full,needsRecovery=recovery,
          releaseUrl=f'https://github.com/{REPO}/releases/tag/v{release["version"]}')
     return release
 
@@ -58,7 +65,7 @@ def permitted(name,release_version):
     if name.startswith('world/'):
         return name in ('world/package.json','world/README.md','world/LICENSE') or (len(p.parts)>2 and p.parts[1] in ('src','dist') and p.suffix in ('.js','.css','.md','.py'))
     if name.startswith('scripts/'):
-        return len(p.parts)==2 and p.name in ('activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','collect_diagnostics.py','report_issue.py')
+        return len(p.parts)==2 and p.name in ('activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','collect_diagnostics.py','report_issue.py','issue_reporting.py','gpu_memory.py')
     return name in ('README.md','collect-diagnostics.cmd') or (len(p.parts)==2 and p.parts[0]=='docs' and p.suffix=='.md')
 
 def unpack(archive,release):
@@ -95,12 +102,21 @@ def world_targets(extensions):
     alias=base/'node_modules'/name;target=alias.resolve(strict=True);local=base/'local-soft-voice'
     if target!=alias.absolute() and not target.is_relative_to((base/'node_modules/.pnpm').resolve()):raise ValueError('Extension link escapes pnpm store')
     if local.resolve()!=local.absolute():raise ValueError('Local extension must not be a symlink/junction')
-    for folder in (target,local):
+    targets=[target]+([local] if local.exists() else [])
+    for folder in targets:
         if json.loads((folder/'package.json').read_text(encoding='utf-8'))['name']!=name:raise ValueError('Unexpected installed World')
-    return [target,local]
+    return targets
 
-def managed_roots(root,worlds):
-    return [root/'python/Lib/site-packages',root/'world',root/'scripts',root/'docs',root/'README.md',root/'collect-diagnostics.cmd',root/'portable-manifest.json',*worlds]
+
+def installed_world_version(root,extensions=None):
+    folders=world_targets(extensions)[:1] if extensions else [Path(root)/'world']
+    file=folders[0]/'package.json'
+    if file.exists():return json.loads(file.read_text(encoding='utf-8'))['version']
+    manifest=Path(root)/'portable-manifest.json'
+    return json.loads(manifest.read_text(encoding='utf-8')).get('worldVersion','0.0.0') if manifest.exists() else '0.0.0'
+
+def managed_roots(root,worlds,extensions=None):
+    return [root/'python/Lib/site-packages',root/'world',root/'scripts',root/'docs',root/'README.md',root/'collect-diagnostics.cmd',root/'portable-manifest.json',*worlds,*([Path(extensions).resolve()/'package.json'] if extensions else [])]
 
 def restore(journal,roots):
     entries=json.loads(journal.read_text(encoding='utf-8'))['files']
@@ -119,11 +135,14 @@ def install_archive(root,archive,release,extensions=None,verify=None):
     actual={'dll':cfg['dllSha256'],**cfg.get('speechOnly',{}).get('hashes',{})}
     if actual!=meta['runtimeHashes']:raise ValueError('This update is incompatible with the installed native/model profile; use complete ZIP')
     site=root/'python/Lib/site-packages';worlds=[root/'world',*world_targets(extensions)]
-    roots=managed_roots(root,worlds)
+    roots=managed_roots(root,worlds,extensions)
     cache=root/'updates';cache.mkdir(exist_ok=True);journal=cache/'pending.json'
     if journal.exists():restore(journal,roots)
     current=json.loads((root/'portable-manifest.json').read_text(encoding='utf-8'))
-    if version(current['version'])<version(release['minimumVersion']) or version(current['version'])>=version(release['version']):raise ValueError('Update requires an older supported portable version; refusing downgrade or reinstall')
+    current_world=installed_world_version(root,extensions)
+    if (version(current['version'])<version(release['minimumVersion']) or version(current['version'])>version(release['version'])
+            or version(current_world)>version(release['worldVersion'])):raise ValueError('Update would downgrade engine/World or requires an unsupported portable version')
+    if version(current['version'])==version(release['version']) and version(current_world)>=version(release['worldVersion']):raise ValueError('Engine and World are already current')
     planned={}
     for name,data in files.items():
         if name.startswith('python/'):targets=[site/name[7:]]
@@ -133,9 +152,24 @@ def install_archive(root,archive,release,extensions=None,verify=None):
             target=target.resolve()
             if not any(target.is_relative_to(r) for r in roots):raise ValueError('Update target escapes installation')
             planned[target]=data
+    world_files={name[6:]:data for name,data in files.items() if name.startswith('world/')}
+    if world_files:
+        from .world_package import managed,NAME
+        package=json.loads(world_files['package.json'])
+        if package.get('name')!=NAME or package.get('version')!=release['worldVersion']:raise ValueError('World package identity/version mismatch')
+        for folder in worlds:
+            for old in folder.rglob('*'):
+                if old.is_file() and managed(old.relative_to(folder).as_posix()) and old.relative_to(folder).as_posix() not in world_files:
+                    if not old.resolve().is_relative_to(folder):raise ValueError('Old World file escapes package')
+                    planned[old.resolve()]=None
+        if extensions:
+            ep=Path(extensions).resolve()/'package.json';registration=json.loads(ep.read_text(encoding='utf-8-sig'))
+            registration.setdefault('dependencies',{})[NAME]=release['worldVersion']
+            planned[ep]=json.dumps(registration,ensure_ascii=False,indent=2).encode('utf-8')
     world_changed=bool(extensions) and any(
         not (worlds[1]/name[6:]).is_file() or (worlds[1]/name[6:]).read_bytes()!=data
         for name,data in files.items() if name.startswith(('world/src/','world/dist/')) or name=='world/package.json')
+    world_changed=world_changed or bool(extensions) and any(data is None and target.is_relative_to(worlds[1]) for target,data in planned.items())
     for old in site.glob('coopanion_soft_voice-*.dist-info'):
         if old.name!=f'coopanion_soft_voice-{release["version"]}.dist-info':
             if old.resolve()!=old.absolute():raise ValueError('Old package metadata must not be a link')
@@ -186,10 +220,14 @@ def apply(root,extensions=None):
             import fcntl
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         journal=folder/'pending.json'
-        if journal.exists():restore(journal,managed_roots(root,world_targets(extensions)))
-        release=check(root)
+        if journal.exists():restore(journal,managed_roots(root,world_targets(extensions),extensions))
+        release=check(root,extensions)
+        if 'runtimeHashes' in release:
+            cfg=json.loads((root/'native-runtime.json').read_text(encoding='utf-8'))
+            if {'dll':cfg.get('dllSha256'),**cfg.get('speechOnly',{}).get('hashes',{})}!=release['runtimeHashes']:
+                raise ValueError('This release changes the native/model layout; install the complete ZIP from the release page')
         current=json.loads((root/'portable-manifest.json').read_text(encoding='utf-8'))['version']
-        if version(release['version'])<=version(current):return
+        if version(release['version'])<=version(current) and version(release['worldVersion'])<=version(installed_world_version(root,extensions)):return
         with tempfile.TemporaryDirectory(prefix='voice-update-',dir=folder) as temp:
             archive=Path(temp)/release['patch']['file'];received=0
             emit('downloading','Downloading code-only update',received=0,total=release['patch']['bytes'])
@@ -205,7 +243,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('action',choices=['check','apply']);p.add_argument('--runtime',required=True);p.add_argument('--extensions')
     args=p.parse_args()
     try:
-        if args.action=='check':check(args.runtime)
+        if args.action=='check':check(args.runtime,args.extensions)
         else:apply(args.runtime,args.extensions)
     except Exception as error:
         emit('error',str(error));raise SystemExit(1)

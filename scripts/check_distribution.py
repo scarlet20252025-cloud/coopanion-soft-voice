@@ -8,6 +8,9 @@ archive = max((root/'dist').glob('*.tar.gz'), key=lambda p: p.stat().st_mtime)
 with tarfile.open(archive) as tar:
     names = {'/'.join(n.split('/')[1:]) for n in tar.getnames()}
 required = {
+    'src/coopanion_soft_voice/reports.py','src/coopanion_soft_voice/issue_reporting.py','world/src/reports.js',
+    'src/coopanion_soft_voice/world_package.py','scripts/verify_install_channels.py','docs/INSTALL_CHANNELS.md',
+    'evidence/2026-10-15-vram/qwentts-progressive-kv.patch', 'scripts/benchmark_vram.py', 'src/coopanion_soft_voice/gpu_memory.py',
     'docs/DIAGNOSTICS.md','scripts/build_diagnostics.py','scripts/collect-diagnostics.ps1','scripts/report_issue.py','src/coopanion_soft_voice/diagnostics.py','collect-diagnostics.cmd',
     'AGENTS.md', 'CHANGELOG.md', 'docs/AI_BUG_REPORTS.md', 'docs/PLAYBACK_AND_UPDATES.md', 'scripts/build_update.py', 'src/coopanion_soft_voice/updates.py', 'docs/AI_DEPLOYMENT.md', 'scripts/deploy.ps1',
     'scripts/prepare_speech_profile.py', 'scripts/verify_deployment.py',

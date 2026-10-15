@@ -25,7 +25,7 @@
 
 该完整包包含 Qwen3-TTS 0.6B Base Q8 精简模型、音频解码模型、Vulkan 推理引擎、Python 3.12、播放器依赖、已确认音色和独立 World 扩展。
 
-发布页中的 `cortico-world-soft-voice-0.4.0.tgz` 只包含扩展界面与代码；`Source code (zip)` 是源码。**首次安装请选上面约 1.17 GB 的完整 ZIP**，单独下载 TGZ 或源码无法完成模型部署。
+发布页只保留一份完整安装 ZIP，已包含扩展与模型，无需另找 TGZ。`.sha256` 是校验文件；GitHub 自动显示的 `Source code (zip/tar.gz)` 是源码，不能作为完整安装包。已有市场或本地新版扩展会自动跳过，旧版会更新；模型部署仍会继续。
 
 ## 3. 解压并安装
 

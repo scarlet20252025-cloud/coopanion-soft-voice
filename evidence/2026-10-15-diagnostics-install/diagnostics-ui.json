@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "collectionProgress": true,
+  "detailPersists": true,
+  "zipDownload": true,
+  "explicitConsent": true,
+  "offlineFallback": true,
+  "narrowLayout": true,
+  "pageErrors": []
+}

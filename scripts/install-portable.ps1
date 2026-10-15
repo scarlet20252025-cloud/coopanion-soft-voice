@@ -34,22 +34,7 @@ if (-not $RuntimeOnly) {
     foreach ($file in @((Join-Path $extensions 'package.json'),(Join-Path $bot 'config.json'))) {
         if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Initialize Coopanion once before installing voice. Missing: $file" }
     }
-    $petMeta=Join-Path $appRoot 'resources/app/node_modules/cortico-world-desktop-pet/package.json'
-    $running=Get-CimInstance Win32_Process -Filter "Name='Coopanion.exe'" | Where-Object { $_.ExecutablePath -eq (Join-Path $appRoot 'Coopanion.exe') }
-    if ($running) {
-        if (-not (Test-Path -LiteralPath $petMeta) -or (Get-Content -LiteralPath $petMeta -Raw | ConvertFrom-Json).version -ne '0.1.4') { throw 'Exit Coopanion, then run install.cmd again.' }
-        Write-Host 'Closing Coopanion gracefully before extension installation...'
-        $socket=New-Object System.Net.WebSockets.ClientWebSocket
-        try {
-            $socket.Options.SetRequestHeader('Origin','http://127.0.0.1:7797')
-            $connect=$socket.ConnectAsync([Uri]'ws://127.0.0.1:7797/socket?role=pet&host=tab',[Threading.CancellationToken]::None)
-            if (-not $connect.Wait(5000)) { throw 'Quit connection timed out. Exit Coopanion manually.' }
-            $bytes=[Text.Encoding]::UTF8.GetBytes('{"t":"control","action":"quit"}')
-            $socket.SendAsync([ArraySegment[byte]]::new($bytes),[Net.WebSockets.WebSocketMessageType]::Text,$true,[Threading.CancellationToken]::None).GetAwaiter().GetResult()
-            foreach ($process in $running) { Wait-Process -Id $process.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }
-        } finally { $socket.Dispose() }
-        if (Get-CimInstance Win32_Process -Filter "Name='Coopanion.exe'" | Where-Object { $_.ExecutablePath -eq (Join-Path $appRoot 'Coopanion.exe') }) { throw 'Coopanion is still running. Exit it and retry.' }
-    }
+
 }
 $log=Join-Path $bundleRoot 'installation.log'
 # Windows PowerShell 5.1 wraps native stderr as non-terminating errors.
@@ -69,7 +54,31 @@ Write-Host ('Playback: '+$report.playback.effectivePlaybackMode+'; RTF: '+$repor
 if (-not $report.playbackHealth.smooth) { Write-Warning 'Audio device starvation was detected. Installation succeeded, but smooth playback was NOT verified. Select buffered playback and retest.' }
 elseif (-not $report.playbackHealth.streamingRecommended) { Write-Host 'This GPU uses complete-utterance buffering for smooth audio. Expect longer startup; faster streaming was not verified.' }
 if (-not $RuntimeOnly) {
-    Write-Host '[3/3] Installing the independent World and preserving personal settings...'
+    Write-Host '[3/3] Detecting the installed extension version (marketplace or offline)...'
+    $planRaw=& $voicePython (Join-Path $PSScriptRoot 'install_world.py') --extensions $extensions --bot $bot --runtime $bundleRoot --inspect 2>>$log
+    if ($LASTEXITCODE -ne 0) { throw "Extension version check failed. See $log" }
+    $plan=$planRaw | ConvertFrom-Json
+    if ($plan.action -eq 'skip') { Write-Host ('Keeping installed extension '+$plan.installedVersion+'; bundled '+$plan.bundledVersion+'. Model setup still completes.') }
+    else { Write-Host ('Extension '+$plan.action+': '+$plan.installedVersion+' -> '+$plan.bundledVersion) }
+    $petMeta=Join-Path $appRoot 'resources/app/node_modules/cortico-world-desktop-pet/package.json'
+    $running=Get-CimInstance Win32_Process -Filter "Name='Coopanion.exe'" | Where-Object { $_.ExecutablePath -eq (Join-Path $appRoot 'Coopanion.exe') }
+    if ($running) {
+        if (-not (Test-Path -LiteralPath $petMeta) -or (Get-Content -LiteralPath $petMeta -Raw | ConvertFrom-Json).version -ne '0.1.4') { throw 'Exit Coopanion, then run install.cmd again.' }
+        Add-Type -AssemblyName System.Windows.Forms
+        $restartChoice=[System.Windows.Forms.MessageBox]::Show('Installation needs to close Coopanion and restart it afterwards. Continue now? Choose No to keep using it and install later.','Coopanion voice installation',[System.Windows.Forms.MessageBoxButtons]::YesNo,[System.Windows.Forms.MessageBoxIcon]::Question)
+        if ($restartChoice -ne [System.Windows.Forms.DialogResult]::Yes) { Write-Host 'Model verified. Installation postponed; Coopanion is unchanged.';return }
+        Write-Host 'Closing Coopanion gracefully before extension installation...'
+        $socket=New-Object System.Net.WebSockets.ClientWebSocket
+        try {
+            $socket.Options.SetRequestHeader('Origin','http://127.0.0.1:7797')
+            $connect=$socket.ConnectAsync([Uri]'ws://127.0.0.1:7797/socket?role=pet&host=tab',[Threading.CancellationToken]::None)
+            if (-not $connect.Wait(5000)) { throw 'Quit connection timed out. Exit Coopanion manually.' }
+            $bytes=[Text.Encoding]::UTF8.GetBytes('{"t":"control","action":"quit"}')
+            $socket.SendAsync([ArraySegment[byte]]::new($bytes),[Net.WebSockets.WebSocketMessageType]::Text,$true,[Threading.CancellationToken]::None).GetAwaiter().GetResult()
+            foreach ($process in $running) { Wait-Process -Id $process.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }
+        } finally { $socket.Dispose() }
+        if (Get-CimInstance Win32_Process -Filter "Name='Coopanion.exe'" | Where-Object { $_.ExecutablePath -eq (Join-Path $appRoot 'Coopanion.exe') }) { throw 'Coopanion is still running. Exit it and retry.' }
+    }
     $worldArgs=@('--extensions',$extensions,'--bot',$bot,'--runtime',$bundleRoot)
     if (-not $NoEnableSpeech) { $worldArgs+='--enable' }
     & $voicePython (Join-Path $PSScriptRoot 'install_world.py') @worldArgs 2>>$log

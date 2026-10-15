@@ -28,24 +28,34 @@ function shell(ctx,title,subtitle) {
 function memory(s,c) {
   const m=s.memory;
   if(!c){
-    c=card('系统内存与启动保护');
+    c=card('内存与启动条件','memory-card');
     const field=(tag,key,cls)=>{const e=node(tag,null,cls);e.dataset.memory=key;return e;};
-    c.append(field('div','free','stat'),field('p','total','muted'));
-    const track=node('div',null,'track');track.append(field('div','fill','fill'));
-    for(let i=0;i<3;i++)track.append(field('span','marker'+i,'marker'));c.append(track);
-    c.append(field('p','guard','warn'),field('p','measured','memory-measured'),field('p','verdict','muted'));
-    const why=node('details',null,'memory-help');why.append(node('summary','为什么仍需要这些内存？'),field('p','explain','muted'),field('p','peak','muted'),node('p','低功耗模式在空闲时释放模型，下一句话仍要重新加载；它不能减少正在合成时的模型需求。启动保护线不是游戏同时运行的性能保证。','muted'));c.append(why);
+    c.append(field('p','device','memory-device'));
+    const figures=node('div',null,'memory-figures');
+    for(const [key,label] of [['free','当前可用系统内存'],['required','启动至少需要']]){
+      const box=node('div');box.append(node('div',label,'memory-label'),field('div',key,'memory-number'));figures.append(box);
+    }
+    c.append(figures,field('p','verdict','memory-verdict'));
+    const track=node('div',null,'track');track.setAttribute('role','progressbar');track.setAttribute('aria-label','系统内存是否满足语音启动要求');track.dataset.memory='track';track.append(field('div','fill','fill'));c.append(track);
+    c.append(field('p','guard','memory-measured'),field('p','measured','memory-measured'),field('p','total','memory-measured'));
+    const why=node('details',null,'memory-help');why.append(node('summary','查看占用说明'),field('p','explain','muted'),field('p','peak','muted'),node('p','低功耗模式在空闲时释放模型，下次说话重新加载。启动门槛包含系统余量，不能保证游戏与语音同时运行的性能。','muted'));c.append(why);
   }
   const field=key=>c.querySelector('[data-memory="'+key+'"]');
-  field('free').textContent=m.freeGiB.toFixed(1)+' GiB';field('total').textContent=`当前空闲 / 系统总量 ${m.totalGiB.toFixed(1)} GiB`;
-  field('fill').style.width=`${Math.min(100,m.freeGiB/m.totalGiB*100)}%`;
-  [m.minimumGiB,m.recoveryGiB,s.values.lowPowerMode&&s.values.lowMemoryMiB>0?s.values.lowMemoryMiB/1024:null].forEach((n,i)=>{const e=field('marker'+i);e.hidden=n==null;if(n!=null){e.style.left=n/m.totalGiB*100+'%';e.title=n+' GiB';}});
-  field('guard').textContent=`加载 / 唤醒前至少 ${m.minimumGiB} GiB 空闲 · 自动恢复需 ${m.recoveryGiB} GiB`;
+  field('free').textContent=m.freeGiB.toFixed(1)+' GiB';field('free').setAttribute('aria-label','当前可用系统内存 '+m.freeGiB.toFixed(1)+' GiB');
+  field('required').textContent=m.minimumGiB+' GiB';
+  field('total').textContent=`系统内存总量 ${m.totalGiB.toFixed(1)} GiB · 上方“可用”是剩余 RAM，不是语音占用或显存。`;
+  const enough=m.freeGiB>=m.minimumGiB,loaded=s.workerPid&&s.accepting&&s.phase!=='sleeping';
+  c.dataset.memoryReady=String(enough);
+  field('fill').style.width=`${Math.max(0,Math.min(100,m.freeGiB/m.minimumGiB*100))}%`;
+  field('track').setAttribute('aria-valuemin','0');field('track').setAttribute('aria-valuemax',String(m.minimumGiB));field('track').setAttribute('aria-valuenow',String(Math.min(m.minimumGiB,m.freeGiB)));
+  field('guard').textContent=`内存不足后自动重试：可用系统内存达到 ${m.recoveryGiB} GiB`;
   const measured=s.workerPid?s.processMemory:null;
-  field('measured').textContent=measured?`语音进程专用 ${fmt(measured.privateMiB)} MiB · 驻留 ${fmt(measured.residentMiB)} MiB`:'语音进程占用：尚无当前实测数据';
-  field('verdict').textContent=s.workerPid&&s.accepting&&s.phase!=='sleeping'?'模型已加载，启动保护线仅在重新加载时检查。':m.freeGiB<m.minimumGiB?'可用内存不足，保留文字回复。':'达到启动保护线。';
-  field('explain').textContent=`这里的 ${m.minimumGiB} GiB 是加载前系统需要剩余的内存，包含模型、推理缓存、加载临时空间和系统余量。它不是模型固定占用。${m.layout==='text-rows'?'已启用文字词表按需加载，避免完整词表常驻核显。':m.layout==='compact'?'已识别固定音色精简模型，当前显示的是精简布局经实测校准后的加载保护线。':'当前运行时使用常规保护线。'}`;
-  field('peak').hidden=!measured;if(measured)field('peak').textContent=`本进程历史驻留峰值 ${fmt(measured.peakResidentMiB)} MiB。进程计数未单列核显共享内存，不能与系统空闲量直接相减。`;
+  field('measured').textContent=measured?`语音当前占用的 RAM：${fmt(measured.residentMiB)} MiB（进程物理驻留）`:s.workerPid?'语音当前占用：等待进程实测数据':'语音当前占用：工作进程未运行';
+  field('verdict').textContent=loaded?'语音已加载 · 下次加载时重新检查':enough?'满足启动条件':`暂不能启动 · 还差 ${(m.minimumGiB-m.freeGiB).toFixed(2)} GiB 可用内存`;
+  const kind=s.deviceType||m.deviceType;
+  field('device').textContent=`计算设备：${s.deviceName||m.deviceName||'开启语音后检测'}${kind==='discrete'?'（独显）':kind==='integrated'?'（核显）':''}`;
+  field('explain').textContent=`启动至少需要 ${m.minimumGiB} GiB 可用系统内存，包含加载临时空间和系统余量，不代表语音固定占用这么多。${kind==='discrete'?'独显使用自己的显存存放 GPU 权重与缓存，Python、音频和驱动仍需系统内存。':'核显与 CPU 共享系统内存。'}${m.layout==='progressive-kv'?'已启用按需扩展的 FP32 缓存，并采用经实测的独显启动门槛。':m.layout==='text-rows'?'已启用文字词表按需加载；核显启动门槛保留 3 GiB。':''}`;
+  field('peak').hidden=!measured;if(measured)field('peak').textContent=`进程提交内存 ${fmt(measured.privateMiB)} MiB · 历史物理驻留峰值 ${fmt(measured.peakResidentMiB)} MiB。提交量不等于当前物理 RAM；这些读数也不能与 GPU 专用/共享显存直接相加。`;
   return c;
 }
 function metric(title,value,hint){const c=card(title);c.append(node('div',value,'stat'),node('p',hint,'muted'));return c;}
@@ -130,7 +140,7 @@ const controls={mount(ctx){
     updateVersion.textContent=`引擎 ${s.engineVersion||updates.currentVersion||'待检测'} · 扩展 ${updates.loadedWorldVersion||'0.4.0'}`;
     let percentage=null;if(updates.total>0&&['downloading','backing_up','installing','restoring'].includes(updates.stage))percentage=Math.round((updates.stage==='downloading'?updates.received:updates.completed)/updates.total*100);
     updateSummary.textContent=updates.busy?'更新中…':updates.available&&updates.stage!=='installed'?'热更新 · 有新版':'热更新';
-    updateDetail.textContent=(stages[updates.stage]||'尚未检查')+(percentage!=null?' '+percentage+'%':'')+(updates.stage==='available'?' v'+updates.release?.version:'')+(updates.error?'：'+updates.error:'')+(updates.supported===false?'；当前为源码安装，请用 GitHub 完整包升级':'')+(updates.requiresRestart?'；World 扩展更新待桌宠重启生效':'');
+    updateDetail.textContent=(stages[updates.stage]||'尚未检查')+(percentage!=null?' '+percentage+'%':'')+(updates.stage==='available'?' v'+updates.release?.version:'')+(updates.error?'：'+updates.error:'')+(updates.requiresFullInstall?'；本次包含原生引擎/模型布局更新，请从发布页运行完整安装包':updates.supported===false?'；当前为源码安装，请用 GitHub 完整包升级':'')+(updates.requiresRestart?'；World 扩展更新待桌宠重启生效':'');
     updateProgress.hidden=!updates.busy;if(percentage==null)updateProgress.removeAttribute('value');else updateProgress.value=percentage;
     autoCheck.checked=!!(s.values.autoCheckUpdates??true);
     restartButton.hidden=!updates.requiresRestart;restartButton.disabled=!!updates.busy;restartButton.dataset.locked=String(restartButton.disabled);
@@ -165,9 +175,11 @@ const status={mount(ctx){
     grid.append(metric('首次出声',last?ms(last.firstDeviceCallbackMs):'—','最近一条：音频设备首次回调'),metric('平均合成耗时 / 音频时长',ratios.length?(ratios.reduce((a,b)=>a+b,0)/ratios.length).toFixed(2)+'×':'—','低于 1× 表示平均生成快于音频时长'),metric('断流 / 设备欠载',last?`${fmt(last.underrunMs)} ms / ${fmt(last.deviceUnderflows)} 次`:'—','最近一条：连续播放监测'));
     const info=card('引擎与诊断'),err=node('p',s.workerError||s.detail||'无异常',s.workerError?'error':'muted');
     const policy=s.nativeSettings?.memoryPolicy==='device-local'?'设备本地显存':s.nativeSettings?.memoryPolicy==='backend-default'?'核显/后端默认分配':'尚未检测';
+    const kv=s.nativeSettings;
     const mode={auto:'自动',stream:'流式',buffered:'整句缓冲'};
     info.append(node('p',s.engine),node('p',`实际 GPU：${s.deviceName||'尚未连接'} · 引擎 ${s.engineVersion||'—'}`),node('p',`内存路径：${policy} · 24 kHz 单声道`,'muted'),node('p',`最近加载 / 唤醒 ${ms(s.loadMs)} · 丢弃旧句 ${fmt(s.dropped)}`,'muted'),node('p',last?`最近策略：${mode[last.requestedPlaybackMode]||'—'} → ${mode[last.effectivePlaybackMode]||'—'}；${last.smoothPlayback===true?'播放未检测到欠载':last.smoothPlayback===false?'存在播放欠载':'连续性尚无数据'}。${last.realTimeFactor>=1?'合成慢于实时，不能视为低延迟验收通过。':''}`:'还没有真实播放样本，无法判定性能。','muted'),err);
     const lower=node('div',null,'grid');memoryCard=memory(s,memoryCard);lower.append(memoryCard,info);u.content.replaceChildren(grid,chart(h),lower);
+    if(kv?.adaptiveKv) info.append(node('p',`推理缓存：FP32 · 当前 ${fmt(kv.kvAllocatedMiB)} MiB / ${fmt(kv.kvCapacity)} 个位置 · 按需扩展至 ${fmt(kv.kvContext)}；此数值仅为 Talker KV 缓存，不是模型总显存。`,'muted'));
   });
 }};
 const config={mount(ctx){
@@ -196,4 +208,52 @@ const voices={mount(ctx){
   u.content.append(catalog,upload,help);
   refresh=u.poll(s=>{catalog.replaceChildren(...s.voices.map(v=>{const c=card(v.name,'voice '+(v.key===s.selectedVoice?'selected':!v.available?'pending':''));c.append(node('span',v.key===s.selectedVoice?'使用中':v.available?'可用':'待更新','badge'),node('p',v.description,'muted'));if(v.available&&v.key!==s.selectedVoice)c.append(u.button('使用此音色',async()=>{await u.act('select',[v.key]);await refresh();}));if(!v.available)c.append(node('p','后续更新将提供更多默认音色。','muted'));return c;}));});
 }};
-export default {panels:{controls,status,config,voices}};
+const diagnostics={mount(ctx){
+  const u=shell(ctx,'日志与诊断','查看真实的性能与故障报告。采集不会运行额外语音；公开提交由下方开关控制。');
+  const options=card('自动报告'),inputs={},progress=node('p','正在读取报告…','notice'),actions=node('div',null,'actions');progress.setAttribute('role','status');
+  for(const[key,title,desc]of [
+    ['autoDiagnostics','自动记录故障与性能瓶颈','仅保存在本机。连续两次慢于实时或播放欠载才记录性能问题，同类问题每天一份，每天最多三份。'],
+    ['autoSubmitIssues','自动提交脱敏 Issue','将版本、硬件/驱动、错误码与必要性能日志提交至 Asryto 的 GitHub 仓库。不含聊天、音频、密钥和个人路径；需要本机已有 GitHub 凭据。未登录或失败则保留 ZIP。']]){
+    const row=node('label',null,'row'),text=node('span',title),input=node('input');input.type='checkbox';input.setAttribute('aria-label',title);text.append(node('small',desc));row.append(text,input);options.append(row);inputs[key]=input;
+    input.addEventListener('change',async()=>{input.disabled=true;try{await u.act('save',[{[key]:input.checked}]);}catch{input.checked=!input.checked;}finally{input.disabled=false;}},{signal:ctx.signal});
+  }
+  let refresh=()=>{};
+  actions.append(u.button('立即生成报告',async()=>{await u.act('collectReport',[0]);await refresh();},'primary'),
+    u.button('监测 60 秒',async()=>{await u.act('collectReport',[60]);await refresh();}),
+    u.button('刷新列表',async()=>{await u.act('refreshReports');await refresh();}));
+  const link=node('a','Asryto · GitHub 问题反馈 ↗');link.href='https://github.com/scarlet20252025-cloud/coopanion-soft-voice/issues';link.target='_blank';link.rel='noopener noreferrer';
+  options.append(actions,progress,link);
+  const list=card('最近报告'),rows=node('div'),viewer=card('报告详情'),preview=node('pre', '选择一份报告查看。','report-preview');
+  viewer.append(preview);list.append(node('p','保留最近 20 份。ZIP 内含设备与性能诊断、关键日志、AI 分析入口和 Issue 草稿。','muted'),rows);
+  u.content.append(options,list,viewer);let signature='';
+  function renderReports(reports){
+    const next=JSON.stringify(reports);if(next===signature)return;signature=next;
+    rows.replaceChildren(...reports.map(r=>{
+      const item=node('div',null,'report-item'),title=node('strong',r.title),stamp=node('p',new Date(r.atUtc).toLocaleString()+(r.automatic?' · 自动记录':' · 手动采集'),'muted');
+      const summary=r.summary||{},readings=node('p',`合成/播放比 ${Number.isFinite(summary.realTimeFactor)?summary.realTimeFactor.toFixed(2)+'×':'未测'} · 断流 ${summary.underrunMs??'未测'} ms · 设备欠载 ${summary.deviceUnderflows??'未测'} 次`,'muted');
+      const status=node('p',r.submission?.reason||'仅本地保存','muted'),buttons=node('div',null,'actions');
+      buttons.append(u.button('查看报告',async()=>{const d=await u.act('reportDetail',[r.id]);preview.textContent=JSON.stringify({报告:d.report.title,采集时间:d.report.atUtc,...d.snapshot,最近采样:d.sample},null,2)+(d.perf?'\n\n分阶段性能日志\n'+d.perf:'');viewer.scrollIntoView({block:'nearest'});}),
+        u.button('导出 ZIP',async()=>{const f=await u.act('exportReport',[r.id]);if(!f)return;const bytes=Uint8Array.from(atob(f.base64),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'})),a=node('a');a.href=url;a.download=f.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}),
+        u.button(r.submission?.submitted?'已提交':'提交 Issue',async()=>{
+          const question='向 Asryto 仓库公开提交这份报告的脱敏摘要与性能日志？不包含聊天、音频或个人路径。';
+          const yes=ctx.ui.confirm?await ctx.ui.confirm({title:'提交语音问题反馈',body:question}):window.confirm(question);
+          if(!yes)return;
+          await u.act('submitReport',[r.id,true]);await refresh();}));
+      if(r.submission?.submitted){buttons.lastChild.disabled=true;buttons.lastChild.dataset.locked='true';}
+      item.append(title,stamp,readings,status,buttons);
+      if(r.submission?.url&&/^https:\/\/github\.com\/scarlet20252025-cloud\/coopanion-soft-voice\/issues\/\d+(?:#issuecomment-\d+)?$/.test(r.submission.url)){
+        const issue=node('a','查看关联 Issue ↗');issue.href=r.submission.url;issue.target='_blank';issue.rel='noopener noreferrer';item.append(issue);
+      }
+      return item;
+    }));
+    if(!reports.length)rows.append(node('p','尚无报告。点击“立即生成报告”，或等待发生语音故障。','empty'));
+  }
+  refresh=u.poll(s=>{
+    for(const[k,input]of Object.entries(inputs))if(document.activeElement!==input)input.checked=!!s.values[k];
+    const d=s.diagnostics||{};progress.textContent=(d.detail||'尚未采集报告')+(d.busy&&d.startedAt?' · 已用 '+Math.max(0,Math.floor((Date.now()-d.startedAt)/1000))+' 秒':'');options.setAttribute('aria-busy',String(!!d.busy));
+    for(const b of actions.querySelectorAll('button')){b.disabled=!!d.busy;b.dataset.locked=String(!!d.busy);}
+    renderReports(d.reports||[]);
+  });
+  void ctx.invoke('refreshReports').then(refresh).catch(e=>u.notice.textContent=e.message);
+}};
+export default {panels:{controls,status,config,voices,diagnostics}};

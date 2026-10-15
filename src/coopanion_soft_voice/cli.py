@@ -49,7 +49,7 @@ def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
         print('@@COSY@@'+json.dumps(obj,ensure_ascii=False),file=protocol,flush=True)
         # A bounded diagnostic sidecar contains status/numbers, never text or traces.
         from datetime import datetime,timezone
-        fields=('type','stage','device','deviceType','engineVersion','processMemory','startupTimings','nativeSettings','errorKind')
+        fields=('type','stage','device','deviceType','engineVersion','processMemory','startupTimings','nativeSettings','errorKind','errorCode')
         safe={key:obj[key] for key in fields if key in obj}
         safe['atUtc']=datetime.now(timezone.utc).isoformat()
         try:
@@ -66,14 +66,16 @@ def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
         playback_future=imports.submit(import_module, '.playback', __package__)
         try:model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage,device_name=device_name)
         except Exception as exc:
-            emit({'type':'error','stage':'initialization','errorKind':type(exc).__name__})
+            guarded='GiB free RAM' in str(exc) and 'keeping text only' in str(exc)
+            emit({'type':'error','stage':'initialization','errorKind':type(exc).__name__,
+                  'errorCode':'memory_guard' if guarded else 'worker_error','error':str(exc)})
             raise
         stage('prepare_audio','正在检查播放器，完成后即可发声')
         try:speak=playback_future.result().speak
         except BaseException:model.close();raise
     from . import __version__
     def ready():emit({'type':'ready','engineVersion':__version__,'device':getattr(model,'device_name',mode),
-        'deviceType':getattr(model,'device_type',None),'sampleRate':24000,'processMemory':snapshot(),
+        'deviceType':getattr(model,'device_type',None),'deviceVendorId':getattr(model,'vendor_id',None),'sampleRate':24000,'processMemory':snapshot(),
         'startupTimings':getattr(model,'startup_timings',None),'nativeSettings':getattr(model,'runtime_parameters',None)})
     ready()
     import math

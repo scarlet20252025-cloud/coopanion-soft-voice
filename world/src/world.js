@@ -7,6 +7,7 @@ import { BubbleSpeechSync } from './bubble-sync.js';
 import { installBubbleBridge } from './bubble-bridge.js';
 import { ToolCallTailer } from './tailer.js';
 import { SoftVoiceRuntime } from './runtime.js';
+import { VoiceReports } from './reports.js';
 import { VoiceUpdates } from './updates.js';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -79,12 +80,25 @@ export class SoftVoiceWorld {
       lamps: [{ label: 'TTS', state: lampState, hint: st.detail ?? st.phase }],
       panels: [{ id: 'controls', title: '语音控制', description: '试听、静音、音量、释放内存和恢复。' }, { id: 'status', title: '运行状态', description: '引擎、音色、延迟和异常诊断。' },
         { id: 'config', title: '配置', description: '队列、过期丢弃和内存恢复。' },
+        { id:'diagnostics',title:'日志与诊断',description:'性能、故障报告，导出 ZIP 与脱敏 Issue。' },
         { id: 'voices', title: '音色库', description: '选择音色、导入 ZIP 与制作教程。' }],
       invoke: async (panel, method, args = []) => {
-        if (!['controls','status','config','voices'].includes(panel)) throw new Error('未知语音面板');
+        if (!['controls','status','config','voices','diagnostics'].includes(panel)) throw new Error('未知语音面板');
         if (method === 'state') return { ...this.status(), values: configValues(this.opts.cfg),
           memory: { freeGiB: freemem()/1024**3, totalGiB: totalmem()/1024**3, ...(this.runtime?.memoryPolicy?.() ?? {minimumGiB:4,recoveryGiB:4.5,layout:'standard'}) },
           voices: listVoices(this.runtime.root), selectedVoice: this.opts.cfg.voiceId || BUILTIN, tutorial: TUTORIAL };
+        if(panel==='diagnostics') {
+          if(this.updating)throw new Error('正在更新语音代码，请等待更新完成后采集报告');
+          if(method==='refreshReports')return this.reports.refresh();
+          if(method==='collectReport')return this.reports.run('collect',['--seconds',args[0]===60?'60':'0']);
+          if(method==='reportDetail')return this.reports.call('detail',['--id',args[0]]);
+          if(method==='exportReport')return this.reports.call('export',['--id',args[0]]);
+          if(method==='submitReport') {
+            if(args[1]!==true)throw new Error('请确认向 Asryto 仓库提交脱敏摘要与相关日志');
+            return this.reports.run('submit',['--id',args[0],'--authorized']);
+          }
+          if(method==='save')return this.saveConfig(args[0]);
+        }
         if (panel === 'voices') {
           if (method === 'import') return importVoice(this.runtime, args[0]);
           if (method === 'select') return this.selectVoice(args[0]);
@@ -92,7 +106,7 @@ export class SoftVoiceWorld {
         if (panel === 'config' && method === 'save') return this.saveConfig(args[0]);
         if (panel === 'controls') {
           if (this.updating && !['state','devices'].includes(method)) throw new Error('正在更新语音代码，请等待更新完成');
-          if (method === 'checkUpdate') return this.updates.run('check');
+          if (method === 'checkUpdate') return this.updates.run('check',this.opts.botDir?join(this.opts.botDir,'..','..','extensions'):undefined);
           if (method === 'applyUpdate') return this.applyUpdate();
           if (method === 'devices') return this.runtime.devices();
           if (method === 'selectDevice') return this.selectDevice(args[0]);
@@ -130,6 +144,8 @@ export class SoftVoiceWorld {
     this.skippedBeforeReady = 0;
     this.runtime = this.makeRuntime(host);
     this.updates = new VoiceUpdates(this.runtime);
+    this.reports = new VoiceReports(this.runtime,this.opts.cfg,host.log);
+    this.runtime.onDiagnosticEvent=event=>this.reports.observe(event);
     this.settingsFile = join(this.runtime.root, 'settings.json');
     this.speechEnabled = false;
     if (existsSync(this.settingsFile)) {
@@ -182,7 +198,7 @@ export class SoftVoiceWorld {
     if(!this.active||!this.updates||!this.opts.cfg.autoCheckUpdates||this.updates.status().busy||this.updating||this.switchingDevice)return;
     if(now>=this.nextUpdateCheck){
       this.nextUpdateCheck=now+86400000;
-      try{await this.updates.run('check');}
+      try{await this.updates.run('check',this.opts.botDir?join(this.opts.botDir,'..','..','extensions'):undefined);}
       catch(err){this.nextUpdateCheck=now+3600000;this.host?.log.warn(`自动检查失败，一小时后重试：${err.message}`);return;}
     }
 
@@ -217,7 +233,7 @@ export class SoftVoiceWorld {
 
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
-      updates:this.updates?.status(),switchingDevice:!!this.switchingDevice,updating:!!this.updating,
+      diagnostics:this.reports?.status(),updates:this.updates?.status(),switchingDevice:!!this.switchingDevice,updating:!!this.updating,
       bubbleSync: this.bubbleSyncStatus(),
       volume: volumePercent(this.opts.cfg.volume),
       speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
@@ -269,7 +285,7 @@ export class SoftVoiceWorld {
   }
 
   assertIdleOperation() {
-    if (!this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.updating || this.updates?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
+    if (!this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.updating || this.updates?.status().busy || this.reports?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
   }
 
   async selectDevice(name) {
@@ -375,6 +391,7 @@ export class SoftVoiceWorld {
     this.queue.length = 0;
     await this.updatePolling?.catch(()=>{});
     await this.updates?.running?.catch(()=>{});
+    await this.reports?.running?.catch(()=>{});
     await this.sleepPromise;
     await this.runtime?.stop();
     await this.draining;

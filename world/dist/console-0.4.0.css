@@ -18,6 +18,7 @@
 .lva .power-help {position:relative;margin-left:auto}.lva summary {cursor:pointer;color:var(--lv-muted)}
 .lva .power-help p {position:absolute;right:0;top:24px;width:min(350px,75vw);z-index:2;padding:14px;border:1px solid #515b7c;border-radius:10px;background:#202537;box-shadow:0 6px 20px #0005}
 .lva .memory-help {margin-top:10px;font-size:12px}.lva .memory-measured {font-size:12px;color:var(--lv-muted)}
+.lva .memory-card h3{margin-bottom:8px}.lva .memory-device{font-size:12px;color:var(--lv-muted);overflow-wrap:anywhere}.lva .memory-figures{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 12px}.lva .memory-label{font-size:12px;color:var(--lv-muted)}.lva .memory-number{font-size:26px;line-height:1.3;font-weight:650;margin-top:4px;white-space:nowrap}.lva .memory-verdict{font-size:13px;font-weight:600;color:#ffbe91}.lva .memory-card[data-memory-ready=true] .memory-verdict{color:#8cdbb7}.lva .memory-card[data-memory-ready=true] .fill{background:#78c5a3}.lva .memory-card .track{height:7px;margin:10px 0 14px}.lva .memory-card .memory-help{padding-top:6px}
 .lva .startup-feedback {font-size:13px;margin-top:10px}.lva .startup-feedback[hidden],.lva .startup-progress[hidden]{display:none}
 .lva .startup-progress {height:4px;overflow:hidden;border-radius:4px;background:#39415e;margin-top:8px}
 .lva .startup-progress:after {content:'';display:block;width:35%;height:100%;background:#a6b8ff;animation:voice-start 1.5s ease-in-out infinite}
@@ -27,3 +28,5 @@
 
 .lva .control-top-grid {display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:16px;margin:14px 0}.lva .control-top-grid>.card {margin:0}.lva .control-top-grid .deployment {padding:18px;border-left-width:3px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;background:var(--lv-card)}.lva .control-top-grid .deployment.attention {background:#30261b}.lva .control-top-grid .deployment h3 {margin:0 0 6px}.lva .control-top-grid .deployment p {margin:0;font-size:12px}.lva .control-top-grid .deploy-link {font-size:12px;padding:7px 0;margin-top:auto}.lva .control-top-grid .deploy-link.highlight {padding:8px 12px}.lva .control-top-grid .hero {padding:18px 20px}.lva .control-top-grid .actions {gap:8px;margin:14px 0}.lva .control-top-grid .actions button {font-size:13px;padding:8px 12px}
 @media(max-width:720px){.lva .control-top-grid{grid-template-columns:1fr}.lva .control-top-grid .deployment{padding:14px 16px}.lva .control-top-grid .deploy-link{margin-top:4px}}
+
+.lva .report-item{border-top:1px solid var(--lv-border);padding:16px 0}.lva .report-item .actions{margin:10px 0}.lva .report-preview{max-height:480px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.65}.lva .report-item p{font-size:12px}

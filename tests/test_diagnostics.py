@@ -3,9 +3,7 @@ from pathlib import Path
 from unittest.mock import patch
 from coopanion_soft_voice import diagnostics as d
 
-ROOT=Path(__file__).resolve().parents[1]
-spec=importlib.util.spec_from_file_location('report_issue',ROOT/'scripts/report_issue.py')
-reporter=importlib.util.module_from_spec(spec);spec.loader.exec_module(reporter)
+from coopanion_soft_voice import issue_reporting as reporter
 
 class DiagnosticsTests(unittest.TestCase):
     def fixture(self,root):
