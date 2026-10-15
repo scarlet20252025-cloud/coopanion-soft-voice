@@ -182,7 +182,7 @@ export class SoftVoiceRuntime {
       const timer = setTimeout(() => { this.fail(new Error('语音生成或播放超时，请恢复语音'),'speech_timeout'); void this.terminateWorker(this.worker).catch(err=>this.fail(err)); }, 180000);
       this.pending.set(id, { resolve: result => { clearTimeout(timer); resolve(result); },
         reject: err => { clearTimeout(timer); reject(err); }, receivedAt, queueWaitMs: Date.now() - receivedAt });
-      this.worker.stdin.write(JSON.stringify({ id, text, speed: 1, volume: this.cfg.volume, playbackMode:this.cfg.playbackMode||'auto' }) + '\n', err => { if (err) this.fail(err); });
+      this.worker.stdin.write(JSON.stringify({ id, text, speed: 1, volume: this.cfg.volume, playbackMode:this.cfg.playbackMode||'auto',cacheRepeated:this.cfg.cacheRepeated!==false }) + '\n', err => { if (err) this.fail(err); });
     });
   }
   async openFolder() { spawn('explorer.exe', [this.root], { windowsHide: true, detached: true, stdio: 'ignore' }).unref(); return this.root; }

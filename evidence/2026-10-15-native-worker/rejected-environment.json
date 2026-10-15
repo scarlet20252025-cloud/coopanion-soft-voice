@@ -1,0 +1,215 @@
+{
+  "experimental": true,
+  "adopted": false,
+  "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "runs": [
+    {
+      "kind": "python-A",
+      "ready": {
+        "ready": true,
+        "startupMs": 4879,
+        "memory": {
+          "privateMiB": 1828.5,
+          "residentMiB": 1045.9,
+          "peakResidentMiB": 1066.9
+        }
+      },
+      "sentences": [
+        {
+          "id": "p0",
+          "synthesisMs": 1508,
+          "seconds": 3.2,
+          "sha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2",
+          "memory": {
+            "privateMiB": 2039.3,
+            "residentMiB": 1072.0,
+            "peakResidentMiB": 1072.0
+          }
+        },
+        {
+          "id": "p1",
+          "synthesisMs": 1257,
+          "seconds": 3.52,
+          "sha256": "413ab81ddd79983739694b2c4261e407f54dc736b8e6ec15321f03625e0208e6",
+          "memory": {
+            "privateMiB": 2091.1,
+            "residentMiB": 1081.6,
+            "peakResidentMiB": 1081.6
+          }
+        },
+        {
+          "id": "p2",
+          "synthesisMs": 2839,
+          "seconds": 8.24,
+          "sha256": "f5e906a6a6ce99e651bf6a62998d7cf5bf66be9f42f6c883a753375d51245939",
+          "memory": {
+            "privateMiB": 2126.3,
+            "residentMiB": 1084.7,
+            "peakResidentMiB": 1084.7
+          }
+        }
+      ],
+      "sleep": {
+        "slept": true,
+        "memory": {
+          "privateMiB": 953.0,
+          "residentMiB": 207.7,
+          "peakResidentMiB": 1084.8
+        }
+      }
+    },
+    {
+      "kind": "native",
+      "ready": {
+        "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+        "deviceType": "discrete",
+        "engineVersion": "0.6.0-experimental",
+        "nativeSettings": {
+          "adaptiveKv": true,
+          "compactGraphs": true,
+          "cpuThreads": 4,
+          "kvContext": 1024,
+          "kvPrecision": "FP32",
+          "memoryPolicy": "device-local",
+          "streamTextEmbedding": true
+        },
+        "processMemory": {
+          "peakResidentMiB": 2132.9921875,
+          "privateMiB": 2378.69921875,
+          "residentMiB": 1268.5234375
+        },
+        "sampleRate": 24000,
+        "startupTimings": {
+          "totalMs": 4523
+        },
+        "type": "ready",
+        "workerKind": "native-cpp-trial"
+      },
+      "sentences": [
+        {
+          "effectivePlaybackMode": "buffered",
+          "firstChunkMs": 40503,
+          "id": "p0",
+          "pcmSha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2",
+          "pieceCount": 1,
+          "playbackVerified": false,
+          "processMemory": {
+            "peakResidentMiB": 2132.9921875,
+            "privateMiB": 2706.140625,
+            "residentMiB": 98.328125
+          },
+          "realTimeFactor": 12.6571875,
+          "seconds": 3.2,
+          "totalSynthesisMs": 40503,
+          "type": "done",
+          "workerKind": "native-cpp-trial"
+        },
+        {
+          "effectivePlaybackMode": "buffered",
+          "firstChunkMs": 1155,
+          "id": "p1",
+          "pcmSha256": "413ab81ddd79983739694b2c4261e407f54dc736b8e6ec15321f03625e0208e6",
+          "pieceCount": 1,
+          "playbackVerified": false,
+          "processMemory": {
+            "peakResidentMiB": 2132.9921875,
+            "privateMiB": 2714.88671875,
+            "residentMiB": 109.83203125
+          },
+          "realTimeFactor": 0.328125,
+          "seconds": 3.52,
+          "totalSynthesisMs": 1155,
+          "type": "done",
+          "workerKind": "native-cpp-trial"
+        },
+        {
+          "effectivePlaybackMode": "buffered",
+          "firstChunkMs": 2601,
+          "id": "p2",
+          "pcmSha256": "f5e906a6a6ce99e651bf6a62998d7cf5bf66be9f42f6c883a753375d51245939",
+          "pieceCount": 2,
+          "playbackVerified": false,
+          "processMemory": {
+            "peakResidentMiB": 2132.9921875,
+            "privateMiB": 2716.84765625,
+            "residentMiB": 113.8203125
+          },
+          "realTimeFactor": 0.3156553398058252,
+          "seconds": 8.24,
+          "totalSynthesisMs": 2601,
+          "type": "done",
+          "workerKind": "native-cpp-trial"
+        }
+      ],
+      "sleep": {
+        "processMemory": {
+          "peakResidentMiB": 2132.9921875,
+          "privateMiB": 172.4609375,
+          "residentMiB": 68.18359375
+        },
+        "type": "slept"
+      }
+    },
+    {
+      "kind": "python-B",
+      "ready": {
+        "ready": true,
+        "startupMs": 2867,
+        "memory": {
+          "privateMiB": 1828.5,
+          "residentMiB": 1045.8,
+          "peakResidentMiB": 1066.9
+        }
+      },
+      "sentences": [
+        {
+          "id": "p0",
+          "synthesisMs": 1313,
+          "seconds": 3.2,
+          "sha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2",
+          "memory": {
+            "privateMiB": 2043.1,
+            "residentMiB": 1072.1,
+            "peakResidentMiB": 1072.1
+          }
+        },
+        {
+          "id": "p1",
+          "synthesisMs": 1128,
+          "seconds": 3.52,
+          "sha256": "413ab81ddd79983739694b2c4261e407f54dc736b8e6ec15321f03625e0208e6",
+          "memory": {
+            "privateMiB": 2095.2,
+            "residentMiB": 1081.7,
+            "peakResidentMiB": 1081.7
+          }
+        },
+        {
+          "id": "p2",
+          "synthesisMs": 2927,
+          "seconds": 8.24,
+          "sha256": "f5e906a6a6ce99e651bf6a62998d7cf5bf66be9f42f6c883a753375d51245939",
+          "memory": {
+            "privateMiB": 2168.3,
+            "residentMiB": 1084.8,
+            "peakResidentMiB": 1084.8
+          }
+        }
+      ],
+      "sleep": {
+        "slept": true,
+        "memory": {
+          "privateMiB": 962.9,
+          "residentMiB": 209.7,
+          "peakResidentMiB": 1084.8
+        }
+      }
+    }
+  ],
+  "pcmExactMatches": [
+    true,
+    true,
+    true
+  ],
+  "ok": true
+}

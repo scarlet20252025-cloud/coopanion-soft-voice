@@ -8,6 +8,8 @@ archive = max((root/'dist').glob('*.tar.gz'), key=lambda p: p.stat().st_mtime)
 with tarfile.open(archive) as tar:
     names = {'/'.join(n.split('/')[1:]) for n in tar.getnames()}
 required = {
+    'world/dist/console-0.4.2.js','world/dist/console-0.4.2.css','src/coopanion_soft_voice/pcm_cache.py',
+    'native/voice_worker_trial.cpp','scripts/build_native_worker_trial.ps1','docs/NATIVE_WORKER_EVALUATION.md',
     'world/dist/console-0.4.1.js','world/dist/console-0.4.1.css',
     'src/coopanion_soft_voice/reports.py','src/coopanion_soft_voice/issue_reporting.py','world/src/reports.js',
     'src/coopanion_soft_voice/world_package.py','scripts/verify_install_channels.py','docs/INSTALL_CHANNELS.md',

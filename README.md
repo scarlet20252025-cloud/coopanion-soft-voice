@@ -1,14 +1,14 @@
 # 轻量化本地语音引擎 · Coopanion
 
-作者：**Asryto** · Python **0.5.0** / World **0.4.1**
+作者：**Asryto** · Python **0.5.1** / World **0.4.2**
 
-0.5.0 已验证本机 AMD 核显与 RTX 4050；Intel UHD 提速、其他显卡和能效提升仍在 [验证与优化计划](docs/OPTIMIZATION_PLAN.md) 中，不作为已通过承诺。
+0.5.0 原生模型已验证本机 AMD 核显与 RTX 4050；0.5.1 的缓存和线程池改进另经 RTX 4050 实测。Intel UHD 提速、其他显卡和能效提升仍在 [验证与优化计划](docs/OPTIMIZATION_PLAN.md) 中，不作为已通过承诺。
 
 Windows Coopanion 的独立 Vulkan 语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，并提供 GitHub 安装入口。
 
 ## 最简安装
 
-0.5.0 新增慢设备连续播放、核显/独显选择、右上角更新提示与一键主动更新，详见 [更新记录](CHANGELOG.md)。原音色与采样参数保持不变。
+新增可控重复语句缓存和线程池精简；保留慢设备连续播放、核显/独显选择、右上角更新提示与一键主动更新，详见 [更新记录](CHANGELOG.md)。原音色与采样参数保持不变。
 
 **[不依赖扩展市场的安装教程](docs/INSTALL_WITHOUT_MARKET.md)**：完整包自动安装 World，不需要 npm 账号或市场安装。
 
@@ -53,3 +53,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1
 历史文字词表优化减少约 248–316 MiB **私有提交内存**，7 条测试 PCM 与原版一致。这不是总显存指标。新便携包的验证记录见 `evidence/2026-10-14-portable/`；无真人重新试听的测试不得宣称新的听感验收。
 
 源码构建：`python -m build`。Windows CI 检查 Python/World 测试及打包内容；原生构建从固定源码应用补丁。无 GPU 的 CI 不能代替真实核显合成。
+
+新版增加最多 4 MiB 的进程内重复语句缓存，并精简 NumPy 的空闲线程池。只降低对应开销，不宣称新句推理或物理 RAM 成比例改善。[社区 C++ 方案与原生工作进程评估](docs/NATIVE_WORKER_EVALUATION.md)记录已验证结果、失败样本和后续流式验收计划。

@@ -135,6 +135,9 @@ class NativeEngine:
         self.startup_timings = {}
         self.ctx = None; self.voice = Voice(); self.dirs = []
         self.cached_arrays = None
+        from .pcm_cache import PCMCache
+        self.pcm_cache = PCMCache()
+        self.cache_repeated = True
         if buffer_mode not in ('fixed', 'adaptive'): raise ValueError('Unknown startup buffer mode')
         self.buffer_mode = buffer_mode
         self.reference_path = reference()
@@ -259,6 +262,7 @@ class NativeEngine:
             self.voice_conditioning = {'referenceSha256':hashlib.sha256(self.reference_path.read_bytes()).hexdigest(),
                                        'conditioningSha256':self._conditioning_signature,
                                        'mode':'full-icl', 'pieceLimit':self.speech_piece_limit}
+            self.update_pcm_cache_state()
             self.update_cache_state()
             self.startup_timings['totalMs'] = round((time.perf_counter()-started)*1000)
         except BaseException:
@@ -273,6 +277,13 @@ class NativeEngine:
                 raise RuntimeError('Native progressive KV state unavailable')
             self.runtime_parameters.update(kvCapacity=capacity.value, kvContext=limit.value,
                                            kvAllocatedMiB=round(size.value/1024**2, 3))
+
+    def update_pcm_cache_state(self):
+        state = self.pcm_cache.status()
+        self.runtime_parameters.update(pcmCache=state, pcmCacheBytes=state['bytes'],
+                                       pcmCacheMaximumBytes=state['maximumBytes'],
+                                       pcmCacheHits=state['hits'], pcmCacheMisses=state['misses'],
+                                       pcmCacheEntries=state['entries'])
 
     def conditioning_signature(self):
         voice = self.voice
@@ -292,6 +303,16 @@ class NativeEngine:
             raise ValueError('Native synthesis requires 1-60 characters per piece')
         if self.conditioning_signature() != self._conditioning_signature:
             raise RuntimeError('Reference conditioning changed; refusing to switch voice mid-utterance')
+        cache_key = (self._conditioning_signature, text)
+        cached = self.pcm_cache.get(cache_key) if self.cache_repeated else None
+        self.last_cache_hit = cached is not None
+        if cached is not None:
+            self.last_start_buffer = {'productionRtf': 0, 'chunks': len(cached), 'bufferSeconds': sum(len(b) for b in cached)/24000}
+            for block in cached:
+                receive(block, 24000)
+            self.update_pcm_cache_state()
+            if on_complete: on_complete()
+            return
         p = Params(); self.dll.qt_tts_default_params(C.byref(p))
         p.text = text.encode(); p.lang = b'Chinese'; p.ref_text = self.reference_text.encode()
         p.speaker = None  # Always use the full reference, never a native preset.
@@ -300,7 +321,7 @@ class NativeEngine:
         p.seed = 44; p.max_new_tokens = 360
         p.temperature = .9; p.top_k = 50; p.top_p = 1; p.repetition_penalty = 1.05
         p.subtalker_temperature = .9; p.subtalker_top_k = 50; p.subtalker_top_p = 1
-        pending = []; count = 0; total_samples = 0; opened = False; errors = []; started = time.perf_counter()
+        pending = []; capture = []; capture_bytes = 0; count = 0; total_samples = 0; opened = False; errors = []; started = time.perf_counter()
         self.last_start_buffer = None
         from .start_buffer import StartBuffer
         gate = StartBuffer(fixed=getattr(self, 'buffer_mode', 'adaptive') == 'fixed')
@@ -308,10 +329,14 @@ class NativeEngine:
         def cancel(user): return time.perf_counter()-started > 60
         @Chunk
         def chunk(samples, n, user):
-            nonlocal count, total_samples, opened
+            nonlocal count, total_samples, opened, capture_bytes
             try:
                 data = np.ctypeslib.as_array(samples, shape=(n,)).copy()
                 if not np.isfinite(data).all(): raise ValueError('Nonfinite audio')
+                if self.cache_repeated and capture_bytes <= self.pcm_cache.maximum:
+                    capture_bytes += data.nbytes
+                    if capture_bytes <= self.pcm_cache.maximum: capture.append(data)
+                    else: capture.clear()
                 total_samples += n
                 if opened:
                     receive(data, 24000)
@@ -340,12 +365,20 @@ class NativeEngine:
             raise RuntimeError('Native engine returned no audio')
         self.update_cache_state()
         if pending: receive(np.concatenate(pending), 24000)
+        # Only fully successful, untruncated PCM can become reusable. No presets
+        # or approximate text matching; a fresh model/voice starts with no cache.
+        if self.cache_repeated and capture and capture_bytes <= self.pcm_cache.maximum:
+            self.pcm_cache.put(cache_key, capture)
+        self.update_pcm_cache_state()
         # Queue the final (possibly shorter than the start buffer) chunk before
         # telling the audio thread it can stop. Otherwise a drained previous
         # piece could end playback between completion and this final enqueue.
         if on_complete: on_complete()
 
     def close(self):
+        if getattr(self, 'pcm_cache', None):
+            self.pcm_cache.clear()
+            if hasattr(self, 'runtime_parameters'): self.update_pcm_cache_state()
         if getattr(self, 'dll', None) and not self.cached_arrays:
             self.dll.qt_voice_ref_free(C.byref(self.voice))
         if self.ctx:
