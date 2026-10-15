@@ -41,6 +41,8 @@ def speak(model,text,key,volume,speed,request_id,stage,root,playback_mode='auto'
             model.synthesize_stream(piece,key,receive,on_complete=completed if index==len(pieces)-1 else None)
             piece_metrics.append({'characters':len(piece),'seconds':(player.samples-before)/model.sample_rate,
                                   'synthesisMs':round((time.perf_counter()-piece_started)*1000)})
+            hit=getattr(model,'last_cache_hit',None)
+            if isinstance(hit,bool):piece_metrics[-1]['cacheHit']=hit
         total=round((time.perf_counter()-started)*1000)
         if not player.samples:raise RuntimeError('模型没有返回声音')
         player.finish()
@@ -53,6 +55,10 @@ def speak(model,text,key,volume,speed,request_id,stage,root,playback_mode='auto'
                 'requestedPlaybackMode':playback_mode,'effectivePlaybackMode':effective,
                 'smoothPlayback':not (player.underrun_frames or player.device_underflows),
                 'pieceCount':len(pieces),'pieces':piece_metrics}
+        if all('cacheHit' in piece for piece in piece_metrics):
+            hits=sum(piece['cacheHit'] for piece in piece_metrics)
+            result.update(cachedPieces=hits,generatedPieces=len(pieces)-hits,
+                          audioSource='repeat-cache' if hits==len(pieces) else 'mixed' if hits else 'model')
         identity=getattr(model,'voice_conditioning',None)
         if isinstance(identity,dict):result['voiceConditioning']=identity
         if isinstance(device,str):result.update(deviceName=device,deviceType=getattr(model,'device_type',None))

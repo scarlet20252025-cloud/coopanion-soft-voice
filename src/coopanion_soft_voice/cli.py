@@ -43,6 +43,11 @@ def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
     if mode=='cache':
         from .cache_worker import worker as cache_worker
         return cache_worker()
+    if mode == 'igpu':
+        # NumPy only handles PCM here; NN inference uses GGML's own threads.
+        # Avoid creating an unused BLAS worker stack for every logical CPU.
+        import os
+        os.environ['OPENBLAS_NUM_THREADS'] = '1'
     protocol=sys.stdout;sys.stdout=sys.stderr
     from .memory_metrics import snapshot
     def emit(obj):
@@ -85,10 +90,11 @@ def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
             msg=json.loads(line)
             if msg.get('type')=='quit':break
             if msg.get('type')=='sleep':
+                parameters=getattr(model,'runtime_parameters',None)
                 if model is not None:model.close();model=None
                 import gc
                 gc.collect()
-                emit({'type':'slept','processMemory':snapshot()})
+                emit({'type':'slept','processMemory':snapshot(),'nativeSettings':parameters})
                 continue
             if msg.get('type')=='wake':
                 if model is None:model=load(runtime,mode,voice_pack,register_exit=False,on_stage=stage,device_name=device_name)
@@ -104,6 +110,11 @@ def worker(runtime,mode='gpu',voice_pack=None,device_name=None):
             if supplied and Path(supplied).resolve()!=reference():raise ValueError('Reference voice is locked')
             stage('synthesizing','正在生成固定参考声线')
             if model is None:model=load(runtime,mode,voice_pack,register_exit=False,device_name=device_name)
+            if mode == 'igpu':
+                enabled = msg.get('cacheRepeated', True)
+                if type(enabled) is not bool: raise ValueError('Invalid repeated speech cache setting')
+                model.cache_repeated = enabled
+                if not enabled: model.pcm_cache.clear()
             result=speak(model,text,'accepted',volume,float(msg.get('speed',1)),request_id,stage,runtime,
                          playback_mode=msg.get('playbackMode','auto'))
             emit({**result,'processMemory':snapshot()})

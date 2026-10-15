@@ -1,6 +1,6 @@
 # 轻量化本地语音引擎：不依赖扩展市场的安装教程
 
-作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.5.0 / World 0.4.1。
+作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.5.1 / World 0.4.2。
 
 **下载完整 ZIP → 解压 → 双击 `install.cmd` → 在桌宠中试听。** 安装器会同时安装语音扩展、模型和运行环境，不需要扩展市场、npm 账号，也不用单独安装 Python、Git、Node、PyTorch、CUDA 或编译工具。
 
@@ -19,9 +19,9 @@
 
 直接下载：
 
-**[coopanion-local-voice-0.5.0-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.0/coopanion-local-voice-0.5.0-windows-x64.zip)**
+**[coopanion-local-voice-0.5.1-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.1/coopanion-local-voice-0.5.1-windows-x64.zip)**
 
-也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/tag/v0.5.0)，在 Assets 中选择同名文件。
+也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/tag/v0.5.1)，在 Assets 中选择同名文件。
 
 该完整包包含 Qwen3-TTS 0.6B Base Q8 精简模型、音频解码模型、Vulkan 推理引擎、Python 3.12、播放器依赖、已确认音色和独立 World 扩展。
 

@@ -26,10 +26,27 @@ def fake_engine():
     engine.cached_arrays = ((C.c_float*1024)(),(C.c_int32*(16*55))())
     engine.voice = native_engine.Voice(engine.cached_arrays[0],1024,engine.cached_arrays[1],55,16)
     engine._conditioning_signature = engine.conditioning_signature()
+    from coopanion_soft_voice.pcm_cache import PCMCache
+    engine.pcm_cache = PCMCache(); engine.cache_repeated = True; engine.runtime_parameters = {}
     return engine
 
 
 class NativeValidationTests(unittest.TestCase):
+    def test_repeat_reuses_exact_pcm_and_changed_reference_still_fails(self):
+        engine=fake_engine();first=[];second=[]
+        engine.synthesize_stream('你好。','accepted',lambda a,r:first.append(a.tobytes()))
+        engine.dll.qt_synthesize=Mock(side_effect=AssertionError('Must not generate again'))
+        engine.synthesize_stream('你好。','accepted',lambda a,r:second.append(a.tobytes()))
+        self.assertEqual(first,second);self.assertTrue(engine.last_cache_hit)
+        engine.voice.ref_codes[0]=1
+        with self.assertRaisesRegex(RuntimeError,'conditioning changed'):
+            engine.synthesize_stream('你好。','accepted',Mock())
+
+    def test_failed_native_output_never_enters_repeat_cache(self):
+        engine=fake_engine();engine.dll.samples=0
+        with self.assertRaises(RuntimeError):engine.synthesize_stream('测试。','accepted',Mock())
+        self.assertEqual(engine.pcm_cache.status()['entries'],0)
+
     def test_progressive_cache_is_opt_in_and_clears_stale_process_environment(self):
         import os
         config={'deviceType':'integrated','kvContext':1024,'adaptiveKv':True}

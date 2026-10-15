@@ -12,6 +12,9 @@ on:
       - 'evidence/2026-10-14-text-rows/qwentts-text-rows.patch'
       - 'evidence/2026-10-15-vram/qwentts-progressive-kv.patch'
       - '.github/workflows/native-build.yml'
+      - 'native/**'
+      - 'scripts/build_native_worker_trial.ps1'
+      - 'scripts/check_native_worker_trial.py'
 permissions:
   contents: read
 jobs:
@@ -26,6 +29,11 @@ jobs:
       - name: Build pinned native engine without GPU inference
         shell: pwsh
         run: ./scripts/setup-native.ps1 -Python (Get-Command python).Source -BuildOnly
+      - name: Build experimental worker and check model-free Unicode parity
+        shell: pwsh
+        run: |
+          ./scripts/build_native_worker_trial.ps1 -QwenSource .runtime-native/native/qwentts -Compiler .runtime-native/native/llvm-mingw/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-mingw32-clang++.exe
+          python scripts/check_native_worker_trial.py --exe .runtime/native-worker-trial-build/voice-worker.exe
       - uses: actions/upload-artifact@v4
         with:
           name: native-build-log-and-manifest

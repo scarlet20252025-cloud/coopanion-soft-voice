@@ -6,10 +6,10 @@ from pathlib import Path
 SCHEMA=1
 REPO='https://github.com/scarlet20252025-cloud/coopanion-soft-voice'
 PERF=re.compile(r'^\[Perf\] (PromptBuild|Prefill|TTFA|TalkerDecode|CodePredictor|HostCompose|CodecDecode|Total)\b')
-METRICS=('atUtc','seconds','totalSynthesisMs','realTimeFactor','firstChunkMs','firstDeviceCallbackMs','underrunMs','deviceUnderflows','pieceCount','startupBufferMode','requestedPlaybackMode','effectivePlaybackMode','smoothPlayback','engineVersion','deviceName','deviceType')
-CONFIG=('volume','maxQueue','maxAgeSec','pollMs','lowPowerMode','idleUnloadSec','keepWorker','lowMemoryMiB','autoRecover','syncBubbles','playbackMode','deviceName')
+METRICS=('atUtc','seconds','totalSynthesisMs','realTimeFactor','firstChunkMs','firstDeviceCallbackMs','underrunMs','deviceUnderflows','pieceCount','startupBufferMode','requestedPlaybackMode','effectivePlaybackMode','smoothPlayback','engineVersion','deviceName','deviceType','cachedPieces','generatedPieces','audioSource')
+CONFIG=('volume','maxQueue','maxAgeSec','pollMs','lowPowerMode','idleUnloadSec','keepWorker','lowMemoryMiB','autoRecover','syncBubbles','playbackMode','deviceName','cacheRepeated')
 MEMORY_FIELDS=('pid','privateMiB','residentMiB','peakResidentMiB')
-NATIVE_FIELDS=('memoryPolicy','disableHostVisibleVram','cpuThreads','kvContext','compactGraphs','streamTextEmbedding','maxNodesPerSubmit','adaptiveKv','kvPrecision','kvCapacity','kvAllocatedMiB','minimumFreeGiB')
+NATIVE_FIELDS=('memoryPolicy','disableHostVisibleVram','cpuThreads','kvContext','compactGraphs','streamTextEmbedding','maxNodesPerSubmit','adaptiveKv','kvPrecision','kvCapacity','kvAllocatedMiB','minimumFreeGiB','pcmCacheBytes','pcmCacheMaximumBytes','pcmCacheHits','pcmCacheMisses','pcmCacheEntries')
 STARTUP_FIELDS=('validationMs','modelInitMs','totalMs','availableBeforeLoadGiB')
 
 def subset(value,fields):
@@ -147,7 +147,7 @@ def selected_metrics(value):
     for key,fields in [('processMemory',MEMORY_FIELDS),('nativeSettings',NATIVE_FIELDS)]:
         if isinstance(value.get(key),dict):out[key]=subset(value[key],fields)
     pieces=value.get('pieces',[])
-    out['pieces']=[subset(p,('characters','seconds','synthesisMs')) for p in pieces[:30] if isinstance(p,dict)] if isinstance(pieces,list) else []
+    out['pieces']=[subset(p,('characters','seconds','synthesisMs','cacheHit')) for p in pieces[:30] if isinstance(p,dict)] if isinstance(pieces,list) else []
     return out
 
 def perf_tail(file):
