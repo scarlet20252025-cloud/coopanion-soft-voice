@@ -1,0 +1,281 @@
+{
+  "device": "AMD Radeon(TM) Graphics",
+  "nativeSha256": "02fe1d4e2aeb5502e399bb7f01b57748091bfc9eb5e436c436245d913407e1c1",
+  "casesSha256": "4d06dc240f5ec967ae4df30d28513549b2893202ebbd1ca54cf2afa7f8ab7a1b",
+  "modelHashes": {
+    "model": "c4af966ade422ec29ff573d4811cba6766a0273baf056b7291efe8716145cbbd",
+    "codec": "72b05f6436093f4698fc7b2e69d726a26008c78d2cf7007413e39e9f4cd6b556"
+  },
+  "installedConfigurationModified": false,
+  "playbackValidated": false,
+  "runs": [
+    {
+      "label": "0-baseline",
+      "variant": "baseline",
+      "environment": {},
+      "elapsedSeconds": 12.64,
+      "valid": true,
+      "warmRtf": 0.680078125,
+      "warmSynthesisMs": 5223,
+      "warmAudioSeconds": 7.68,
+      "pcm": [
+        "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+        "e9472a50ac49940faad2fe79ce44cf79480f5f49c577bbe890cf9c7f33a2a609",
+        "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660"
+      ],
+      "firstChunkMs": [
+        1412,
+        953,
+        902
+      ],
+      "peaks": {
+        "privateMiB": 1440.6,
+        "residentMiB": 1860.3,
+        "peakResidentMiB": 1860.3,
+        "dedicatedMiB": 90.805,
+        "sharedMiB": 969.562
+      },
+      "stagesMs": {
+        "Prefill": [
+          78.7,
+          90.1,
+          82.8
+        ],
+        "TalkerDecode": [
+          586.4,
+          704.6,
+          589.7
+        ],
+        "CodePredictor": [
+          1301.1,
+          1513.8,
+          1294.4
+        ],
+        "CodecDecode": [
+          821.7,
+          498.3,
+          396.7
+        ]
+      }
+    },
+    {
+      "label": "1-submit-1000",
+      "variant": "submit-1000",
+      "environment": {
+        "GGML_VK_MAX_NODES_PER_SUBMIT": "1000"
+      },
+      "elapsedSeconds": 12.75,
+      "valid": true,
+      "warmRtf": 0.6731770833333334,
+      "warmSynthesisMs": 5170,
+      "warmAudioSeconds": 7.68,
+      "pcm": [
+        "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+        "e9472a50ac49940faad2fe79ce44cf79480f5f49c577bbe890cf9c7f33a2a609",
+        "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660"
+      ],
+      "firstChunkMs": [
+        1365,
+        913,
+        453
+      ],
+      "peaks": {
+        "privateMiB": 1439.3,
+        "residentMiB": 1907.1,
+        "peakResidentMiB": 1907.1,
+        "dedicatedMiB": 90.805,
+        "sharedMiB": 969.562
+      },
+      "stagesMs": {
+        "Prefill": [
+          77.1,
+          92.3,
+          84.4
+        ],
+        "TalkerDecode": [
+          593.6,
+          702.0,
+          584.0
+        ],
+        "CodePredictor": [
+          1290.4,
+          1509.2,
+          1260.9
+        ],
+        "CodecDecode": [
+          888.0,
+          497.7,
+          403.0
+        ]
+      }
+    },
+    {
+      "label": "2-mmvq",
+      "variant": "mmvq",
+      "environment": {
+        "GGML_VK_FORCE_MMVQ": "1"
+      },
+      "elapsedSeconds": 12.2,
+      "valid": true,
+      "warmRtf": 0.646875,
+      "warmSynthesisMs": 4761,
+      "warmAudioSeconds": 7.36,
+      "pcm": [
+        "2920c6ec49ecae0bba2a22eb4f400b0721b049ddf58510261761a8fb54407d03",
+        "7f29958213200198d070853074e09deca3e865eb4ccb61a352470e441d62b53c",
+        "2920c6ec49ecae0bba2a22eb4f400b0721b049ddf58510261761a8fb54407d03"
+      ],
+      "firstChunkMs": [
+        1327,
+        450,
+        853
+      ],
+      "peaks": {
+        "privateMiB": 1441.1,
+        "residentMiB": 1908.7,
+        "peakResidentMiB": 1908.7,
+        "dedicatedMiB": 91.055,
+        "sharedMiB": 969.812
+      },
+      "stagesMs": {
+        "Prefill": [
+          75.9,
+          88.3,
+          88.2
+        ],
+        "TalkerDecode": [
+          524.3,
+          678.6,
+          525.8
+        ],
+        "CodePredictor": [
+          1161.7,
+          1460.9,
+          1152.8
+        ],
+        "CodecDecode": [
+          789.4,
+          422.6,
+          310.3
+        ]
+      }
+    },
+    {
+      "label": "3-baseline",
+      "variant": "baseline",
+      "environment": {},
+      "elapsedSeconds": 12.5,
+      "valid": true,
+      "warmRtf": 0.6606770833333333,
+      "warmSynthesisMs": 5074,
+      "warmAudioSeconds": 7.68,
+      "pcm": [
+        "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+        "e9472a50ac49940faad2fe79ce44cf79480f5f49c577bbe890cf9c7f33a2a609",
+        "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660"
+      ],
+      "firstChunkMs": [
+        1352,
+        464,
+        474
+      ],
+      "peaks": {
+        "privateMiB": 1440.7,
+        "residentMiB": 1908.7,
+        "peakResidentMiB": 1908.7,
+        "dedicatedMiB": 90.805,
+        "sharedMiB": 969.562
+      },
+      "stagesMs": {
+        "Prefill": [
+          75.6,
+          88.2,
+          98.0
+        ],
+        "TalkerDecode": [
+          576.8,
+          671.5,
+          575.9
+        ],
+        "CodePredictor": [
+          1271.1,
+          1491.7,
+          1258.1
+        ],
+        "CodecDecode": [
+          825.0,
+          448.8,
+          390.4
+        ]
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "variant": "submit-1000",
+      "valid": true,
+      "baselinePcmStable": true,
+      "candidatePcmMatches": true,
+      "warmRtfChangePercent": 0.417597358453925,
+      "baselineWarmRtfRange": [
+        0.680078125,
+        0.6606770833333333
+      ],
+      "acceptedForRelease": false,
+      "note": "Exploration only; requires repeated target-device, playback and voice acceptance. RTF changes with different PCM are not a controlled speedup."
+    },
+    {
+      "variant": "mmvq",
+      "valid": true,
+      "baselinePcmStable": true,
+      "candidatePcmMatches": false,
+      "warmRtfChangePercent": -3.505875497717792,
+      "baselineWarmRtfRange": [
+        0.680078125,
+        0.6606770833333333
+      ],
+      "acceptedForRelease": false,
+      "note": "Exploration only; requires repeated target-device, playback and voice acceptance. RTF changes with different PCM are not a controlled speedup."
+    }
+  ],
+  "hardware": {
+    "os": "Microsoft Windows 11 Home China",
+    "version": "10.0.26100",
+    "build": "26100",
+    "cpu": "AMD Ryzen 7 7735H with Radeon Graphics        ",
+    "logicalProcessors": 16,
+    "drivers": [
+      {
+        "Name": "OrayIddDriver Device",
+        "DriverVersion": "17.1.58.818"
+      },
+      {
+        "Name": "MuMu Virtual Display Adapter",
+        "DriverVersion": "20.36.41.498"
+      },
+      {
+        "Name": "Zako Display Adapter",
+        "DriverVersion": "17.27.43.852"
+      },
+      {
+        "Name": "GameViewer Virtual Display Adapter",
+        "DriverVersion": "15.6.5.199"
+      },
+      {
+        "Name": "Virtual Desktop Monitor",
+        "DriverVersion": "13.50.53.699"
+      },
+      {
+        "Name": "AMD Radeon(TM) Graphics",
+        "DriverVersion": "32.0.11038.3"
+      },
+      {
+        "Name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+        "DriverVersion": "32.0.15.8108"
+      }
+    ]
+  },
+  "sourceIssue": 13,
+  "targetIntelValidated": false,
+  "realPlaybackValidated": false
+}
