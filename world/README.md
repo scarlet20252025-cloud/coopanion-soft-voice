@@ -2,7 +2,18 @@
 
 作者：**Asryto** · npm 包 `cortico-world-soft-voice` · Cortico World API 5
 
-Coopanion 的独立本地 TTS 扩展，使用 Qwen3-TTS 0.6B Base Q8、Vulkan 核显和已确认的 `soft-child-design-2` 音色。无需旧 CosyVoice 扩展、语音 API key、PyTorch 或 CUDA。
+Coopanion 的独立本地 TTS 扩展，使用 Qwen3-TTS 0.6B Base Q8、Vulkan 核显/独显和已确认的 `soft-child-design-2` 音色。无需旧 CosyVoice 扩展、语音 API key、PyTorch 或 CUDA。
+
+## 特点与优势
+
+- **离线发声，无语音接口费用**：模型部署后在本机合成，不向云端语音服务发送朗读内容；桌宠的聊天模型账号仍单独配置。
+- **轻量模型，较低显存占用**：Q8 模型配合渐进 KV 缓存、计算图精简和按需文本嵌入。本机 RTX 4050 Laptop GPU 正常合成专用显存实测约 1045 MiB（1.02 GiB），并非所有设备的保证，也不是系统 RAM 要求。[实测对照](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/blob/main/docs/PERFORMANCE_0.5.2.md)
+- **核显、独显可选**：使用 Vulkan；支持明确选择推理设备，显示保存、切换和实际生效状态，不偷偷换到其他显卡。
+- **流式播放与气泡同步**：边生成边播放，气泡可等待当前段读完再切换；慢设备可用整句缓冲优先保证连续播放。
+- **可选低功耗休眠**：空闲时释放模型，下一句自动唤醒；显示唤醒进度，首次出声会多出加载时间。
+- **易部署、易排错**：完整包自带模型与运行环境，自动寻找 Coopanion；界面提供延迟、内存、断流指标和可导出的诊断报告。
+
+**不需要用户单独安装 Python，但完整运行包仍内置 Python 播放与控制组件；不是零 Python 项目。**
 
 **npm 市场包只包含 World 与控制界面。使用语音前需要下载安装 Qwen3-TTS 小模型和本地运行环境。** 未部署时主页会醒目提示，并提供 GitHub 部署入口；文件存在、连接成功、加载、休眠和等待内存是不同状态。
 
@@ -12,7 +23,7 @@ Coopanion 的独立本地 TTS 扩展，使用 Qwen3-TTS 0.6B Base Q8、Vulkan �
 2. 完整包会自动安装 World 并登记语音路径；无需扩展市场、npm 账号，也不需要再安装 TGZ。
 3. 打开 **轻量化本地语音引擎 → 语音控制**。播放状态在左、模型部署检测在右；窄窗口上下排列。
 
-要求 **Windows 10/11 x64、厂商 Vulkan 显卡驱动、加载前至少 3 GiB 系统可用内存**，自动恢复线为 3.5 GiB。自动枚举 Vulkan 设备，只选择集成显卡；只有一块核显时自动选用，多块时用安装器的 `-DeviceName` 明确选择。缺驱动或加载失败会报错，不自动回退独显。AMD 核显已实测，Intel 核显尚未作者实机验证。其他硬件的兼容性与性能需实际检查。
+要求 **Windows 10/11 x64、厂商 Vulkan 显卡驱动**。核显加载前至少 3 GiB 系统可用内存，自动恢复线 3.5 GiB；已验证渐进 FP32 KV 布局的 NVIDIA 独显为 2.75 / 3.25 GiB，旧运行时或未识别设备不套用降低后的门槛。默认自动选择核显，独显需用户明确选择；缺驱动或加载失败会报错，不自动回退其他显卡。AMD 核显及 NVIDIA RTX 4050 Laptop GPU 已实测，Intel 核显尚未作者实机验证。其他硬件的兼容性与性能需实际检查。
 
 完整包不包含桌宠程序、角色或聊天模型账号。保留解压目录，模型与 Python 从其中运行；迁移到别的英文路径后重新执行安装器。本地文件扩展从 GitHub 完整包更新，不查询 npm。详细步骤见 [不依赖扩展市场的安装教程](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/blob/main/docs/INSTALL_WITHOUT_MARKET.md)。
 
