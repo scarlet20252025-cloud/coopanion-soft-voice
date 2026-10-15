@@ -30,6 +30,33 @@ def fake_engine():
 
 
 class NativeValidationTests(unittest.TestCase):
+    def test_progressive_cache_is_opt_in_and_clears_stale_process_environment(self):
+        import os
+        config={'deviceType':'integrated','kvContext':1024,'adaptiveKv':True}
+        with patch.dict(os.environ,{},clear=True):
+            self.assertTrue(native_engine.configure_vulkan(config)['adaptiveKv'])
+            self.assertEqual(os.environ['QWEN_TTS_ADAPTIVE_KV'],'1')
+            self.assertFalse(native_engine.configure_vulkan({**config,'adaptiveKv':False})['adaptiveKv'])
+            self.assertNotIn('QWEN_TTS_ADAPTIVE_KV',os.environ)
+
+    def test_nvidia_uses_device_local_without_changing_uma_default(self):
+        import os
+        config={'deviceType':'discrete','vendorId':0x10de,'kvContext':1024,'compactGraphs':True,'streamTextEmbedding':True}
+        with patch.dict(os.environ,{},clear=True):
+            policy=native_engine.configure_vulkan(config)
+            self.assertEqual(policy['memoryPolicy'],'device-local')
+            self.assertEqual(os.environ['GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM'],'1')
+        with patch.dict(os.environ,{},clear=True):
+            policy=native_engine.configure_vulkan({**config,'deviceType':'integrated','vendorId':0x1002})
+            self.assertEqual(policy['memoryPolicy'],'backend-default')
+            self.assertNotIn('GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM',os.environ)
+    def test_explicit_discrete_selection_is_allowed_without_automatic_fallback(self):
+        devices=[{'index':0,'name':'NVIDIA','kind':'discrete'},{'index':1,'name':'AMD','kind':'integrated'}]
+        with patch.object(native_engine,'vulkan_devices',return_value=devices):
+            self.assertEqual(native_engine.integrated_devices(),[{'index':1,'name':'AMD'}])
+            self.assertEqual(native_engine.explicit_device('NVIDIA')['index'],0)
+            with self.assertRaisesRegex(RuntimeError,'no automatic fallback'):native_engine.explicit_device('Missing GPU')
+            with self.assertRaises(RuntimeError):native_engine.select_integrated_name('NVIDIA')
     def test_auto_device_selection_never_chooses_discrete_or_ambiguous_devices(self):
         with patch.object(native_engine,'integrated_devices',return_value=[{'index':1,'name':'Intel Integrated'}]):
             self.assertEqual(native_engine.select_integrated_name(),'Intel Integrated')

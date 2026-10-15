@@ -1,0 +1,30 @@
+{
+  "dateBeijing": "2026-10-15",
+  "author": "Asryto",
+  "pythonTests": 80,
+  "nodeTests": 46,
+  "automaticInstall": false,
+  "automaticCheck": {
+    "default": true,
+    "startupDelaySeconds": 30,
+    "intervalHours": 24,
+    "failureBackoffHours": 1
+  },
+  "activeUpdatePipeline": [
+    "download",
+    "sha256-validation",
+    "backup",
+    "install",
+    "verify",
+    "rollback-on-failure"
+  ],
+  "restart": {
+    "explicitConfirmationRequired": true,
+    "postponeKeepsPendingState": true,
+    "officialBootRequest": true,
+    "gracefulExistingHandler": true,
+    "realHostRestartNotExecutedInThisTest": true
+  },
+  "browserPanelFixturePassed": true,
+  "intelUHDPerformanceRetest": "pending"
+}

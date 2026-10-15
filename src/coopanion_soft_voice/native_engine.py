@@ -1,4 +1,4 @@
-"""Experimental full-ICL Q8 engine restricted to an explicitly named integrated GPU."""
+"""Full-ICL Q8 Vulkan engine: automatic iGPU selection, explicit discrete GPU opt-in."""
 import ctypes as C
 import hashlib
 import json
@@ -14,8 +14,8 @@ MODEL_HASHES = {
 }
 
 
-def integrated_devices():
-    """Enumerate without creating a GPU device; never silently select a discrete GPU."""
+def vulkan_devices():
+    """Enumerate hardware GPUs without loading a model or silently selecting one."""
     class Create(C.Structure):
         _fields_ = [('sType', C.c_uint32), ('next', C.c_void_p), ('flags', C.c_uint32),
                     ('app', C.c_void_p), ('nl', C.c_uint32), ('layers', C.c_void_p),
@@ -42,11 +42,20 @@ def integrated_devices():
             v.vkGetPhysicalDeviceProperties(device, buf)
             kind = int.from_bytes(buf.raw[16:20], 'little')
             actual = buf.raw[20:276].split(b'\0')[0].decode('utf-8')
-            if kind == 1:
-                matches.append({'index':i,'name':actual})
+            if kind in (1,2):
+                matches.append({'index':i,'name':actual,'kind':'integrated' if kind==1 else 'discrete',
+                                'vendorId':int.from_bytes(buf.raw[8:12],'little')})
         return matches
     finally:
         v.vkDestroyInstance(instance, None)
+
+def integrated_devices():
+    return [{'index':d['index'],'name':d['name']} for d in vulkan_devices() if d['kind']=='integrated']
+
+def explicit_device(name):
+    matches=[d for d in vulkan_devices() if d['name']==name]
+    if len(matches)!=1:raise RuntimeError('Selected Vulkan GPU is missing or ambiguous; no automatic fallback')
+    return matches[0]
 
 
 def integrated_device(name):
@@ -65,7 +74,7 @@ def select_integrated_name(name=None):
                        json.dumps(devices,ensure_ascii=False))
 
 
-def settings(runtime, *, cached_verification=False):
+def settings(runtime, *, cached_verification=False, device_name=None):
     config = json.loads((Path(runtime)/'native-runtime.json').read_text(encoding='utf-8'))
     speech_only = config.get('speechOnly')
     if speech_only and (speech_only.get('format') != 1 or speech_only.get('sourceHashes') != MODEL_HASHES):
@@ -86,9 +95,32 @@ def settings(runtime, *, cached_verification=False):
         raise ValueError('compactGraphs must be boolean')
     if type(config.get('streamTextEmbedding', False)) is not bool:
         raise ValueError('streamTextEmbedding must be boolean')
+    if type(config.get('adaptiveKv', False)) is not bool:
+        raise ValueError('adaptiveKv must be boolean')
     reference()
-    config['deviceIndex'] = integrated_device(config['deviceName'])
+    explicit=device_name or (config['deviceName'] if config.get('deviceSelectedExplicitly') is True else None)
+    if explicit:
+        device=explicit_device(explicit)
+        config.update(deviceIndex=device['index'],deviceName=device['name'],deviceType=device['kind'],vendorId=device.get('vendorId'))
+    else:
+        config['deviceIndex'] = integrated_device(config['deviceName'])
+        config['deviceType']='integrated'
     return config
+
+def configure_vulkan(config):
+    """Keep UMA zero-copy; avoid the measured slow mapped-VRAM path on NVIDIA Windows."""
+    nvidia=config.get('deviceType')=='discrete' and config.get('vendorId')==0x10de
+    if nvidia:
+        os.environ['GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM']='1'
+        os.environ.pop('GGML_VK_PREFER_HOST_MEMORY',None)
+        os.environ.pop('GGML_VK_ALLOW_SYSMEM_FALLBACK',None)
+    if config.get('adaptiveKv', False): os.environ['QWEN_TTS_ADAPTIVE_KV']='1'
+    else: os.environ.pop('QWEN_TTS_ADAPTIVE_KV',None)
+    return {'memoryPolicy':'device-local' if nvidia else 'backend-default',
+            'disableHostVisibleVram':os.environ.get('GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM')=='1',
+            'cpuThreads':4,'kvContext':config['kvContext'],
+            'compactGraphs':config.get('compactGraphs',False),'streamTextEmbedding':config.get('streamTextEmbedding',False),
+            'adaptiveKv':config.get('adaptiveKv',False),'kvPrecision':'FP32'}
 
 
 class NativeEngine:
@@ -98,7 +130,7 @@ class NativeEngine:
     speech_piece_limit = 32
     speech_piece_target = 24
 
-    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True, buffer_mode='adaptive', on_stage=None):
+    def __init__(self, runtime, voice_pack=None, *, use_reference_cache=True, buffer_mode='adaptive', on_stage=None, device_name=None):
         started = time.perf_counter()
         self.startup_timings = {}
         self.ctx = None; self.voice = Voice(); self.dirs = []
@@ -112,8 +144,8 @@ class NativeEngine:
             self.reference_path, pack = load(voice_pack)
             self.reference_text = pack['referenceText']
         report = on_stage or (lambda name, detail: None)
-        report('validate_model','正在校验模型文件并检查核显')
-        config = settings(runtime, cached_verification=True)
+        report('validate_model','正在校验模型文件并检查所选 GPU')
+        config = settings(runtime, cached_verification=True,device_name=device_name)
         self.startup_timings['validationMs'] = round((time.perf_counter()-started)*1000)
         class MemoryStatus(C.Structure):
             _fields_ = [('length', C.c_uint32), ('load', C.c_uint32)] + [
@@ -130,6 +162,7 @@ class NativeEngine:
         os.environ['GGML_BACKEND'] = 'Vulkan0'
         os.environ['GGML_VK_VISIBLE_DEVICES'] = str(config['deviceIndex'])
         os.environ['QWEN_CPU_THREADS'] = '4'
+        self.runtime_parameters=configure_vulkan(config)
         os.environ['QWEN_TTS_KV_CONTEXT'] = str(config['kvContext'])
         if config.get('compactGraphs', False): os.environ['QWEN_TTS_COMPACT_GRAPHS'] = '1'
         else: os.environ.pop('QWEN_TTS_COMPACT_GRAPHS', None)
@@ -144,6 +177,10 @@ class NativeEngine:
             for folder in [str(Path(config['dll']).parent)] + config['dllDirectories']:
                 self.dirs.append(os.add_dll_directory(folder))
             self.dll = C.CDLL(config['dll'])
+            self.adaptive_kv = config.get('adaptiveKv', False)
+            if self.adaptive_kv:
+                from .native_capabilities import require_adaptive_kv
+                require_adaptive_kv(self.dll)
             if config.get('streamTextEmbedding', False):
                 from .native_capabilities import require_text_stream
                 require_text_stream(self.dll)
@@ -215,13 +252,27 @@ class NativeEngine:
                     if not self.ctx:
                         raise RuntimeError(self.dll.qt_last_error().decode())
             self.device_name = config['deviceName']
+            self.device_type = config['deviceType']
+            self.vendor_id = config.get('vendorId')
+            self.runtime_parameters['minimumFreeGiB'] = minimum
             self._conditioning_signature = self.conditioning_signature()
             self.voice_conditioning = {'referenceSha256':hashlib.sha256(self.reference_path.read_bytes()).hexdigest(),
                                        'conditioningSha256':self._conditioning_signature,
                                        'mode':'full-icl', 'pieceLimit':self.speech_piece_limit}
+            self.update_cache_state()
             self.startup_timings['totalMs'] = round((time.perf_counter()-started)*1000)
         except BaseException:
             self.close(); raise
+
+    def update_cache_state(self):
+        # Called only after initialization / completed synchronous synthesis.
+        # Never query mutable native state while a request is in flight.
+        if getattr(self, 'adaptive_kv', False) and self.ctx:
+            capacity, limit, size = C.c_int(), C.c_int(), C.c_uint64()
+            if not self.dll.qt_adaptive_kv_state(self.ctx, C.byref(capacity), C.byref(limit), C.byref(size)):
+                raise RuntimeError('Native progressive KV state unavailable')
+            self.runtime_parameters.update(kvCapacity=capacity.value, kvContext=limit.value,
+                                           kvAllocatedMiB=round(size.value/1024**2, 3))
 
     def conditioning_signature(self):
         voice = self.voice
@@ -250,6 +301,7 @@ class NativeEngine:
         p.temperature = .9; p.top_k = 50; p.top_p = 1; p.repetition_penalty = 1.05
         p.subtalker_temperature = .9; p.subtalker_top_k = 50; p.subtalker_top_p = 1
         pending = []; count = 0; total_samples = 0; opened = False; errors = []; started = time.perf_counter()
+        self.last_start_buffer = None
         from .start_buffer import StartBuffer
         gate = StartBuffer(fixed=getattr(self, 'buffer_mode', 'adaptive') == 'fixed')
         @Cancel
@@ -267,7 +319,8 @@ class NativeEngine:
                     pending.append(data); count += n
                     if gate.feed(n, time.perf_counter()):
                         self.last_start_buffer = {'chunks':gate.chunks,'bufferSeconds':count/24000,
-                                                  'targetSeconds':gate.target_seconds,'maxGap':gate.max_gap}
+                                                  'targetSeconds':gate.target_seconds,'maxGap':gate.max_gap,
+                                                  'productionRtf':gate.production_rtf}
                         receive(np.concatenate(pending), 24000); pending.clear(); opened = True
                 return True
             except Exception as exc:
@@ -285,6 +338,7 @@ class NativeEngine:
             raise RuntimeError('Speech reached the generation limit; output may be incomplete')
         if not total_samples:
             raise RuntimeError('Native engine returned no audio')
+        self.update_cache_state()
         if pending: receive(np.concatenate(pending), 24000)
         # Queue the final (possibly shorter than the start buffer) chunk before
         # telling the audio thread it can stop. Otherwise a drained previous

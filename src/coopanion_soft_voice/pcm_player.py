@@ -5,12 +5,13 @@ import sounddevice as sd
 
 class PCMPlayer:
     """One continuous output device, fed independently of GPU generation."""
-    def __init__(self,rate=24000,volume=1.0,on_start=None):
+    def __init__(self,rate=24000,volume=1.0,on_start=None,defer_start=False):
         self.rate=rate;self.volume=volume;self.on_start=on_start
         self.queue=deque();self.lock=threading.Lock();self.finished=threading.Event()
         self.producer_done=False;self.stream=None;self.underrun_frames=0;self.device_underflows=0
         self.first_audio_at=None;self.samples=0
         self.notified=False
+        self.playback_started=not defer_start
         # Open the device before entering native generation. The producer callback
         # must only enqueue samples, never initialize drivers on the compute thread.
         self.stream=sd.OutputStream(samplerate=self.rate,channels=1,dtype='float32',blocksize=480,latency='low',callback=self._callback,finished_callback=self.finished.set)
@@ -19,6 +20,7 @@ class PCMPlayer:
 
     def _callback(self,out,frames,timing,status):
         out.fill(0)
+        if not self.playback_started:return
         if status.output_underflow and self.first_audio_at is not None:self.device_underflows+=1
         written=0
         with self.lock:
@@ -38,12 +40,20 @@ class PCMPlayer:
         a=np.asarray(a,dtype=np.float32)
         if not np.isfinite(a).all():raise ValueError('音频包含无效采样')
         with self.lock:self.queue.append(np.clip(a*self.volume,-1,1));self.samples+=len(a)
-        if not self.notified:
+        if self.playback_started:self._notify()
+
+    def _notify(self):
+        if self.samples and not self.notified:
             self.notified=True
             if self.on_start:self.on_start()
 
+    def start_playback(self):
+        self.playback_started=True
+        self._notify()
+
     def finish(self):
         self.producer_done=True
+        self.start_playback()
         if self.stream:
             if not self.finished.wait(self.samples/self.rate+10):raise TimeoutError('连续播放未结束')
             self.stream.close();self.stream=None

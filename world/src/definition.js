@@ -1,5 +1,6 @@
 import { DEFAULTS, ID } from './config.js';
 import { SoftVoiceWorld } from './world.js';
+import { restartRequest } from './restart.js';
 
 const cloneDefaults = () => ({ ...DEFAULTS });
 
@@ -16,6 +17,7 @@ const definition = {
     dataDir: ctx.dataDir,
     botDir: ctx.botDir,
     persist: ctx.persist,
+    requestDesktopRestart:restartRequest(ctx.dataDir),
   })
 };
 

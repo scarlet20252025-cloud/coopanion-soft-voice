@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "states": [
+    "missing",
+    "connected",
+    "sleeping"
+  ],
+  "detailsPersist": true,
+  "narrowLayout": true,
+  "pageErrors": []
+}

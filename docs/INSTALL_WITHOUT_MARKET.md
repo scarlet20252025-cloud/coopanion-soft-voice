@@ -1,6 +1,6 @@
 # 轻量化本地语音引擎：不依赖扩展市场的安装教程
 
-作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.4.11 / World 0.3.11。
+作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.5.0 / World 0.4.1。
 
 **下载完整 ZIP → 解压 → 双击 `install.cmd` → 在桌宠中试听。** 安装器会同时安装语音扩展、模型和运行环境，不需要扩展市场、npm 账号，也不用单独安装 Python、Git、Node、PyTorch、CUDA 或编译工具。
 
@@ -8,7 +8,7 @@
 
 - Windows 10/11 **x64**。
 - 已安装并启动过一次 [Coopanion 官方桌宠](https://github.com/Pal-AI-Lab/Coopanion/releases/latest)，让它完成首次初始化。
-- 一块支持 Vulkan 的核显和相应厂商驱动。只有一块核显时自动选用，多块时需要指定。AMD 核显已实测，Intel 核显尚未实机验证。
+- 支持 Vulkan 的显卡和相应厂商驱动。默认自动选用唯一核显；多块或明确使用独显时用 `-DeviceName` 指定。AMD 核显与 NVIDIA RTX 4050 是本次验收设备；Intel 数据来自用户反馈，尚未作者实机复测。
 - 加载前至少 **3 GiB 系统可用内存**，约 **4 GB 可用磁盘**。这里的可用内存指任务管理器显示的“可用”，不是电脑安装的总内存；不要用独显显存大小代替。
 
 语音合成本身不需要 API key；桌宠的文字对话仍使用你自己的聊天模型配置。没有配置聊天模型也可以单独验证语音运行包，不能据此认为桌宠已能对话。
@@ -19,13 +19,13 @@
 
 直接下载：
 
-**[coopanion-local-voice-0.4.11-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.4.11/coopanion-local-voice-0.4.11-windows-x64.zip)**
+**[coopanion-local-voice-0.5.0-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.0/coopanion-local-voice-0.5.0-windows-x64.zip)**
 
-也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/tag/v0.4.11)，在 Assets 中选择同名文件。
+也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/tag/v0.5.0)，在 Assets 中选择同名文件。
 
 该完整包包含 Qwen3-TTS 0.6B Base Q8 精简模型、音频解码模型、Vulkan 推理引擎、Python 3.12、播放器依赖、已确认音色和独立 World 扩展。
 
-发布页中的 `cortico-world-soft-voice-0.3.11.tgz` 只包含扩展界面与代码；`Source code (zip)` 是源码。**首次安装请选上面约 1.17 GB 的完整 ZIP**，单独下载 TGZ 或源码无法完成模型部署。
+发布页只保留一份完整安装 ZIP，已包含扩展与模型，无需另找 TGZ。`.sha256` 是校验文件；GitHub 自动显示的 `Source code (zip/tar.gz)` 是源码，不能作为完整安装包。已有市场或本地新版扩展会自动跳过，旧版会更新；模型部署仍会继续。
 
 ## 3. 解压并安装
 
@@ -97,7 +97,7 @@ Set-Location 'D:\CoopanionVoice'
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-portable.ps1 -CoopanionRoot 'D:\Apps\Coopanion'
 ```
 
-如果电脑有多块核显，安装日志会列出可选名称。在命令末尾添加 `-DeviceName '安装器列出的核显名称'`。默认 Bot 目录名为 `companion`；使用其他 Bot 时添加 `-BotId '你的Bot目录名'`。
+如果电脑有多块核显，安装日志会列出可选名称。在命令末尾添加 `-DeviceName 'Vulkan设备名称'`；该参数也支持明确指定独显，不自动回退其他设备。安装后可以在主页“检测设备 → 切换设备”选择。默认 Bot 目录名为 `companion`；使用其他 Bot 时添加 `-BotId '你的Bot目录名'`。
 
 其他可选参数：`-NoLaunch` 安装后不打开桌宠；`-RuntimeOnly` 只验证语音运行包、不接入桌宠；`-NoEnableSpeech` 不主动开启语音，保留既有开关选择（新安装保持关闭）。
 
@@ -106,6 +106,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-portable.p
 **保留解压目录。** 桌宠会从里面运行 Python 和模型，不能在安装成功后把它当成临时安装文件夹删除。
 
 使用本地完整包时，语音扩展不会通过 npm 查询更新。以后在 GitHub 下载新的完整包，解压到英文目录，正常退出桌宠后运行新版 `install.cmd`，指定同一个桌宠即可。安装器备份相关配置，保留既有音量、气泡同步和低功耗选择；默认会开启语音，需要保留关闭状态时使用 `-NoEnableSpeech`。
+
+0.5.0 起也可从主页右上角“热更新”下载匹配当前模型布局的小型代码包，无需重复下载模型。语音引擎更新后恢复；World 代码需要重启桌宠加载。详见 [播放、设备和更新说明](PLAYBACK_AND_UPDATES.md)。
 
 搬到其他英文目录后重新运行安装器，让它重新登记本机路径。搬到另一台电脑时，也需要重新运行，以重新选择那台电脑的核显；不要复制作者或原电脑的路径配置来代替安装。
 

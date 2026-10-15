@@ -1,0 +1,242 @@
+--- a/src/pipeline-tts.h
++++ b/src/pipeline-tts.h
+@@ -158,6 +158,8 @@
+     // Persistent KV caches, one set per slot: the talker holds the LM
+     // contexts, the predictor holds one frame's 16 sub-steps per slot,
+     // rewritten every frame at baked rows.
++    int talker_context_limit;
++    bool adaptive_kv;
+     KVCache talker_kv;
+     KVCache code_predictor_kv;
+ 
+--- a/src/pipeline-tts.cpp
++++ b/src/pipeline-tts.cpp
+@@ -134,6 +134,51 @@
+     return code_predictor_frame_graph_build(&pt->code_predictor, &pt->code_predictor_kv, pt->backend,
+                                             pt->talker.codec_embedding, pt->hidden_bridge, &s.sampler, tail, N,
+                                             pt->use_flash_attn, pt->clamp_fp16, &frame);
++}
++
++// Grow at the existing 256-position attention boundary. All K/V values stay
++// FP32 on the selected device; no host round trip and no sliding/truncation.
++static bool pipeline_tts_grow_kv(PipelineTTS * pt, int needed) {
++    KVCache & old = pt->talker_kv;
++    const int capacity = (needed + 255) / 256 * 256;
++    if (capacity <= old.max_seq_len) return true;
++    if (capacity > pt->talker_context_limit || old.n_sets != 1) return false;
++    ggml_backend_synchronize(pt->backend);
++    KVCache next = {};
++    if (!kv_cache_init(&next, old.n_layers, old.n_kv_heads, old.head_dim,
++                       capacity, 1, pt->backend)) return false;
++    const int used = old.cur_len[0];
++    const int max_nodes = old.n_layers * 16 + 64;
++    ggml_init_params gp = {ggml_tensor_overhead() * (size_t) (old.n_layers * 6 + 16)
++                           + ggml_graph_overhead_custom(max_nodes, false), nullptr, true};
++    ggml_context * ctx = ggml_init(gp);
++    if (!ctx) { kv_cache_free(&next); return false; }
++    ggml_cgraph * graph = ggml_new_graph_custom(ctx, max_nodes, false);
++    for (int l = 0; l < old.n_layers; ++l) {
++        for (int v = 0; v < 2; ++v) {
++            ggml_tensor * src = v ? kv_cache_v(&old, 0, l) : kv_cache_k(&old, 0, l);
++            ggml_tensor * dst = v ? kv_cache_v(&next, 0, l) : kv_cache_k(&next, 0, l);
++            ggml_tensor * a = ggml_view_3d(ctx, src, old.head_dim, used, old.n_kv_heads,
++                                          src->nb[1], src->nb[2], 0);
++            ggml_tensor * b = ggml_view_3d(ctx, dst, old.head_dim, used, old.n_kv_heads,
++                                          dst->nb[1], dst->nb[2], 0);
++            ggml_build_forward_expand(graph, ggml_cpy(ctx, a, b));
++        }
++    }
++    ggml_gallocr_t alloc = ggml_gallocr_new(ggml_backend_get_default_buffer_type(pt->backend));
++    const bool ok = alloc && ggml_gallocr_alloc_graph(alloc, graph)
++        && backend_static_compute(pt->backend, graph) == GGML_STATUS_SUCCESS;
++    ggml_backend_synchronize(pt->backend);
++    if (alloc) ggml_gallocr_free(alloc);
++    ggml_free(ctx);
++    if (!ok) { kv_cache_free(&next); return false; }
++    next.cur_len = old.cur_len;
++    ggml_backend_sched_reset(pt->sched);
++    for (auto & g : pt->talker_decode_graphs) talker_decode_graph_free(&g);
++    kv_cache_free(&old);
++    old = std::move(next);
++    qt_log(QT_LOG_INFO, "[AdaptiveKV] grew to %d positions, preserved %d FP32 rows", capacity, used);
++    return true;
+ }
+ 
+ bool pipeline_tts_load(PipelineTTS * pt,
+@@ -255,12 +300,18 @@
+         const int requested = std::atoi(value);
+         if (requested >= 1024 && requested <= 4096 && requested % 256 == 0) talker_context = requested;
+     }
++    // One desktop utterance at a time: allocate a small cache at load, then
++    // size it from the actual prompt plus the UNCHANGED generation budget.
++    // Padding, attention precision and sampling remain the original path.
++    pt->talker_context_limit = talker_context;
++    pt->adaptive_kv = pt->max_batch == 1 && std::getenv("QWEN_TTS_ADAPTIVE_KV");
++    const int initial_context = pt->adaptive_kv ? 256 : talker_context;
+     // KV caches, one set per slot: the talker holds the LM context up
+     // to 4096 positions (the longest ICL prompt observed is ~250 +
+     // max_new_tokens ~ 1500, so 4096 has 60% headroom). Predictor holds
+     // one frame of 16 sub-steps per slot.
+     if (!kv_cache_init(&pt->talker_kv, pt->talker.num_hidden_layers, pt->talker.num_key_value_heads,
+-                       pt->talker.head_dim, talker_context, pt->max_batch, pt->backend)) {
++                       pt->talker.head_dim, initial_context, pt->max_batch, pt->backend)) {
+         ggml_backend_sched_free(pt->sched);
+         pt->sched = NULL;
+         pipeline_codec_free(&pt->codec);
+@@ -323,7 +374,7 @@
+     // fixed and the positions, kv rows, and mask baked in. Wider
+     // predictor sets and the batched talker decode graphs build lazily
+     // on first use.
+-    pt->talker_decode_graphs.resize(((size_t) pt->talker_kv.max_seq_len + 255) / 256);
++    pt->talker_decode_graphs.resize(((size_t) pt->talker_context_limit + 255) / 256);
+     bool graphs_ok = graph_arena_init(&pt->talker_arena, talker_graph_max_nodes(pt->talker.num_hidden_layers)) &&
+                      pipeline_tts_cp_graphs_ensure(pt, 1, SAMPLER_TAIL_FIXED);
+     if (!graphs_ok) {
+@@ -883,6 +934,34 @@
+         return tts_admit_fail(job, QT_STATUS_GENERATE_FAILED);
+     }
+     s.perf.build_ms = t_build.ms();
++
++    if (pt->adaptive_kv) {
++        const int64_t need = (int64_t) s.prompt.T_ctx + (int64_t) params->max_new_tokens;
++        if (slot_idx != 0 || need <= 0 || need > pt->talker_context_limit) {
++            qt_set_error("adaptive KV: prompt plus generation budget exceeds context limit");
++            e->slots.pop_back();
++            return tts_admit_fail(job, QT_STATUS_INVALID_PARAMS);
++        }
++        const int capacity = (s.prompt.T_ctx + 255) / 256 * 256;
++        if (capacity != pt->talker_kv.max_seq_len) {
++            // No live sequence exists at admission for max_batch=1. Synchronize
++            // and drop every graph referencing the old storage BEFORE freeing.
++            ggml_backend_synchronize(pt->backend);
++            ggml_backend_sched_reset(pt->sched);
++            for (auto & graph : pt->talker_decode_graphs) talker_decode_graph_free(&graph);
++            kv_cache_free(&pt->talker_kv);
++            if (!kv_cache_init(&pt->talker_kv, pt->talker.num_hidden_layers,
++                               pt->talker.num_key_value_heads, pt->talker.head_dim,
++                               capacity, 1, pt->backend)) {
++                qt_set_error("adaptive KV allocation failed");
++                e->slots.pop_back();
++                return tts_admit_fail(job, QT_STATUS_OOM);
++            }
++            qt_log(QT_LOG_INFO, "[AdaptiveKV] prompt=%d budget=%d capacity=%d limit=%d",
++                   s.prompt.T_ctx, params->max_new_tokens, capacity, pt->talker_context_limit);
++        }
++    }
++
+ 
+     if (params->dump_dir) {
+         DebugDumper d;
+@@ -1088,6 +1167,15 @@
+     while (N_dec < N && e->slots[(size_t) N_dec].step > 0) {
+         N_dec++;
+     }
++    if (N_dec > 0 && pt->adaptive_kv &&
++        !pipeline_tts_grow_kv(pt, pt->talker_kv.cur_len[0] + 1)) {
++        qt_set_error("adaptive KV growth failed");
++        for (TtsSlot & s : e->slots) {
++            s.finished = true;
++            s.fin_status = QT_STATUS_GENERATE_FAILED;
++        }
++        N_dec = 0;
++    }
+     bool any_dump = false;
+     for (int i = 0; i < N; i++) {
+         any_dump = any_dump || (e->slots[(size_t) i].job->params->dump_dir != NULL);
+--- a/src/qwen.h
++++ b/src/qwen.h
+@@ -175,6 +175,9 @@
+ // Release every module owned by the handle and free the handle itself.
+ // Safe on NULL.
+ QT_API void qt_free(struct qt_context * q);
++// Local voice extension, query only while the caller has no synthesis in flight.
++QT_API int qt_adaptive_kv_version(void);
++QT_API int qt_adaptive_kv_state(struct qt_context * q, int * capacity, int * limit, uint64_t * bytes);
+ 
+ // Precomputed Base-model voice reference latents. Plain POD: both
+ // pointers are malloc allocated by qt_extract_voice_ref, owned by the
+--- a/src/qwen.cpp
++++ b/src/qwen.cpp
+@@ -193,6 +193,14 @@
+ 
+ extern "C" {
+ int qt_text_embedding_stream_version(void) { return 1; }
++int qt_adaptive_kv_version(void) { return 1; }
++int qt_adaptive_kv_state(struct qt_context * q, int * capacity, int * limit, uint64_t * bytes) {
++    if (!q || !capacity || !limit || !bytes || !q->pt.talker_kv.buffer) return 0;
++    *capacity = q->pt.talker_kv.max_seq_len;
++    *limit = q->pt.talker_context_limit;
++    *bytes = ggml_backend_buffer_get_size(q->pt.talker_kv.buffer);
++    return 1;
++}
+ 
+ const char * qt_version(void) {
+     // QWEN_VERSION is a string literal injected by tools/version.cmake
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -212,3 +212,11 @@
+ )
+ target_link_libraries(test-abi-c PRIVATE qwen-core)
+ link_ggml_backends(test-abi-c)
++
++# Optional Local Voice allocation regression, requires selected backend at runtime.
++option(QWEN_TEST_ADAPTIVE_KV "Build progressive KV preservation test" OFF)
++if(QWEN_TEST_ADAPTIVE_KV)
++    add_executable(test-adaptive-kv tests/adaptive-kv.cpp)
++    target_link_libraries(test-adaptive-kv PRIVATE qwen-core)
++    link_ggml_backends(test-adaptive-kv)
++endif()
+--- /dev/null
++++ b/tests/adaptive-kv.cpp
+@@ -0,0 +1,51 @@
++#include "../src/pipeline-tts.cpp"
++#include <vector>
++#include <cstring>
++#include <cstdio>
++int main() {
++    PipelineTTS pt = {};
++    ggml_backend_load_all();
++    pt.bp = backend_init("KVTest");
++    if (!pt.bp.backend) return 2;
++    pt.backend = pt.bp.backend;
++    pt.sched = backend_sched_new(pt.bp, 1024);
++    pt.talker_context_limit = 1024;
++    if (!pt.sched || !kv_cache_init(&pt.talker_kv, 28, 8, 128, 256, 1, pt.backend)) return 3;
++    for (int old_capacity : {256, 512, 768}) {
++        const int target = old_capacity + 256;
++        for (int layer = 0; layer < 28; ++layer) {
++            for (int v = 0; v < 2; ++v) {
++                ggml_tensor * t = v ? kv_cache_v(&pt.talker_kv, 0, layer) : kv_cache_k(&pt.talker_kv, 0, layer);
++                std::vector<float> data((size_t) ggml_nelements(t));
++                for (size_t i = 0; i < data.size(); ++i) data[i] = (float) ((int)(i % 1301) - 650 + layer * 3 + v);
++                ggml_backend_tensor_set(t, data.data(), 0, data.size() * sizeof(float));
++            }
++        }
++        pt.talker_kv.cur_len[0] = old_capacity;
++        if (!pipeline_tts_grow_kv(&pt, target)) return 4;
++        if (pt.talker_kv.max_seq_len != target || pt.talker_kv.cur_len[0] != old_capacity) return 5;
++        for (int layer = 0; layer < 28; ++layer) {
++            for (int v = 0; v < 2; ++v) {
++                ggml_tensor * t = v ? kv_cache_v(&pt.talker_kv, 0, layer) : kv_cache_k(&pt.talker_kv, 0, layer);
++                std::vector<float> data((size_t) ggml_nelements(t));
++                ggml_backend_tensor_get(t, data.data(), 0, data.size() * sizeof(float));
++                for (int h = 0; h < 8; ++h) for (int row = 0; row < target; ++row) for (int d = 0; d < 128; ++d) {
++                    const size_t old_i = ((size_t) h * old_capacity + row) * 128 + d;
++                    const size_t new_i = ((size_t) h * target + row) * 128 + d;
++                    const float expected = row < old_capacity ? (float) ((int)(old_i % 1301) - 650 + layer * 3 + v) : 0.f;
++                    if (data[new_i] != expected) {
++                        fprintf(stderr,"copy mismatch layer=%d v=%d head=%d row=%d d=%d\n",layer,v,h,row,d);
++                        return 6;
++                    }
++                }
++            }
++        }
++        printf("verified capacity %d: 56 tensors, all live FP32 rows bit-exact, padded tail zero\n", target);
++    }
++    if (pipeline_tts_grow_kv(&pt, 1025) || pt.talker_kv.max_seq_len != 1024) return 7;
++    kv_cache_free(&pt.talker_kv);
++    ggml_backend_sched_free(pt.sched);
++    backend_release(pt.bp.backend, pt.bp.cpu_backend);
++    puts("KV growth and context overflow guard passed");
++    return 0;
++}

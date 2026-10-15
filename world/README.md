@@ -12,7 +12,7 @@ Coopanion 的独立本地 TTS 扩展，使用 Qwen3-TTS 0.6B Base Q8、Vulkan �
 2. 完整包会自动安装 World 并登记语音路径；无需扩展市场、npm 账号，也不需要再安装 TGZ。
 3. 打开 **轻量化本地语音引擎 → 语音控制**。播放状态在左、模型部署检测在右；窄窗口上下排列。
 
-要求 **Windows 10/11 x64、厂商 Vulkan 核显驱动、加载前至少 3 GiB 系统可用内存**，自动恢复线为 3.5 GiB。自动枚举 Vulkan 设备，只选择集成显卡；只有一块核显时自动选用，多块时用安装器的 `-DeviceName` 明确选择。缺驱动或加载失败会报错，不回退独显。AMD 核显已实测，Intel 核显尚未实机验证。其他硬件的兼容性与性能需实际检查。
+要求 **Windows 10/11 x64、厂商 Vulkan 显卡驱动、加载前至少 3 GiB 系统可用内存**，自动恢复线为 3.5 GiB。自动枚举 Vulkan 设备，只选择集成显卡；只有一块核显时自动选用，多块时用安装器的 `-DeviceName` 明确选择。缺驱动或加载失败会报错，不自动回退独显。AMD 核显已实测，Intel 核显尚未作者实机验证。其他硬件的兼容性与性能需实际检查。
 
 完整包不包含桌宠程序、角色或聊天模型账号。保留解压目录，模型与 Python 从其中运行；迁移到别的英文路径后重新执行安装器。本地文件扩展从 GitHub 完整包更新，不查询 npm。详细步骤见 [不依赖扩展市场的安装教程](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/blob/main/docs/INSTALL_WITHOUT_MARKET.md)。
 
@@ -39,3 +39,7 @@ Coopanion 的独立本地 TTS 扩展，使用 Qwen3-TTS 0.6B Base Q8、Vulkan �
 当前气泡显示桥适配官方桌宠包 0.1.4，完整安装器会安装；未知版本或结构变化会提示。单独市场扩展不会自动下载模型、修改聊天账号或注册开机自启。
 
 代码 MIT。原生引擎、模型和 Python 等依赖保留各自许可证，见仓库第三方说明与完整包的 licenses 目录。
+
+## 播放与更新
+
+0.4.0 增加自动/连续/开口优先策略、空闲时切换核显或用户明确选择的独显，以及主页右上角代码热更新。语音引擎立即生效，World 代码在重启桌宠后加载；详见 [说明](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/blob/main/docs/PLAYBACK_AND_UPDATES.md)。

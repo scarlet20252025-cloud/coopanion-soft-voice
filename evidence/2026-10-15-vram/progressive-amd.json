@@ -1,0 +1,402 @@
+{
+  "device": "AMD Radeon(TM) Graphics",
+  "nativeSha256": "618545b8ef2aac70fd85da9b0347a33baca56d1fe5694bd2307e6fb7f2499b8c",
+  "sampleIntervalMs": 100,
+  "cases": [
+    {
+      "repeat": 0,
+      "textIndex": 0,
+      "samples": 84480,
+      "pcmSha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "synthesisMs": 4262,
+      "firstChunkMs": 2142,
+      "rtf": 1.2107
+    },
+    {
+      "repeat": 0,
+      "textIndex": 1,
+      "samples": 253440,
+      "pcmSha256": "200069daf40f6d6f8ecc971245e4c0c4bb8dd05429068c567ea0a5ee6bc74cf3",
+      "synthesisMs": 9781,
+      "firstChunkMs": 1323,
+      "rtf": 0.9262
+    },
+    {
+      "repeat": 0,
+      "textIndex": 2,
+      "samples": 57600,
+      "pcmSha256": "77ecf939836500edc368a57c964abb835250ee82f618cb1c87724bcc0df563fc",
+      "synthesisMs": 2436,
+      "firstChunkMs": 1299,
+      "rtf": 1.0151
+    },
+    {
+      "repeat": 0,
+      "textIndex": 3,
+      "samples": 90240,
+      "pcmSha256": "6bb705618643099f995326a83e7ce26db6dc352c92b68021db431a138ea6db0d",
+      "synthesisMs": 3617,
+      "firstChunkMs": 1268,
+      "rtf": 0.962
+    },
+    {
+      "repeat": 0,
+      "textIndex": 4,
+      "samples": 84480,
+      "pcmSha256": "bea91d9a3919d08d18c388582810d4bf263f2b646798e0471ddc5c926094293e",
+      "synthesisMs": 3310,
+      "firstChunkMs": 1185,
+      "rtf": 0.9402
+    },
+    {
+      "repeat": 0,
+      "textIndex": 5,
+      "samples": 138240,
+      "pcmSha256": "bcdf48d42493c2c62d4db8fbd8b1ea5f07f4acf0f1bbc0c1c81e5ab0499602f5",
+      "synthesisMs": 5649,
+      "firstChunkMs": 1147,
+      "rtf": 0.9808
+    },
+    {
+      "repeat": 0,
+      "textIndex": 6,
+      "samples": 84480,
+      "pcmSha256": "e9de1af7b220a86512d186e14558d426fa18b16d6054ee3be24835df8b4f7660",
+      "synthesisMs": 3638,
+      "firstChunkMs": 1303,
+      "rtf": 1.0336
+    },
+    {
+      "repeat": 0,
+      "textIndex": 7,
+      "samples": 284160,
+      "pcmSha256": "bf0cc537703f2aad8cf809a0eb1a8f6631865b3993a19ea0a19c7b55978e78de",
+      "synthesisMs": 11401,
+      "firstChunkMs": 1423,
+      "rtf": 0.9629
+    }
+  ],
+  "counterScope": "process-all-adapters",
+  "loadMs": 1961,
+  "nativeSettings": {
+    "memoryPolicy": "backend-default",
+    "disableHostVisibleVram": false,
+    "cpuThreads": 4,
+    "kvContext": 1024,
+    "compactGraphs": true,
+    "streamTextEmbedding": true
+  },
+  "voiceConditioning": {
+    "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+    "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+    "mode": "full-icl",
+    "pieceLimit": 32
+  },
+  "ok": true,
+  "observedPeaksMiB": {
+    "dedicatedMiB": 40.809,
+    "sharedMiB": 1030.738
+  },
+  "phaseSamples": {
+    "before-load": {
+      "elapsedMs": 0,
+      "phase": "before-load",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 0.0,
+        "sharedMiB": 0.0
+      },
+      "process": {
+        "privateMiB": 546.9,
+        "residentMiB": 56.3,
+        "peakResidentMiB": 69.1
+      }
+    },
+    "load": {
+      "elapsedMs": 1855,
+      "phase": "load",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 7.973,
+        "sharedMiB": 920.605
+      },
+      "process": {
+        "privateMiB": 1723.6,
+        "residentMiB": 1837.1,
+        "peakResidentMiB": 1837.1
+      }
+    },
+    "loaded-idle": {
+      "elapsedMs": 2178,
+      "phase": "loaded-idle",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 7.973,
+        "sharedMiB": 920.605
+      },
+      "process": {
+        "privateMiB": 1723.6,
+        "residentMiB": 3.1,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-0": {
+      "elapsedMs": 6514,
+      "phase": "utterance-0-0",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 19.379,
+        "sharedMiB": 955.777
+      },
+      "process": {
+        "privateMiB": 1852.0,
+        "residentMiB": 146.7,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-0": {
+      "elapsedMs": 6836,
+      "phase": "idle-0-0",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 19.379,
+        "sharedMiB": 955.777
+      },
+      "process": {
+        "privateMiB": 1852.6,
+        "residentMiB": 143.4,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-1": {
+      "elapsedMs": 16580,
+      "phase": "utterance-0-1",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 14.246,
+        "sharedMiB": 1001.145
+      },
+      "process": {
+        "privateMiB": 1850.2,
+        "residentMiB": 146.6,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-1": {
+      "elapsedMs": 16903,
+      "phase": "idle-0-1",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 19.473,
+        "sharedMiB": 980.027
+      },
+      "process": {
+        "privateMiB": 1852.1,
+        "residentMiB": 143.3,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-2": {
+      "elapsedMs": 19408,
+      "phase": "utterance-0-2",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 19.504,
+        "sharedMiB": 988.527
+      },
+      "process": {
+        "privateMiB": 1894.8,
+        "residentMiB": 180.7,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-2": {
+      "elapsedMs": 19624,
+      "phase": "idle-0-2",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 19.504,
+        "sharedMiB": 988.527
+      },
+      "process": {
+        "privateMiB": 1894.8,
+        "residentMiB": 180.7,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-3": {
+      "elapsedMs": 23311,
+      "phase": "utterance-0-3",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 14.359,
+        "sharedMiB": 1030.738
+      },
+      "process": {
+        "privateMiB": 1926.0,
+        "residentMiB": 223.1,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-3": {
+      "elapsedMs": 23644,
+      "phase": "idle-0-3",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 14.359,
+        "sharedMiB": 1030.738
+      },
+      "process": {
+        "privateMiB": 1926.3,
+        "residentMiB": 223.4,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-4": {
+      "elapsedMs": 26911,
+      "phase": "utterance-0-4",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 14.277,
+        "sharedMiB": 1009.645
+      },
+      "process": {
+        "privateMiB": 1903.7,
+        "residentMiB": 195.9,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-4": {
+      "elapsedMs": 27242,
+      "phase": "idle-0-4",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 19.504,
+        "sharedMiB": 988.527
+      },
+      "process": {
+        "privateMiB": 1898.1,
+        "residentMiB": 190.3,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-5": {
+      "elapsedMs": 32871,
+      "phase": "utterance-0-5",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 30.359,
+        "sharedMiB": 1014.738
+      },
+      "process": {
+        "privateMiB": 1887.4,
+        "residentMiB": 169.8,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-5": {
+      "elapsedMs": 33193,
+      "phase": "idle-0-5",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 35.504,
+        "sharedMiB": 972.527
+      },
+      "process": {
+        "privateMiB": 1888.4,
+        "residentMiB": 165.5,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-6": {
+      "elapsedMs": 36858,
+      "phase": "utterance-0-6",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 30.277,
+        "sharedMiB": 993.645
+      },
+      "process": {
+        "privateMiB": 1862.4,
+        "residentMiB": 144.9,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-6": {
+      "elapsedMs": 37187,
+      "phase": "idle-0-6",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 35.504,
+        "sharedMiB": 972.527
+      },
+      "process": {
+        "privateMiB": 1862.4,
+        "residentMiB": 139.6,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "utterance-0-7": {
+      "elapsedMs": 48583,
+      "phase": "utterance-0-7",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 30.219,
+        "sharedMiB": 1014.738
+      },
+      "process": {
+        "privateMiB": 1862.4,
+        "residentMiB": 145.7,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "idle-0-7": {
+      "elapsedMs": 48903,
+      "phase": "idle-0-7",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 35.504,
+        "sharedMiB": 972.527
+      },
+      "process": {
+        "privateMiB": 1863.5,
+        "residentMiB": 141.4,
+        "peakResidentMiB": 1847.4
+      }
+    },
+    "sleep": {
+      "elapsedMs": 52248,
+      "phase": "sleep",
+      "gpu": {
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 1.055,
+        "sharedMiB": 23.82
+      },
+      "process": {
+        "privateMiB": 631.3,
+        "residentMiB": 72.8,
+        "peakResidentMiB": 1847.4
+      }
+    }
+  }
+}

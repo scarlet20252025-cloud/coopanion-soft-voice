@@ -1,0 +1,91 @@
+{
+  "initialFreeGiB": 5.491249084472656,
+  "targetFreeGiB": 2.6,
+  "maxBallastMiB": 4096,
+  "deviceName": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "cycles": [
+    {
+      "beforeLoadFreeGiB": 2.5886154174804688,
+      "ballastMiB": 2976,
+      "loadMs": 4486,
+      "startupTimings": {
+        "validationMs": 466,
+        "availableBeforeLoadGiB": 2.5885,
+        "modelInitMs": 4447,
+        "totalMs": 6978
+      },
+      "afterLoadFreeGiB": 2.569782257080078,
+      "loadedMemory": {
+        "privateMiB": 4807.1,
+        "residentMiB": 851.0,
+        "peakResidentMiB": 3183.6
+      },
+      "samples": [
+        {
+          "sha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2",
+          "freeGiB": 2.486522674560547,
+          "memory": {
+            "privateMiB": 5016.8,
+            "residentMiB": 879.7,
+            "peakResidentMiB": 3183.6
+          },
+          "synthesisMs": 1751
+        },
+        {
+          "sha256": "40cbcf1ab8d9e3b341e147a39b7f4c6ad79adc75ab3409e41a352cd6e642a93b",
+          "freeGiB": 2.512920379638672,
+          "memory": {
+            "privateMiB": 4961.9,
+            "residentMiB": 25.5,
+            "peakResidentMiB": 3183.6
+          },
+          "synthesisMs": 5931
+        }
+      ],
+      "afterSleepFreeGiB": 2.521800994873047
+    },
+    {
+      "beforeLoadFreeGiB": 2.5722312927246094,
+      "ballastMiB": 1200,
+      "loadMs": 3400,
+      "startupTimings": {
+        "validationMs": 267,
+        "availableBeforeLoadGiB": 2.5722,
+        "modelInitMs": 3388,
+        "totalMs": 5190
+      },
+      "afterLoadFreeGiB": 2.4539871215820312,
+      "loadedMemory": {
+        "privateMiB": 3058.4,
+        "residentMiB": 2158.3,
+        "peakResidentMiB": 3183.6
+      },
+      "samples": [
+        {
+          "sha256": "f5707aefbe13bb01179e963d83425e8b2ae9e826298f7ad90dd53bb8486603b2",
+          "freeGiB": 4.249774932861328,
+          "memory": {
+            "privateMiB": 3234.3,
+            "residentMiB": 22.6,
+            "peakResidentMiB": 3183.6
+          },
+          "synthesisMs": 1421
+        },
+        {
+          "sha256": "40cbcf1ab8d9e3b341e147a39b7f4c6ad79adc75ab3409e41a352cd6e642a93b",
+          "freeGiB": 5.0588226318359375,
+          "memory": {
+            "privateMiB": 3187.8,
+            "residentMiB": 39.1,
+            "peakResidentMiB": 3183.6
+          },
+          "synthesisMs": 3882
+        }
+      ],
+      "afterSleepFreeGiB": 5.149314880371094
+    }
+  ],
+  "safetyReleased": false,
+  "minFreeGiB": 1.9206809997558594,
+  "endFreeGiB": 6.3358001708984375
+}

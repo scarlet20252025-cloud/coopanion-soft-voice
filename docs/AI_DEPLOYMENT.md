@@ -12,13 +12,13 @@
 
 ## 验收与边界
 
-安装先生成本机 `native-runtime.json`，核对模型和音色、枚举 Vulkan 核显，再真实合成与静音播放，报告 `verification/deployment-check.json`。检查 `ok`、device、音频时长、断流和错误；该报告不代表真人听感确认。
+安装先生成本机 `native-runtime.json`，核对模型和音色、枚举 Vulkan GPU（默认核显，独显必须用户明确选择），再真实合成与静音播放，报告 `verification/deployment-check.json`。检查 `ok`、device、音频时长、RTF、`playbackHealth`、断流和错误；该报告不代表真人听感确认。
 
 只有运行时测试成功才接入 World。个人配置保留并备份，安装器兼容 pnpm 扩展链接。支持的桌宠正常退出后安装并重新启动；失败不强制杀进程。路径搬迁后重新运行安装器。
 
-参数：`-RuntimeOnly` 只测试包；`-NoLaunch` 安装后不启动；`-NoEnableSpeech` 保留关闭选择；`-DeviceName` 指定核显。主页部署状态区分已安装未连接、就绪、休眠、内存不足与错误。
+参数：`-RuntimeOnly` 只测试包；`-NoLaunch` 安装后不启动；`-NoEnableSpeech` 保留关闭选择；`-DeviceName` 明确指定核显或独显。主页部署状态区分已安装未连接、就绪、休眠、内存不足与错误。
 
-要求 Windows x64、Vulkan 核显驱动、至少 3 GiB 可用 RAM；不自行关闭游戏、不回退独显、不修改账号。聊天模型是用户自己的配置，语音引擎可以单独验证。
+要求 Windows x64、Vulkan 显卡驱动、至少 3 GiB 可用 RAM；不自行关闭游戏、不自动回退独显、不修改账号。聊天模型是用户自己的配置，语音引擎可以单独验证。
 
 ## 备用源码路线
 

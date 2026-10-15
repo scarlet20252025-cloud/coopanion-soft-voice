@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "registry": "isolated localhost, real pnpm installs",
+  "publicPublishPerformed": false,
+  "directions": [
+    "market to offline equal-version skip/repair",
+    "older offline keeps newer market",
+    "offline to newer market",
+    "market to GitHub update"
+  ],
+  "canonicalPayloadFiles": 41,
+  "exactPayloadMatch": true,
+  "preserved": [
+    "settings",
+    "voice files",
+    "runtime profile",
+    "model"
+  ],
+  "gpuInferenceTested": false
+}

@@ -1,0 +1,92 @@
+{
+  "ok": true,
+  "diagnostic": {
+    "reportSaved": true,
+    "matchingWorkers": 1,
+    "voiceGpuMemory": [
+      {
+        "pid": 34884,
+        "source": "Windows GPU Process Memory",
+        "scope": "process-all-adapters",
+        "dedicatedMiB": 1007.895,
+        "sharedMiB": 94.332
+      }
+    ],
+    "uploadPerformed": false
+  },
+  "wake": {
+    "pid": 34884,
+    "phase": "ready",
+    "sameProcess": true,
+    "memoryPolicy": "device-local"
+  },
+  "deviceSwitch": {
+    "toIntegrated": {
+      "pid": 31116,
+      "phase": "ready",
+      "device": "AMD Radeon(TM) Graphics",
+      "policy": "backend-default",
+      "oldExited": true
+    },
+    "backToDiscrete": {
+      "pid": 35800,
+      "phase": "ready",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "policy": "device-local"
+    }
+  },
+  "stopped": {
+    "pid": null,
+    "phase": "disabled",
+    "error": null
+  },
+  "nvidia": {
+    "seconds": 3.2,
+    "totalSynthesisMs": 1343,
+    "realTimeFactor": 0.42,
+    "firstDeviceCallbackMs": 530,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "effectivePlaybackMode": "stream",
+    "nativeSettings": {
+      "memoryPolicy": "device-local",
+      "disableHostVisibleVram": true,
+      "cpuThreads": 4,
+      "kvContext": 1024,
+      "compactGraphs": true,
+      "streamTextEmbedding": true,
+      "adaptiveKv": true,
+      "kvPrecision": "FP32",
+      "minimumFreeGiB": 2.75,
+      "kvCapacity": 256,
+      "kvAllocatedMiB": 56
+    }
+  },
+  "amd": {
+    "seconds": 3.52,
+    "totalSynthesisMs": 11869,
+    "realTimeFactor": 3.372,
+    "firstDeviceCallbackMs": 11873,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "effectivePlaybackMode": "buffered",
+    "nativeSettings": {
+      "memoryPolicy": "backend-default",
+      "disableHostVisibleVram": false,
+      "cpuThreads": 4,
+      "kvContext": 1024,
+      "compactGraphs": true,
+      "streamTextEmbedding": true,
+      "adaptiveKv": true,
+      "kvPrecision": "FP32",
+      "minimumFreeGiB": 3,
+      "kvCapacity": 256,
+      "kvAllocatedMiB": 56
+    }
+  },
+  "pythonTests": 98,
+  "worldTests": 50,
+  "publicTestIssueCreated": false,
+  "scope": "Real portable worker lifecycle and local report capture; UI interactions use a fixture. Other hardware, game coexistence and Intel UHD speed are pending.",
+  "nonChineseWindowsCodepage": true
+}

@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "testedCapacities": [
+    256,
+    512,
+    768,
+    1024
+  ],
+  "tensors": 56,
+  "preservation": "all live FP32 values exact; new padded tail zero",
+  "overflowGuard": true
+}

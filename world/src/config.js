@@ -1,10 +1,15 @@
 export const ID = 'soft-voice';
 const K = `worlds.${ID}`;
 
-export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, lowPowerMode: false, idleUnloadSec: 300, keepWorker: true, lowMemoryMiB: 1536, syncBubbles: true });
+export const DEFAULTS = Object.freeze({ enabled: false, volume: 65, pollMs: 180, maxQueue: 3, maxAgeSec: 45, autoRecover: true, lowPowerMode: false, idleUnloadSec: 300, keepWorker: true, lowMemoryMiB: 1536, syncBubbles: true, playbackMode: 'auto', deviceName: '', autoCheckUpdates:true, autoDiagnostics:true, autoSubmitIssues:false });
 export const CONFIG_GROUP = {
   id: `world:${ID}`, owner: `world:${ID}`,
   schema: { type: 'object', title: '轻量化本地语音引擎', properties: {
+    [`${K}.autoDiagnostics`]: {type:'boolean',title:'自动保存故障与连续性能瓶颈报告（仅本地）',default:true,'x-hot':true},
+    [`${K}.autoSubmitIssues`]: {type:'boolean',title:'自动提交脱敏 Issue 到 Asryto 仓库（需本机 GitHub 登录）',default:false,'x-hot':true},
+    [`${K}.autoCheckUpdates`]: { type:'boolean',title:'自动检查更新（启动后检查，每 24 小时一次）',default:true,'x-hot':true },
+    [`${K}.deviceName`]: { type: 'string', title: 'Vulkan 推理设备（空值为自动核显）', default: '', maxLength: 256 },
+    [`${K}.playbackMode`]: { type: 'string', title: '播放策略（自动 / 优先连续 / 优先开口）', enum: ['auto','buffered','stream'], default: 'auto', 'x-hot': true },
     [`${K}.syncBubbles`]: { type: 'boolean', title: '气泡同步（默认随语音启用，可单独关闭）', default: true, 'x-hot': true },
     [`${K}.lowPowerMode`]: { type: 'boolean', title: '低功耗模式（空闲或内存紧张时自动休眠）', 'x-hot': true },
     [`${K}.keepWorker`]: { type: 'boolean', title: '休眠时保留工作进程（关闭则完全退出）', 'x-hot': true },
@@ -36,6 +41,8 @@ export function validateConfigPatch(values) {
   for (const [key, value] of Object.entries(values)) {
     const property = CONFIG_GROUP.schema.properties[`${K}.${key}`];
     if (!property) throw new Error(`未知配置: ${key}`);
+    if (property.enum && !property.enum.includes(value)) throw new Error(`${property.title} 的选项无效`);
+    if (property.maxLength && (typeof value!=='string' || value.length>property.maxLength)) throw new Error(`${property.title} 的长度无效`);
     if ((property.type === 'integer' && (!Number.isInteger(value))) ||
       (property.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value))) ||
       (property.type === 'boolean' && typeof value !== 'boolean') ||

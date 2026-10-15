@@ -10,6 +10,7 @@ on:
       - 'evidence/2026-10-12-native/qwentts-kv-context.patch'
       - 'evidence/2026-10-14-compact-native/qwentts-compact-graphs.patch'
       - 'evidence/2026-10-14-text-rows/qwentts-text-rows.patch'
+      - 'evidence/2026-10-15-vram/qwentts-progressive-kv.patch'
       - '.github/workflows/native-build.yml'
 permissions:
   contents: read

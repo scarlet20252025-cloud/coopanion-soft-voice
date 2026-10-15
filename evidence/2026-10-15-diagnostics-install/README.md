@@ -1,0 +1,7 @@
+# 0.5.0 installation and diagnostics verification
+
+Author: Asryto. Real pnpm against an isolated local registry validates package replacement and preservation; it does not publish to npm. UI fixtures validate report progress, persisted view, ZIP download, consent, offline fallback and narrow layout. Real final portable Python validates speech, retained-worker sleep/wake, device switching and reports with a live worker. The actual report contains per-process dedicated/shared GPU counters. No fake public test issue was posted; GitHub deduplication, credential failure and HTTP behavior are exercised in isolated tests.
+
+NVIDIA short playback was RTF 0.420 with first callback 530 ms. AMD first use in the new final directory was RTF 3.372 with complete buffering and first callback 11873 ms; this is not a speed pass. An earlier complete-package run generated 7.12 s audio in 14.317 s. Cache/file/shader cold-start and background-load effects remain to be separated. Buffered playback continuity does not prove fast inference. No general GPU compatibility or new listening approval is claimed.
+
+The runtime ZIP has no generated native-runtime.json, cache or verification artifacts; paths are regenerated on the destination machine. The npm TGZ, full bundle and code update contain the identical World payload. The release page keeps one full installer; programmatic code updates use a separate prerelease resource page.

@@ -1,7 +1,7 @@
 """Bind a relocatable, checked portable bundle to this machine's integrated GPU."""
 import argparse,hashlib,json,os
 from pathlib import Path
-from coopanion_soft_voice.native_engine import settings,select_integrated_name
+from coopanion_soft_voice.native_engine import settings,select_integrated_name,explicit_device
 
 
 def bind(root,name=None):
@@ -13,7 +13,9 @@ def bind(root,name=None):
         if not path.is_relative_to(root) or not path.is_file():raise ValueError('Missing portable '+key)
         cfg[key]=str(path)
     cfg['dllDirectories']=[str((root/'native').resolve())]
-    cfg['deviceName']=select_integrated_name(name)
+    if name:
+        device=explicit_device(name);cfg.update(deviceName=device['name'],deviceType=device['kind'],deviceSelectedExplicitly=True)
+    else:cfg.update(deviceName=select_integrated_name(),deviceType='integrated',deviceSelectedExplicitly=False)
     features=root/'voice-features.json'
     if hashlib.sha256(features.read_bytes()).hexdigest()!=cfg['speechOnly']['featuresSha256']:
         raise ValueError('Portable voice features checksum mismatch')
