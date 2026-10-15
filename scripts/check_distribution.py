@@ -2,12 +2,14 @@
 from pathlib import Path
 import tarfile
 import zipfile
+import json
 
 root = Path(__file__).resolve().parents[1]
 archive = max((root/'dist').glob('*.tar.gz'), key=lambda p: p.stat().st_mtime)
 with tarfile.open(archive) as tar:
     names = {'/'.join(n.split('/')[1:]) for n in tar.getnames()}
 required = {
+    'docs/PERFORMANCE_0.5.2.md','scripts/benchmark_speech_recovery.py',
     'world/dist/console-0.4.2.js','world/dist/console-0.4.2.css','src/coopanion_soft_voice/pcm_cache.py',
     'native/voice_worker_trial.cpp','scripts/build_native_worker_trial.ps1','docs/NATIVE_WORKER_EVALUATION.md',
     'world/dist/console-0.4.1.js','world/dist/console-0.4.1.css',
@@ -33,6 +35,8 @@ required = {
     'evidence/2026-10-12-native/qwentts-kv-context.patch',
     'evidence/2026-10-14-compact-native/qwentts-compact-graphs.patch',
 }
+world = json.loads((root/'world/package.json').read_text(encoding='utf-8'))
+required.update('world/'+world['cortico'][key] for key in ('consoleClient','consoleStyle'))
 assert required <= names, sorted(required - names)
 wheel = max((root/'dist').glob('*.whl'), key=lambda p: p.stat().st_mtime)
 with zipfile.ZipFile(wheel) as z:
