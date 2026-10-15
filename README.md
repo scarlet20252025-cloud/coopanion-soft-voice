@@ -2,11 +2,13 @@
 
 
 完整包约 **1.09 GiB**（0.5.2 实测）：主模型解压后约 **924 MiB**，音频解码模型约 **192 MiB**，另含运行库、播放器和扩展。**0.6B 是参数规模，不是几十 MB 的模型**；精简运行组件、推理缓存与模型权重是不同的体积指标。已有兼容模型可只下载代码更新，无需重复下载模型。
-作者：**Asryto** · 语音引擎 **0.5.2** / World **0.4.5**
+作者：**Asryto** · 稳定语音引擎 **0.5.4** / World **0.4.8**
+
+当前工程状态与验收边界见 [工程进度](docs/PROJECT_STATUS.md)。Intel 用户反馈慢速时，可下载 [双击测试工具](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/diagnostic-intel-v1.0.0/QingHe-Intel-Diagnostic-1.0.0.zip)，解压后运行 `START.cmd`，结束后回传自动生成的报告 ZIP。工具不替换稳定版，Intel 提速仍待实机验收。
 
 0.5.0 原生模型已验证本机 AMD 核显与 RTX 4050；0.5.1 的缓存和线程池改进另经 RTX 4050 实测。Intel UHD 提速、其他显卡和能效提升仍在 [验证与优化计划](docs/OPTIMIZATION_PLAN.md) 中，不作为已通过承诺。
 
-Windows Coopanion 的独立 Vulkan 语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，并提供 GitHub 安装入口。
+Windows Coopanion 的独立 Vulkan 语音扩展。保留已确认的 `soft-child-design-2`，支持流式播放、独立气泡同步开关、低功耗休眠、延迟图表、模型部署检测和 ZIP 音色库。主页明确区分未部署、加载、已连接、休眠和内存不足，提供魔搭优先的一键部署、备用源和离线 ZIP 导入；失败时才显示手动部署指南。
 
 ## 最简安装
 

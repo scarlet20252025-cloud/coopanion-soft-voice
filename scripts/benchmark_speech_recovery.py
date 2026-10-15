@@ -38,11 +38,13 @@ with GpuMemory() as gpu:
         while not stop.wait(.1): sample()
     thread = threading.Thread(target=monitor, daemon=True); thread.start()
     try:
-        engine = NativeEngine(a.runtime, device_name=a.device)
+        engine = NativeEngine(a.runtime, device_name=a.device,
+                              on_stage=lambda name, detail: print('PROGRESS '+detail, flush=True))
         engine.cache_repeated = False
         report.update(loadMs=round((time.perf_counter()-begun)*1000), ready=snapshot(),
                       conditioning=engine.voice_conditioning, settings=engine.runtime_parameters)
         for index, text in enumerate(cases):
+            print(f'PROGRESS 测试句 {index+1}/{len(cases)}：正在合成', flush=True)
             phase[0] = f'case-{index}'
             blocks, records, first = [], [], []
             started = time.perf_counter()

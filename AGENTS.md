@@ -2,6 +2,8 @@
 
 作者 Asryto。部署先读 `docs/AI_DEPLOYMENT.md`。默认免编译完整包，入口 `scripts/deploy.ps1`；不要让普通用户安装编译工具或重新下载完整模型再裁剪。
 
+继续工程工作先读 `docs/PROJECT_STATUS.md`，区分稳定版本、独立诊断工具和未验收实验。历史性能报告保留其当时版本，不当作当前状态；Intel Issue #13 未解决，不因测试工具完成而关闭。
+
 - 从 `portable-release.json` 固定 URL 下载并核对 SHA256，或使用同版本 Release ZIP。包内 `install.cmd` / `scripts/install-portable.ps1` 自带 Python、小模型和引擎。安装自动寻找 Coopanion，找不到或多副本再选择。
 - Windows x64、厂商 Vulkan 驱动；核显加载前至少 3 GiB 可用 RAM，自动恢复线 3.5 GiB。已验证渐进 FP32 KV 布局的 NVIDIA 独显为 2.75 / 3.25 GiB；旧 DLL、旧布局或未识别设备不得套用降低后的门槛。默认只自动选择核显；用户可明确选择独显，空闲时停止旧 worker 并重新加载，失败恢复原配置，不自动回退其他设备。不绕过对应保护线，不关闭游戏。
 - `-RuntimeOnly` 先验证运行时；必须检查真实合成和静音设备测试结果。文件存在不代表连接成功，不能把无 GPU CI 当推理验证。

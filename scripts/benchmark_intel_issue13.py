@@ -94,11 +94,25 @@ def main():
                        '--source', str(root / 'src'), '--runtime', str(runtime),
                        '--device', args.device, '--cases', str(cases), '--output', str(output / label)]
             begun = time.monotonic()
-            with (output / f'{label}.log').open('w', encoding='utf-8') as log:
-                completed = subprocess.run(command, env=trial_environment(os.environ, variant),
-                                           stdout=log, stderr=subprocess.STDOUT, timeout=args.timeout)
-            if completed.returncode:
-                raise RuntimeError(f'{label} failed ({completed.returncode}); see local log. No fallback attempted.')
+            log_path = output / f'{label}.log'
+            with log_path.open('w', encoding='utf-8') as log:
+                child = subprocess.Popen(command, env=trial_environment(os.environ, variant),
+                                         stdout=log, stderr=subprocess.STDOUT)
+                try:
+                    while child.poll() is None:
+                        if time.monotonic()-begun > args.timeout:
+                            raise TimeoutError(f'{label}: exceeded {args.timeout} seconds')
+                        # Report real stage/elapsed time, never an invented ETA.
+                        lines = log_path.read_text(encoding='utf-8', errors='replace').splitlines()
+                        stage = next((s[9:] for s in reversed(lines) if s.startswith('PROGRESS ')), '正在启动与校验')
+                        print(f'已完成 {index}/{len(sequence)} 组 | 本组 {int(time.monotonic()-begun)} 秒 | {stage}', flush=True)
+                        time.sleep(2)
+                finally:
+                    if child.poll() is None:
+                        child.kill()  # This trial only, never the desktop or another worker.
+                    child.wait()
+            if child.returncode:
+                raise RuntimeError(f'{label} failed ({child.returncode}); see local log. No fallback attempted.')
             report = json.loads((output / label / 'report.json').read_text(encoding='utf-8'))
             summary = summarize(report, (output / f'{label}.log').read_text(encoding='utf-8'))
             if not summary['valid']:
@@ -108,7 +122,7 @@ def main():
         result['comparisons'] = [
             {'variant': r['variant'], **compare(result['runs'][0], r, result['runs'][-1])}
             for r in result['runs'][1:-1]]
-    except Exception as exc:
+    except BaseException as exc:
         result['error'] = str(exc)
         raise
     finally:

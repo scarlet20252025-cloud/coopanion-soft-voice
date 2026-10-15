@@ -1,0 +1,27 @@
+{
+  "toolVersion": "1.0.0",
+  "artifact": {
+    "file": "QingHe-Intel-Diagnostic-1.0.0.zip",
+    "bytes": 232284,
+    "sha256": "ff53d047d3fe0dea72ba21134ecf90c4ac21204f81df4608885f49cb4d2bbea7"
+  },
+  "automaticallyFoundInstalledRuntime": true,
+  "fullPipeline": [
+    {
+      "selectedDevice": "AMD Radeon(TM) Graphics",
+      "runs": 4,
+      "allSynthesisValid": true,
+      "reportZipValidated": true,
+      "audioIncluded": false
+    }
+  ],
+  "finalBootstrapPreflightPassed": true,
+  "missingIntelReportZipPassed": true,
+  "windowsPowerShell51MissingRuntimeZipPassed": true,
+  "targetIntelRealHardwareValidated": false,
+  "realPlaybackValidated": false,
+  "focusedTestsPassed": 9,
+  "productionEngineVersion": "0.5.4",
+  "productionWorldVersion": "0.4.8",
+  "productionEngineChanged": false
+}
