@@ -1,0 +1,93 @@
+{
+  "ok": true,
+  "model": "Qwen3-TTS 0.6B Base Q8_0",
+  "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "loadMs": 3002,
+  "playback": {
+    "type": "done",
+    "id": "deploy-verification",
+    "seconds": 6.96,
+    "totalSynthesisMs": 3264,
+    "realTimeFactor": 0.469,
+    "firstChunkMs": 752,
+    "firstDeviceCallbackMs": 752,
+    "underrunMs": 0,
+    "deviceUnderflows": 0,
+    "playbackMode": "continuous_pcm",
+    "requestedPlaybackMode": "auto",
+    "effectivePlaybackMode": "stream",
+    "smoothPlayback": true,
+    "pieceCount": 2,
+    "pieces": [
+      {
+        "characters": 16,
+        "seconds": 3.2,
+        "synthesisMs": 1665,
+        "cacheHit": false
+      },
+      {
+        "characters": 19,
+        "seconds": 3.76,
+        "synthesisMs": 1470,
+        "cacheHit": false
+      }
+    ],
+    "cachedPieces": 0,
+    "generatedPieces": 2,
+    "audioSource": "model",
+    "voiceConditioning": {
+      "referenceSha256": "4d47133ec965474fb546110c521541d0a6d610f8b84a02b1a575404c6fa63f20",
+      "conditioningSha256": "8016cabf0e7a819275ce6a5f2194ca48a04ac665cf83526f675a2f880391df16",
+      "mode": "full-icl",
+      "pieceLimit": 32
+    },
+    "deviceName": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "deviceType": "discrete",
+    "nativeSettings": {
+      "memoryPolicy": "device-local",
+      "disableHostVisibleVram": true,
+      "cpuThreads": 4,
+      "kvContext": 1024,
+      "compactGraphs": true,
+      "streamTextEmbedding": true,
+      "adaptiveKv": true,
+      "kvPrecision": "FP32",
+      "minimumFreeGiB": 2.75,
+      "pcmCache": {
+        "bytes": 668160,
+        "maximumBytes": 4194304,
+        "entries": 2,
+        "hits": 0,
+        "misses": 2
+      },
+      "pcmCacheBytes": 668160,
+      "pcmCacheMaximumBytes": 4194304,
+      "pcmCacheHits": 0,
+      "pcmCacheMisses": 2,
+      "pcmCacheEntries": 2,
+      "kvCapacity": 256,
+      "kvAllocatedMiB": 56.0
+    },
+    "engineVersion": "0.5.3",
+    "processMemory": {
+      "privateMiB": 1990.4,
+      "residentMiB": 9.6,
+      "peakResidentMiB": 1088.9
+    },
+    "atUtc": "2026-10-15T09:18:31.444134+00:00",
+    "startupBufferMode": "adaptive",
+    "nextBufferMode": "adaptive"
+  },
+  "processMemory": {
+    "privateMiB": 1991.0,
+    "residentMiB": 20.1,
+    "peakResidentMiB": 1088.9
+  },
+  "subjectiveVoiceQualityApproved": false,
+  "playbackHealth": {
+    "smooth": true,
+    "streamingRecommended": true,
+    "effectiveMode": "stream",
+    "note": "Buffered playback trades startup delay for continuity; ok means execution succeeded, not a speed or listening-quality guarantee."
+  }
+}

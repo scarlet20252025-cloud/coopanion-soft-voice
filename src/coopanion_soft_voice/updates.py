@@ -7,6 +7,31 @@ REPO='scarlet20252025-cloud/coopanion-soft-voice'
 POINTER=f'https://raw.githubusercontent.com/{REPO}/main/update-release.json'
 MAX_ZIP=32*1024*1024
 MAX_FILES=64*1024*1024
+MARKET='https://registry.npmjs.org/cortico-world-soft-voice/latest'
+
+def marketplace_version():
+    request=urllib.request.Request(MARKET,headers={'User-Agent':'Asryto-local-voice-updater','Cache-Control':'no-cache'})
+    with urllib.request.urlopen(request,timeout=8) as response:raw=response.read(65537)
+    if len(raw)>65536:raise ValueError('Marketplace metadata exceeds size limit')
+    data=json.loads(raw)
+    if not isinstance(data,dict) or data.get('name')!='cortico-world-soft-voice':raise ValueError('Unexpected marketplace package')
+    version(data['version'])
+    return data['version']
+
+def compare_channels(current,current_world,release,market=None,market_error=None,recovery=False):
+    github_new=version(release['version'])>version(current) or version(release['worldVersion'])>version(current_world)
+    market_new=market is not None and version(market)>version(current_world)
+    no_downgrade=version(release['version'])>=version(current) and version(release['worldVersion'])>=version(current_world)
+    patch_available=(github_new or recovery) and no_downgrade
+    market_ahead=market_new and version(market)>version(release['worldVersion'])
+    blocked=github_new and not no_downgrade
+    stage='available' if patch_available else 'market_only' if market_new else 'blocked' if blocked else 'partial' if market_error else 'current'
+    detail={'available':'发现可安装的 GitHub 更新','market_only':'npm 扩展有新版，GitHub 更新包尚未同步；请在桌宠扩展市场更新',
+            'blocked':'GitHub 有新版，但安装会降级现有组件；请等待同步版本',
+            'partial':'GitHub 已检查，但 npm 检查失败，无法确认扩展是否最新','current':'GitHub 与 npm 均未发现更高版本'}[stage]
+    return dict(stage=stage,detail=detail,available=bool(patch_available or market_new or blocked),patchAvailable=bool(patch_available),
+                marketplaceVersion=market,marketplaceError=market_error,marketplaceAhead=bool(market_ahead),
+                requiresMarketUpdate=bool(market_new and not patch_available),checkComplete=not bool(market_error))
 
 def version(value):
     if not isinstance(value,str) or not re.fullmatch(r'\d+\.\d+\.\d+',value):raise ValueError('Invalid release version')
@@ -37,7 +62,7 @@ def portable(root):
 def check(root,extensions=None):
     root=Path(root).resolve()
     emit('checking','Checking the official GitHub release descriptor')
-    with urllib.request.urlopen(urllib.request.Request(POINTER,headers={'User-Agent':'Asryto-local-voice-updater'}),timeout=20) as response:
+    with urllib.request.urlopen(urllib.request.Request(POINTER+'?check='+str(time.time_ns()),headers={'User-Agent':'Asryto-local-voice-updater','Cache-Control':'no-cache'}),timeout=20) as response:
         data=response.read(65537)
     if len(data)>65536:raise ValueError('Release descriptor exceeds size limit')
     release=descriptor(json.loads(data))
@@ -48,10 +73,14 @@ def check(root,extensions=None):
     current_world=installed_world_version(root,extensions)
     cfg=json.loads((root/'native-runtime.json').read_text(encoding='utf-8')) if (root/'native-runtime.json').is_file() else {}
     actual={'dll':cfg.get('dllSha256'),**cfg.get('speechOnly',{}).get('hashes',{})}
-    requires_full='runtimeHashes' in release and actual!=release['runtimeHashes']
-    available=version(release['version'])>version(current) or version(release['worldVersion'])>version(current_world) or recovery
-    emit('available' if available else 'current','Update available' if available else 'Already current',
-         release=release,currentVersion=current,currentWorldVersion=current_world,available=available,supported=supported and not requires_full,requiresFullInstall=requires_full,needsRecovery=recovery,
+    requires_full=('runtimeHashes' in release and actual!=release['runtimeHashes']) or version(current)<version(release['minimumVersion'])
+    market=market_error=None
+    try:market=marketplace_version()
+    except (OSError,ValueError,KeyError,TypeError):market_error='npm 暂不可用，请稍后重试；不会将检查失败当作已是最新'
+    comparison=compare_channels(current,current_world,release,market,market_error,recovery)
+    release['_canApply']=comparison['patchAvailable']
+    emit(**comparison,
+         release=release,currentVersion=current,currentWorldVersion=current_world,supported=supported and not requires_full and not comparison['requiresMarketUpdate'],requiresFullInstall=requires_full,needsRecovery=recovery,
          releaseUrl=f'https://github.com/{REPO}/releases/tag/v{release["version"]}')
     return release
 
@@ -222,6 +251,10 @@ def apply(root,extensions=None):
         journal=folder/'pending.json'
         if journal.exists():restore(journal,managed_roots(root,world_targets(extensions),extensions))
         release=check(root,extensions)
+        if release.get('_canApply') is False:
+            current=json.loads((root/'portable-manifest.json').read_text(encoding='utf-8'))['version']
+            if version(release['version'])>version(current):raise ValueError('This bundle would downgrade the installed World; update through the marketplace or wait for a synchronized bundle')
+            return
         if 'runtimeHashes' in release:
             cfg=json.loads((root/'native-runtime.json').read_text(encoding='utf-8'))
             if {'dll':cfg.get('dllSha256'),**cfg.get('speechOnly',{}).get('hashes',{})}!=release['runtimeHashes']:
