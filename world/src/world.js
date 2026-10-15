@@ -9,6 +9,7 @@ import { ToolCallTailer } from './tailer.js';
 import { SoftVoiceRuntime } from './runtime.js';
 import { VoiceReports } from './reports.js';
 import { VoiceUpdates } from './updates.js';
+import { VoiceDeployment } from './deployment.js';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -87,6 +88,7 @@ export class SoftVoiceWorld {
         if (method === 'state') return { ...this.status(), values: configValues(this.opts.cfg),
           memory: { freeGiB: freemem()/1024**3, totalGiB: totalmem()/1024**3, ...(this.runtime?.memoryPolicy?.() ?? {minimumGiB:4,recoveryGiB:4.5,layout:'standard'}) },
           voices: listVoices(this.runtime.root), selectedVoice: this.opts.cfg.voiceId || BUILTIN, tutorial: TUTORIAL };
+        if(this.deployer?.status().busy && method!=='cancelDeployment')throw new Error('模型正在部署，请等待完成或取消后再操作');
         if(panel==='diagnostics') {
           if(this.updating)throw new Error('正在更新语音代码，请等待更新完成后采集报告');
           if(method==='refreshReports')return this.reports.refresh();
@@ -106,6 +108,8 @@ export class SoftVoiceWorld {
         if (panel === 'config' && method === 'save') return this.saveConfig(args[0]);
         if (panel === 'controls') {
           if (this.updating && !['state','devices'].includes(method)) throw new Error('正在更新语音代码，请等待更新完成');
+          if (method === 'deploy') return this.startDeployment(args[0]);
+          if (method === 'cancelDeployment') {this.deployer.cancel();return this.deployer.status();}
           if (method === 'checkUpdate') return this.updates.run('check',this.opts.botDir?join(this.opts.botDir,'..','..','extensions'):undefined);
           if (method === 'applyUpdate') return this.applyUpdate();
           if (method === 'devices') return this.runtime.devices();
@@ -144,6 +148,7 @@ export class SoftVoiceWorld {
     this.skippedBeforeReady = 0;
     this.runtime = this.makeRuntime(host);
     this.updates = new VoiceUpdates(this.runtime);
+    this.deployer = new VoiceDeployment(this.runtime);
     this.reports = new VoiceReports(this.runtime,this.opts.cfg,host.log);
     this.runtime.onDiagnosticEvent=event=>this.reports.observe(event);
     this.settingsFile = join(this.runtime.root, 'settings.json');
@@ -172,7 +177,7 @@ export class SoftVoiceWorld {
     this.tick = () => {
       if(!this.updatePolling)this.updatePolling=this.maybeUpdates().catch(err=>host.log.warn(`自动更新：${err.message}`)).finally(()=>{this.updatePolling=null;});
       void this.maybeUnload().catch(err => host.log.warn(`空闲卸载失败: ${err.message}`));
-      if (this.speechEnabled && this.active && !this.accepting && !this.initialization &&
+      if (!this.deployer?.status().busy && this.speechEnabled && this.active && !this.accepting && !this.initialization &&
           this.opts.cfg.autoRecover && this.runtime?.state?.phase === 'waiting_memory' && freemem() >= (this.runtime?.memoryPolicy?.().recoveryGiB ?? 4.5)*1024**3 &&
           Date.now() - (this.lastMemoryRetry || 0) >= 60000) {
         this.lastMemoryRetry = Date.now();
@@ -195,7 +200,7 @@ export class SoftVoiceWorld {
   makeRuntime(host) { return new SoftVoiceRuntime({ cfg: this.opts.cfg, log: host.log, dataDir: this.opts.dataDir }); }
 
   async maybeUpdates(now=Date.now()) {
-    if(!this.active||!this.updates||!this.opts.cfg.autoCheckUpdates||this.updates.status().busy||this.updating||this.switchingDevice)return;
+    if(this.deployer?.status().busy||!this.active||!this.updates||!this.opts.cfg.autoCheckUpdates||this.updates.status().busy||this.updating||this.switchingDevice)return;
     if(now>=this.nextUpdateCheck){
       this.nextUpdateCheck=now+86400000;
       try{await this.updates.run('check',this.opts.botDir?join(this.opts.botDir,'..','..','extensions'):undefined);}
@@ -233,7 +238,7 @@ export class SoftVoiceWorld {
 
   status() {
     return { ...this.runtime.status(), queueLength: this.queue.length, speaking: this.speaking,
-      diagnostics:this.reports?.status(),updates:this.updates?.status(),switchingDevice:!!(this.switchingDevice||this.deviceChecking),deviceChange:this.deviceChange||null,selectedDeviceName:this.opts.cfg.deviceName||'',updating:!!this.updating,
+      deploymentTask:this.deployer?.status(),diagnostics:this.reports?.status(),updates:this.updates?.status(),switchingDevice:!!(this.switchingDevice||this.deviceChecking),deviceChange:this.deviceChange||null,selectedDeviceName:this.opts.cfg.deviceName||'',updating:!!this.updating,
       bubbleSync: this.bubbleSyncStatus(),
       volume: volumePercent(this.opts.cfg.volume),
       speechEnabled: this.speechEnabled, toggling: !!this.togglePromise,
@@ -285,7 +290,7 @@ export class SoftVoiceWorld {
   }
 
   assertIdleOperation() {
-    if (!this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.deviceChecking || this.updating || this.updates?.status().busy || this.reports?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
+    if (this.deployer?.status().busy || !this.active || this.speaking || this.queue.length || this.initialization || this.togglePromise || this.switchingDevice || this.deviceChecking || this.updating || this.updates?.status().busy || this.reports?.status().busy) throw new Error('请等当前朗读、加载或更新结束后再操作');
   }
 
   async selectDevice(name) {
@@ -319,6 +324,24 @@ export class SoftVoiceWorld {
       Object.assign(change,{state:'error',detail,finishedAt:Date.now()});throw new Error(detail);
     } finally {this.switchingDevice=false;this.deviceChecking=false;}
     return this.status();
+  }
+
+  async startDeployment(options={}) {
+    this.assertIdleOperation();
+    if(!options||typeof options!=='object'||Array.isArray(options))throw new Error('无效的部署选项');
+    await this.runtime.stop();this.accepting=false;
+    const status=this.deployer.start({source:options.source||'auto',offlinePath:options.offlinePath||'',deviceName:options.deviceName||this.opts.cfg.deviceName||''});
+    void this.deployer.running.then(async()=>{
+      if(!this.active)return;
+      if(['installed','waiting_memory'].includes(this.deployer.status().phase)&&options.deviceName){
+        const patch=validateConfigPatch({deviceName:options.deviceName});
+        this.opts.persist?.(patch);
+        this.writeSettings({...this.settings,config:configValues({...this.opts.cfg,...patch})});
+        Object.assign(this.opts.cfg,patch);
+      }
+      if(this.active&&this.runtime.hasLocalFiles()&&this.speechEnabled)await this.initialize(false);
+    }).catch(error=>this.host?.log.warn(`部署后初始化失败：${error.message}`));
+    return status;
   }
 
   async applyUpdate() {
@@ -399,6 +422,8 @@ export class SoftVoiceWorld {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.queue.length = 0;
+    this.deployer?.cancel();
+    await this.deployer?.running;
     await this.updatePolling?.catch(()=>{});
     await this.updates?.running?.catch(()=>{});
     await this.reports?.running?.catch(()=>{});
