@@ -106,6 +106,14 @@ const assert=require('node:assert/strict');
     await page.setViewportSize({width:480,height:1000});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Narrow window overflow');
     await page.screenshot({path:'.runtime/device-ui-feedback/narrow.png',fullPage:true});
+    await page.evaluate(async()=>{window.s.deployment={state:'missing',installed:false,detail:'尚未安装模型'};window.s.deploymentTask={phase:'downloading',busy:true,percent:42,detail:'正在下载模型与运行环境',source:'魔搭国内镜像',bytesPerSecond:1048576};await window.tick();});
+    assert.equal(await page.getByRole('button',{name:'正在部署…',exact:true}).isDisabled(),true);
+    assert.equal(await page.getByLabel('模型部署进度').evaluate(e=>e.value),42);
+    await page.evaluate(async()=>{await window.mount('config');await window.mount();});
+    assert.equal(await page.getByLabel('模型部署进度').evaluate(e=>e.value),42);
+    assert.equal(await page.getByRole('button',{name:'取消下载 / 安装',exact:true}).isVisible(),true);
+    await page.evaluate(async()=>{window.s.deploymentTask={phase:'cancelled',busy:false,detail:'已取消，保留续传文件'};await window.tick();});
+    assert.equal(await page.getByRole('button',{name:'重试 / 继续下载',exact:true}).isEnabled(),true);
     assert.deepEqual(errors,[]);
     console.log(JSON.stringify({ok:true,world:meta.version,savedBeforeScan:true,pageSwitchPersistence:true,pendingDraftPersistence:true,switchProgress:true,rollbackFeedback:true,saveFailureFeedback:true,stalePollIgnored:true,compactBubbleToggle:true,detailsPersist:true,narrowLayout:true}));
   }finally{await browser.close();}
