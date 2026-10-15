@@ -65,7 +65,7 @@ class DiagnosticKitTests(unittest.TestCase):
             tool.isolated_profile(runtime, dest)
             self.assertEqual(profile.read_bytes(), before)
             isolated = json.loads((dest / 'native-runtime.json').read_text())
-            self.assertEqual(Path(isolated['model']), runtime / 'model.gguf')
+            self.assertEqual(Path(isolated['model']), (runtime / 'model.gguf').resolve())
             self.assertEqual(len(list(runtime.iterdir())), 4)
 
     def test_archive_excludes_secrets_profiles_and_audio(self):
