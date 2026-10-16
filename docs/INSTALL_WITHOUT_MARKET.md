@@ -1,6 +1,6 @@
 # 轻核语音 · Qwen3-TTS 超轻量高速语音引擎：不依赖扩展市场的安装教程
 
-作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于 Python 0.5.1 / World 0.4.2。
+作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于语音引擎 0.5.5 / World 0.4.9。完整包与扩展市场版本一致，两边可以互相覆盖更新。
 
 **下载完整 ZIP → 解压 → 双击 `install.cmd` → 在桌宠中试听。** 安装器会同时安装语音扩展、模型和运行环境，不需要扩展市场、npm 账号，也不用单独安装 Python、Git、Node、PyTorch、CUDA 或编译工具。
 
@@ -8,7 +8,7 @@
 
 - Windows 10/11 **x64**。
 - 已安装并启动过一次 [Coopanion 官方桌宠](https://github.com/Pal-AI-Lab/Coopanion/releases/latest)，让它完成首次初始化。
-- 支持 Vulkan 的显卡和相应厂商驱动。默认自动选用唯一核显；多块或明确使用独显时用 `-DeviceName` 指定。AMD 核显与 NVIDIA RTX 4050 是本次验收设备；Intel 数据来自用户反馈，尚未作者实机复测。
+- 支持 Vulkan 的显卡和相应厂商驱动。默认自动选用唯一核显；**没有核显的机器（例如 Intel 型号带 F 后缀 + 独显）不会被自动选择**，安装器会列出检测到的显卡并要求输入序号确认，独显始终由用户明确指定。非交互运行（例如由 AI 代跑）必须先传 `-DeviceName "显卡名称"`，否则安装器会报错并给出可直接复制的命令。AMD 核显与 NVIDIA RTX 4050 是作者验收设备；Intel 与 GTX 1660 数据来自用户反馈。
 - 加载前至少 **3 GiB 系统可用内存**，约 **4 GB 可用磁盘**。这里的可用内存指任务管理器显示的“可用”，不是电脑安装的总内存；不要用独显显存大小代替。
 
 语音合成本身不需要 API key；桌宠的文字对话仍使用你自己的聊天模型配置。没有配置聊天模型也可以单独验证语音运行包，不能据此认为桌宠已能对话。
@@ -19,9 +19,9 @@
 
 直接下载：
 
-**[coopanion-local-voice-0.5.1-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.1/coopanion-local-voice-0.5.1-windows-x64.zip)**
+**[coopanion-local-voice-0.5.5-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.5/coopanion-local-voice-0.5.5-windows-x64.zip)**
 
-也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/tag/v0.5.1)，在 Assets 中选择同名文件。
+也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest)，在 Assets 中选择同名文件。
 
 该完整包包含 Qwen3-TTS 0.6B Base Q8 精简模型、音频解码模型、Vulkan 推理引擎、Python 3.12、播放器依赖、已确认音色和独立 World 扩展。
 
@@ -39,7 +39,7 @@
 
 | 步骤 | 含义 |
 | --- | --- |
-| `[1/3] Checking bundled model...` | 校验运行文件，并选择核显；随后显示 `GPU: 设备名称` |
+| `[1/3] Checking bundled model...` | 校验运行文件，并选择核显；随后显示 `GPU: 设备名称`。没有核显时会先列出所有显卡并要求选择 |
 | `[2/3] Testing real synthesis...` | 实际生成语音，验证静音播放和音频输出 |
 | `[3/3] Installing the independent World...` | 安装扩展，登记本机语音路径，备份相关配置 |
 

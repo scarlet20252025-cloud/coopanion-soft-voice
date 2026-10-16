@@ -70,12 +70,25 @@ def integrated_device(name):
 
 
 def select_integrated_name(name=None):
+    """Bind the default integrated GPU for a portable bundle.
+
+    A discrete GPU is never selected implicitly: it shares VRAM with games and
+    the user must name it. Machines without any integrated GPU therefore get an
+    actionable error instead of a silent choice, and the message lists every
+    detected GPU so an empty integrated list is not read as "no GPU found".
+    """
     devices=integrated_devices()
     if name:
         if len([d for d in devices if d['name']==name])==1:return name
     elif len(devices)==1:return devices[0]['name']
-    raise RuntimeError('Select one integrated Vulkan GPU with -DeviceName; no discrete GPU fallback. Available: '+
-                       json.dumps(devices,ensure_ascii=False))
+    detected=vulkan_devices()
+    if not detected:
+        raise RuntimeError('没有检测到可用的 Vulkan 显卡。请先安装显卡驱动，再重新运行安装器。')
+    names='、'.join(d['name'] for d in detected)
+    if not devices:
+        raise RuntimeError('本机没有核显，无法自动选择设备。独显必须由用户显式指定，例如：-DeviceName "'+
+                           detected[0]['name']+'"。已检测到：'+names)
+    raise RuntimeError('检测到多个核显，请用 -DeviceName 指定其中一个；独显必须显式指定。已检测到：'+names)
 
 
 def settings(runtime, *, cached_verification=False, device_name=None):

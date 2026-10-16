@@ -1,7 +1,17 @@
-"""Bind a relocatable, checked portable bundle to this machine's integrated GPU."""
-import argparse,hashlib,json,os
+"""Bind a relocatable, checked portable bundle to this machine's integrated GPU.
+
+--list-devices lets the installer enumerate Vulkan GPUs before binding, so a
+machine without an integrated GPU can be asked to name its discrete GPU instead
+of failing with an empty integrated list.
+"""
+import argparse,hashlib,json,os,sys
 from pathlib import Path
-from coopanion_soft_voice.native_engine import settings,select_integrated_name,explicit_device
+from coopanion_soft_voice.native_engine import settings,select_integrated_name,explicit_device,vulkan_devices
+
+
+def inventory():
+    devices=vulkan_devices()
+    return {'devices':devices,'integrated':[d['name'] for d in devices if d['kind']=='integrated']}
 
 
 def bind(root,name=None):
@@ -27,5 +37,12 @@ def bind(root,name=None):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--root',required=True);p.add_argument('--device-name')
-    a=p.parse_args();print(json.dumps(bind(a.root,a.device_name),ensure_ascii=False))
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--root')
+    p.add_argument('--device-name')
+    p.add_argument('--list-devices',action='store_true',help='Print detected Vulkan GPUs as JSON and exit')
+    a=p.parse_args()
+    if a.list_devices:
+        print(json.dumps(inventory(),ensure_ascii=False));sys.exit(0)
+    if not a.root:p.error('--root is required unless --list-devices is used')
+    print(json.dumps(bind(a.root,a.device_name),ensure_ascii=False))

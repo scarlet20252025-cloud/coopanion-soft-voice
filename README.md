@@ -2,7 +2,7 @@
 
 
 完整包约 **1.09 GiB**（0.5.2 实测）：主模型解压后约 **924 MiB**，音频解码模型约 **192 MiB**，另含运行库、播放器和扩展。**0.6B 是参数规模，不是几十 MB 的模型**；精简运行组件、推理缓存与模型权重是不同的体积指标。已有兼容模型可只下载代码更新，无需重复下载模型。
-作者：**Asryto** · 稳定语音引擎 **0.5.4** / World **0.4.8**
+作者：**Asryto** · 稳定语音引擎 **0.5.5** / World **0.4.9**
 
 当前工程状态与验收边界见 [工程进度](docs/PROJECT_STATUS.md)。Intel 用户反馈慢速时，可下载 [双击测试工具](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/diagnostic-intel-v1.0.0/QingHe-Intel-Diagnostic-1.0.0.zip)，解压后运行 `START.cmd`，结束后回传自动生成的报告 ZIP。工具不替换稳定版，Intel 提速仍待实机验收。
 
