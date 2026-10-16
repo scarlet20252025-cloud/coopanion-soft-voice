@@ -36,7 +36,8 @@ required = {
     'evidence/2026-10-14-compact-native/qwentts-compact-graphs.patch',
 }
 world = json.loads((root/'world/package.json').read_text(encoding='utf-8'))
-required.update('world/'+world['cortico'][key] for key in ('consoleClient','consoleStyle'))
+required.update('world/'+world['cortico'][key] for key in ('webUiClient','webUiStyle'))
+required.add('world/'+world['cortico']['describe'])
 assert required <= names, sorted(required - names)
 wheel = max((root/'dist').glob('*.whl'), key=lambda p: p.stat().st_mtime)
 with zipfile.ZipFile(wheel) as z:

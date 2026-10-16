@@ -64,7 +64,7 @@ export class SoftVoiceWorld {
   }
   tools() { return []; }
 
-  console() {
+  webUi() {
     const st = this.runtime?.status?.() ?? { phase: 'idle', detail: '未启动' };
     const lampState = st.phase === 'ready' ? 'online' : st.phase === 'error' ? 'error' : LOADING_PHASES.has(st.phase) ? 'loading' : 'offline';
     return {

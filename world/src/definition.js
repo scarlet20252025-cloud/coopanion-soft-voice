@@ -18,7 +18,13 @@ const definition = {
     botDir: ctx.botDir,
     persist: ctx.persist,
     requestDesktopRestart:restartRequest(ctx.dataDir),
-  })
+  }),
+  describe: {
+    // The World exposes no model-facing tools: it speaks pet_say text and
+    // reports its own state through envPromptVars.
+    tools: [],
+    events: []
+  }
 };
 
 export default definition;

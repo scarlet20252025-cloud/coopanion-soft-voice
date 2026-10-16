@@ -86,7 +86,7 @@ const entry = seq => ({ tool: 'pet_say', mod: 'desktop-pet', run: 'r-test', seq,
 test('official environment prompt declares template and reports real capability', async () => {
   const { readFileSync } = await import('node:fs');
   const w = world();
-  const doc = w.console().promptDocs[0];
+  const doc = w.webUi().promptDocs[0];
   assert.equal(doc.role, 'envPrompt');
   assert.match(readFileSync(doc.path, 'utf8'), /\{\{softVoice.state\}\}/);
   const state = () => w.envPromptVars()['softVoice.state'];
@@ -102,7 +102,7 @@ test('official environment prompt declares template and reports real capability'
 });
 test('standalone identity and validated effective controls', () => {
   assert.equal(world().id, 'soft-voice');
-  assert.equal(world().console().label, '轻核语音 · Qwen3-TTS 超轻量高速语音引擎');
+  assert.equal(world().webUi().label, '轻核语音 · Qwen3-TTS 超轻量高速语音引擎');
   assert.throws(() => validateConfigPatch({ speed: 1.2 }));
   assert.throws(() => validateConfigPatch({ volume: 101 }));
   assert.throws(() => validateConfigPatch({ autoRecover: 'true' }));
@@ -188,12 +188,12 @@ test('runtime memory guard follows the actual model layout and keeps fallback pr
 });
 test('panels have separate mounts and read-only status rejects mutations', async () => {
   const w=world();
-  assert.deepEqual(w.console().panels.map(p=>p.id),['controls','status','config','diagnostics','voices']);
-  await assert.rejects(w.console().invoke('status','disable'),/未知/);
-  await assert.rejects(w.console().invoke('config','test'),/未知/);
+  assert.deepEqual(w.webUi().panels.map(p=>p.id),['controls','status','config','diagnostics','voices']);
+  await assert.rejects(w.webUi().invoke('status','disable'),/未知/);
+  await assert.rejects(w.webUi().invoke('config','test'),/未知/);
   const {readFileSync}=await import('node:fs');
   const meta=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
-  const ui=(await import('../'+meta.cortico.consoleClient)).default;
+  const ui=(await import('../'+meta.cortico.webUiClient)).default;
   assert.equal(new Set(Object.values(ui.panels).map(p=>p.mount)).size,5);
 });
 test('future voice is unavailable and cannot become a filesystem path', async () => {
