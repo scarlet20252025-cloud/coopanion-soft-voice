@@ -31,7 +31,27 @@ class BubbleBridgeInstallerTests(unittest.TestCase):
     def test_unsupported_versions_are_not_modified(self):
         with tempfile.TemporaryDirectory(prefix='soft-voice-bubble-test-') as work:
             package=Path(work)
+            (package/'web').mkdir(parents=True)
             (package/'package.json').write_text(json.dumps({'version':'99.0.0'}))
+            page=package/'web/pet-app.js'
+            page.write_text('page without the hooks',encoding='utf-8')
             with self.assertRaises(ValueError):helper.install_bridge(package)
+            self.assertEqual(page.read_text(encoding='utf-8'),'page without the hooks')
+            self.assertFalse((package/'web/soft-voice-bubble-sync.js').exists())
+
+    def test_pet_release_that_already_ships_the_hooks_needs_no_patch(self):
+        # Coopanion 0.2.1 ships cortico-world-desktop-pet 0.2.0 with the hooks
+        # and the client already in place; the installer must not refuse it.
+        with tempfile.TemporaryDirectory(prefix='soft-voice-bubble-test-') as work:
+            package=Path(work)/'pet'
+            (package/'web').mkdir(parents=True)
+            (package/'package.json').write_text(json.dumps({'version':'0.2.0'}))
+            page=package/'web/pet-app.js'
+            page.write_text('\n'.join(after for _before,after in helper.HOOKS),encoding='utf-8')
+            helper.install_bridge(package)
+            self.assertIn(helper.MARKER,page.read_text(encoding='utf-8'))
+            self.assertEqual(json.loads((package/'package.json').read_text())['version'],'0.2.0')
+            self.assertEqual((package/'web/soft-voice-bubble-sync.js').read_bytes(),
+                             (Path(__file__).resolve().parents[1]/'world/src/bubble-client.js').read_bytes())
 
 if __name__=='__main__':unittest.main()

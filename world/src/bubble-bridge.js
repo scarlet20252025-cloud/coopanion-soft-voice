@@ -1,8 +1,21 @@
 import {createRequire} from 'node:module';
-import {readFileSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {dirname,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 const PATH='/api/soft-voice/bubble-sync';
+const MARKER='SOFT_VOICE_BUBBLE_BRIDGE';
+// The pet version is not the contract; these call sites are. A pet release that
+// already ships them needs no patching, and a pin on one version turns a working
+// upstream integration into "缺少显示适配桥".
+const CALLS=['voiceBubbleSync?.register(','voiceBubbleSync?.hold(','voiceBubbleSync?.shown(','voiceBubbleSync?.closed('];
+
+/** null when the pet page can drive this extension; otherwise a user-facing reason. */
+export function bridgeProblem(page,clientExists) {
+  if(!page.includes(MARKER))return '尚未安装气泡显示适配，请按安装教程运行气泡同步脚本后重启桌宠';
+  if(!clientExists)return '气泡显示适配缺少浏览器端脚本，请重新运行气泡同步脚本后重启桌宠';
+  if(CALLS.some(call=>!page.includes(call)))return '桌宠的气泡显示适配与当前扩展不匹配，请重新运行气泡同步脚本后重启桌宠';
+  return null;
+}
 
 function send(res,status,value){res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(value));}
 async function body(req){let size=0,parts=[];for await(const chunk of req){const bytes=Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk);size+=bytes.length;if(size>65536)throw Error('body too large');parts.push(bytes);}return JSON.parse(Buffer.concat(parts).toString('utf8'));}
@@ -37,8 +50,8 @@ export async function installBubbleBridge(owner) {
   const require=createRequire(join(repoRoot(),'package.json'));
   const entry=require.resolve('cortico-world-desktop-pet');
   const root=dirname(dirname(entry));
-  if(JSON.parse(readFileSync(join(root,'package.json'),'utf8')).version!=='0.1.4')throw Error('当前桌宠版本尚未验证气泡适配桥');
-  if(!readFileSync(join(root,'web/pet-app.js'),'utf8').includes('SOFT_VOICE_BUBBLE_BRIDGE'))throw Error('尚未安装气泡显示适配，请运行气泡同步安装脚本');
+  const problem=bridgeProblem(readFileSync(join(root,'web/pet-app.js'),'utf8'),existsSync(join(root,'web/soft-voice-bubble-sync.js')));
+  if(problem)throw Error(problem);
   const {PetServer}=await import(pathToFileURL(join(dirname(entry),'server.ts')).href);
   return attachBubbleRoutes(PetServer,owner);
 }

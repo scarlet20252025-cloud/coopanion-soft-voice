@@ -2,6 +2,12 @@
 
 作者：Asryto。引擎与 World 分别标版本；旧包保留供回退。
 
+## 0.5.8 · 修复气泡同步的桌宠版本门槛
+
+- Coopanion 0.2.1 的桌宠是 `cortico-world-desktop-pet` **0.2.0**，已内置气泡显示适配的钩子与浏览器端脚本（与本仓库 `world/src/bubble-client.js` 逐字节相同），但扩展把桌宠版本写死成 0.1.4，于是气泡同步被判定为「缺少显示适配桥」，开关开着也不生效。
+- 判定改成能力检查：钩子标记存在、`web/soft-voice-bubble-sync.js` 存在、四个 `voiceBubbleSync?.register/hold/shown/closed` 调用点齐全。安装脚本在钩子已存在时幂等成功，只有确实需要打补丁且版本未经核对的桌宠才报错。
+- 完整包同步内嵌 World 0.4.11；引擎其余行为未改。
+
 ## 0.5.7 · 修复代码更新被旧引擎拒绝
 
 - 修复 0.4.11–0.5.5 的安装无法应用 0.5.6 更新的问题：World 0.4.10 新增的 `world/describe.json` 与 `world/CHANGELOG.md` 不在旧引擎的成员白名单里，整包被拒并报 `Unsafe update member: world/describe.json`。代码更新包由**已安装的引擎**解压，所以旧版本的白名单无法靠新版修好。

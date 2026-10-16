@@ -5,6 +5,9 @@ from pathlib import Path
 import shutil
 
 MARKER = 'SOFT_VOICE_BUBBLE_BRIDGE'
+# Only these pet releases are verified for the patch below. A newer pet that
+# already carries the hooks needs no patch at all, which is checked first.
+VERIFIED_PATCH_VERSIONS = ('0.1.4',)
 HOOKS = [
     ("const host = window.petHost || null;", "const host = window.petHost || null;\n// SOFT_VOICE_BUBBLE_BRIDGE: all synchronization logic is in the extension client.\nlet voiceBubbleSync = null;\nvoid import('./soft-voice-bubble-sync.js').then(({ createVoiceBubbleSync }) => { voiceBubbleSync = createVoiceBubbleSync(); }).catch(() => {});"),
     ("case 'say': dropAsks();", "case 'say': voiceBubbleSync?.register(m.id, m.beats); dropAsks();"),
@@ -25,8 +28,7 @@ def patched(source):
 
 def install_bridge(package, restore=False):
     package = Path(package).resolve()
-    if json.loads((package / 'package.json').read_text(encoding='utf-8-sig'))['version'] != '0.1.4':
-        raise ValueError('This bridge is verified for cortico-world-desktop-pet 0.1.4 only')
+    version = json.loads((package / 'package.json').read_text(encoding='utf-8-sig'))['version']
     page = package / 'web' / 'pet-app.js'
     backup = page.with_name('pet-app.js.soft-voice-original')
     current = page.read_text(encoding='utf-8')
@@ -36,6 +38,14 @@ def install_bridge(package, restore=False):
             raise ValueError('Pet page has unrelated edits; restoration would overwrite them')
         page.write_text(original, encoding='utf-8')
     else:
+        if MARKER in current:
+            # An upstream pet release already carries the hooks; only keep the
+            # browser client in step and report success.
+            shutil.copy2(Path(__file__).with_name('bubble-client.js'), package / 'web' / 'soft-voice-bubble-sync.js')
+            return page
+        if version not in VERIFIED_PATCH_VERSIONS:
+            raise ValueError('This bridge patches cortico-world-desktop-pet ' + ' / '.join(VERIFIED_PATCH_VERSIONS) +
+                             ' only; ' + version + ' does not carry the hooks yet, so a new bridge is required')
         result = patched(current)
         if MARKER not in current and not backup.exists():
             shutil.copy2(page, backup)

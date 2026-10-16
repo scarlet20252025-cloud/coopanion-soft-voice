@@ -2,10 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BubbleSpeechSync } from '../src/bubble-sync.js';
 import { createVoiceBubbleSync } from '../src/bubble-client.js';
-import { attachBubbleRoutes } from '../src/bubble-bridge.js';
+import { attachBubbleRoutes, bridgeProblem } from '../src/bubble-bridge.js';
 import {Readable} from 'node:stream';
 
 const item=(key,text='第一段。')=>({key,text});
+test('bubble sync is gated on the pet hooks, not on one pet version',()=>{
+  // Exactly what an upstream pet release that already ships the integration has.
+  const shipped=['// SOFT_VOICE_BUBBLE_BRIDGE: all synchronization logic is in the extension client.',
+    "case 'say': voiceBubbleSync?.register(m.id, m.beats);",
+    'if (item?.kind === \'say\') voiceBubbleSync?.closed(item.id);',
+    'const synced = voiceBubbleSync?.hold(it.id, it.i === it.beats.length - 1);',
+    'if (it.i === 0) voiceBubbleSync?.shown(it.id);'].join('\n');
+  assert.equal(bridgeProblem(shipped,true),null);
+  assert.match(bridgeProblem('plain page',true),/尚未安装/);
+  assert.match(bridgeProblem(shipped,false),/浏览器端脚本/);
+  assert.match(bridgeProblem(shipped.replace('voiceBubbleSync?.hold(','hold('),true),/不匹配/);
+});
 test('audio completion, not elapsed bubble time, releases an utterance',async()=>{
  const gate=new BubbleSpeechSync(()=>true);gate.register('bubble-1','第一段。');gate.track(item('call-1'));
  let started=false;const waiting=gate.waitUntilShown('call-1').then(()=>started=true);
