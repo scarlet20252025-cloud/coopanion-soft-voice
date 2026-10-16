@@ -45,10 +45,15 @@ $ErrorActionPreference='Continue'
 # failing later with an empty integrated-device list.
 Write-Host '[1/3] Checking bundled model and selecting the GPU...'
 if (-not $DeviceName) {
-    $inventory=(& $voicePython (Join-Path $PSScriptRoot 'activate_portable.py') --list-devices 2>>$log | Out-String).Trim()|ConvertFrom-Json
-    $gpus=@($inventory.devices)
-    if (-not $gpus.Count) { throw 'No Vulkan GPU was detected. Install the vendor graphics driver, then run install.cmd again.' }
-    if (@($inventory.integrated).Count -ne 1) {
+    # A machine without a Vulkan driver prints nothing here; treat that as a
+    # driver problem instead of failing inside ConvertFrom-Json.
+    $inventoryText=(& $voicePython (Join-Path $PSScriptRoot 'activate_portable.py') --list-devices 2>>$log | Out-String).Trim()
+    $inventory=$null
+    if ($inventoryText) { try { $inventory=$inventoryText|ConvertFrom-Json } catch { $inventory=$null } }
+    $gpus=@();$integrated=@()
+    if ($inventory) { $gpus=@($inventory.devices);$integrated=@($inventory.integrated) }
+    if (-not $gpus.Count) { throw 'No Vulkan GPU was detected. Install the vendor graphics driver, then run install.cmd again; details are in installation.log.' }
+    if ($integrated.Count -ne 1) {
         Write-Host ''
         Write-Host 'This machine does not have exactly one integrated GPU, so the automatic default cannot be used.'
         Write-Host 'Choose the device that should run speech:'
