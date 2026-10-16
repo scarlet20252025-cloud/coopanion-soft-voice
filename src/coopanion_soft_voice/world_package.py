@@ -6,11 +6,12 @@ import subprocess
 import tarfile
 
 NAME = 'cortico-world-soft-voice'
+ROOT_FILES = ('package.json', 'README.md', 'LICENSE', 'describe.json', 'CHANGELOG.md')
 
 
 def managed(name):
     p = PurePosixPath(name)
-    return (name in ('package.json', 'README.md', 'LICENSE') or
+    return (name in ROOT_FILES or
             len(p.parts) > 1 and p.parts[0] in ('src', 'dist'))
 
 

@@ -92,7 +92,7 @@ def permitted(name,release_version):
     if name.startswith(f'python/coopanion_soft_voice-{release_version}.dist-info/'):
         return p.name in ('METADATA','WHEEL','RECORD','top_level.txt','entry_points.txt','LICENSE')
     if name.startswith('world/'):
-        return name in ('world/package.json','world/README.md','world/LICENSE') or (len(p.parts)>2 and p.parts[1] in ('src','dist') and p.suffix in ('.js','.css','.md','.py'))
+        return name in ('world/package.json','world/README.md','world/LICENSE','world/describe.json','world/CHANGELOG.md') or (len(p.parts)>2 and p.parts[1] in ('src','dist') and p.suffix in ('.js','.css','.md','.py'))
     if name.startswith('scripts/'):
         return len(p.parts)==2 and p.name in ('activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','collect_diagnostics.py','report_issue.py','issue_reporting.py','gpu_memory.py')
     return name in ('README.md','collect-diagnostics.cmd') or (len(p.parts)==2 and p.parts[0]=='docs' and p.suffix=='.md')
