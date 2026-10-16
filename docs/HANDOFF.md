@@ -10,7 +10,7 @@
 | npm 市场 | `cortico-world-soft-voice@0.4.11` 已发布，`dist-tags.latest` = 0.4.11 |
 | main 分支 | 已包含 PR #20（气泡同步修复，CI 通过）；本页随该次提交一并入库 |
 | 本机扩展 | 市场副本与 `local-soft-voice` 均已升到 0.4.11，**等待重启 Coopanion 生效** |
-| 本机引擎 | 运行时目录内实际为 0.5.5 内容，可通过扩展右上角更新提示升到 0.5.8 |
+| 本机引擎 | 已装 0.5.7（已安装包 `__version__` 与运行时 `portable-manifest.json` 一致）；用运行时自带 Python 跑 `coopanion_soft_voice.updates check` 显示 0.5.8 可安装、市场 0.4.11 与本地一致、`requiresMarketUpdate` 为 false |
 | 本轮实机核对 | 用本机真实桌宠页面（`cortico-world-desktop-pet` 0.2.0）跑气泡桥判定：标记、浏览器端脚本、四个调用点齐全，`bridgeProblem()` 返回 `null` |
 
 发布核对证据：Release 资产大小与 `portable-release.json` 记录的 1169757822 字节一致；匿名下载更新包 `coopanion-voice-update-0.5.8.zip`，字节数与 SHA256 与 `update-release.json` 完全一致；`releases/latest` 指向 `v0.5.8`。
@@ -145,13 +145,13 @@ git push origin main
 | 桌宠包 | `...\app\resources\app\node_modules\cortico-world-desktop-pet`（0.2.0） |
 | 扩展目录 | `...\app\data\extensions`（pnpm；`node_modules\cortico-world-soft-voice` 指向 `.pnpm` 虚拟 store；本地渠道副本为 `local-soft-voice`） |
 | Bot 数据 | `...\app\data\home\companion\data\soft-voice`（`settings.json`、`runtime-profile.json`、`backups/`） |
-| 已部署运行时 | `.runtime\release-unified-final\coopanion-local-voice-0.5.0-windows-x64`（内容已升到 0.5.5） |
+| 已部署运行时 | `.runtime\release-unified-final\coopanion-local-voice-0.5.0-windows-x64`（内容已升到 0.5.7） |
 | 构建产物 | `.runtime\build-<版本>`、`.runtime\release-<版本>` |
 | 浏览器 | Firefox：`C:\Program Files\Mozilla Firefox\firefox.exe` |
 
 扩展目录里的 `local-soft-voice` 与 pnpm 虚拟 store 是同一扩展的两份副本，改动要么同时更新、要么走 `scripts/install_world.py`；`package_target()` 会校验符号链接不越界，写入始终先写临时文件再原子替换，避免改坏 pnpm 的共享硬链接。
 
-遗留未清理：`.runtime\release-0.5.6` 残留临时目录约 1.2 GB（删除被沙箱策略拦下）、`evidence/low-power-controls.png` 与 `evidence/voice-controls-final.jpg` 两个未跟踪文件。
+遗留未清理：`.runtime\release-0.5.6` 是同一版本的重复解压目录（约 1.2 GiB，zip 与 notes 都在 `release-0.5.6-final` 里保留）；两次尝试递归删除都被自动审批拦下，需要在普通终端里手工删。`evidence/low-power-controls.png` 与 `evidence/voice-controls-final.jpg` 两个未跟踪文件也留着。`.runtime` 整体约 53 GiB，`build-*`、`accept-*`、`idle-check-*`、`*-fixture` 多为历史验证残留，删除前先确认没有脚本或测试引用。
 
 ## 8. 经验与踩过的坑
 
