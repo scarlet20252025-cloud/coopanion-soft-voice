@@ -13,6 +13,6 @@ test('unsupported hosts never shutdown',async()=>{
 });
 test('panel restart requires explicit confirmation and a completed pending update',async()=>{
  const w=new SoftVoiceWorld({cfg:{},dataDir:'.',requestDesktopRestart:async()=>({requested:true})});w.runtime={status:()=>({})};w.updates={status:()=>({requiresRestart:true,busy:false})};
- const invoke=w.console().invoke;await assert.rejects(invoke('controls','restartDesktop',[]),/确认/);assert.equal((await invoke('controls','restartDesktop',[true])).requested,true);
+ const invoke=w.webUi().invoke;await assert.rejects(invoke('controls','restartDesktop',[]),/确认/);assert.equal((await invoke('controls','restartDesktop',[true])).requested,true);
  w.updates={status:()=>({requiresRestart:true,busy:true})};await assert.rejects(invoke('controls','restartDesktop',[true]),/正在执行/);
 });

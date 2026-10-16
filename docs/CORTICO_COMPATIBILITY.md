@@ -3,16 +3,20 @@
 核对日期：2026-10-13。实际部署验证目标：Coopanion **0.1.24** 所带 Cortico **World API 5**。
 同时阅读以下官方教程，并以安装版实际源码核对接口；不假设 main 分支的新接口已被桌宠采用。
 
-- [官方扩展教程](https://github.com/Pal-AI-Lab/Cortico/blob/main/docs/extensions.md)：ESM npm 包、WorldDefinition 默认导出、manifest、consoleClient/consoleStyle。
+- [官方扩展教程](https://github.com/Pal-AI-Lab/Cortico/blob/main/docs/extensions.md)：ESM npm 包、WorldDefinition 默认导出、manifest、webUiClient/webUiStyle。
 - [官方 World 生命周期和配置](https://github.com/Pal-AI-Lab/Cortico/blob/main/docs/worlds.md)：start/stop、WorldContext、persist。
 - [官方控制台面板契约](https://github.com/Pal-AI-Lab/Cortico/blob/main/src/web/shared/client-panel.ts)：独立 panelId、invoke、root、signal、interval、ui。
 
 ## 本扩展采用的接口
 
-`cortico.kind=world`、`api=5`、`displayName=本地语音助手`。保留 World ID `soft-voice` 和 npm 包名以避免已有配置失联。
+`cortico.kind=world`、`api=6`、`displayName=轻核语音 · Qwen3-TTS 超轻量高速语音引擎`。保留 World ID `soft-voice` 和 npm 包名以避免已有配置失联。
+
+World 契约 v6 把 WebUI 一侧的名字由 console 改成 webUi：实例接口 `console()` → `webUi()`，manifest 的 `consoleClient`/`consoleStyle` → `webUiClient`/`webUiStyle`，面板产物文件名随之改为 `webui-<版本>.js`/`.css`；`cortico.api` 必须等于本类的 6。0.4.9 及更早的包仍是 v5，靠框架过渡层加载并显示升级提示，下一个大版本起不再加载。契约升级清单见 [upgrading.md](https://github.com/Pal-AI-Lab/Cortico/blob/main/docs/upgrading.md)。
+
+自描述 `describe.json` 由 `npm run describe` 从 `WorldDefinition.describe` 与 `role: 'envPrompt'` 的提示词模板生成；`world/test/contract.test.js` 在 CI 里核对它与代码一致，等价于官方 `pnpm check:extension` 对这三项的检查。
 `console()` 声明 controls/status/config/voices 四个独立面板，每个面板有独立 mount，服务端严格分派方法。
 面板仅写入 `ctx.root`，按钮使用 `ctx.ui.button`；请求通过 `ctx.invoke`，轮询通过 `ctx.interval`，自建监听绑定 `ctx.signal`。
-图表为扩展自己的 SVG，无外部图表服务；只显示实际运行指标。CSS 通过官方 `consoleStyle` 声明，限定 `.lva`，不修改宿主页样式。
+图表为扩展自己的 SVG，无外部图表服务；只显示实际运行指标。CSS 通过官方 `webUiStyle` 声明，限定 `.lva`，不修改宿主页样式。
 常规设置通过 `WorldContext.persist` 同步部署配置，兼容保留旧本地设置文件；音色资源和运行数据存储在 Bot 的 dataDir。
 
 ## 保留的兼容适配

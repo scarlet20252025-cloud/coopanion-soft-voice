@@ -62,7 +62,7 @@ class WorldInstallTests(unittest.TestCase):
             with patch.object(installer.subprocess,'run'):installer.install(ext,bot,runtime,True)
             meta=json.loads((ext/'node_modules'/installer.NAME/'package.json').read_text(encoding='utf-8'))
             self.assertEqual(meta['version'],json.loads((ROOT/'world/package.json').read_text(encoding='utf-8'))['version'])
-            self.assertTrue((ext/'node_modules'/installer.NAME/meta['cortico']['consoleClient']).is_file())
+            self.assertTrue((ext/'node_modules'/installer.NAME/meta['cortico']['webUiClient']).is_file())
             cfg=json.loads((bot/'config.json').read_text(encoding='utf-8'));self.assertEqual(cfg['personal'],'keep')
             self.assertEqual(json.loads((ext/'package.json').read_text(encoding='utf-8'))['dependencies']['other-world'],'1.0')
             self.assertEqual(json.loads((ext/'package.json').read_text(encoding='utf-8'))['dependencies'][installer.NAME],meta['version'])

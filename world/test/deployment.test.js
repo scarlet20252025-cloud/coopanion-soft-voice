@@ -38,7 +38,7 @@ test('no Vulkan GPU at all reports the driver instead of an empty device list',(
 test('the shipped client asks the user to confirm the chosen device',async()=>{
   const {readFileSync}=await import('node:fs');
   const meta=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
-  const source=readFileSync(new URL('../'+meta.cortico.consoleClient,import.meta.url),'utf8');
+  const source=readFileSync(new URL('../'+meta.cortico.webUiClient,import.meta.url),'utf8');
   assert.match(source,/deployDevice\.hidden=task\.phase!=='choose_device'/);
   assert.match(source,/task\.phase==='choose_device'\?'使用所选设备继续部署'/);
 });

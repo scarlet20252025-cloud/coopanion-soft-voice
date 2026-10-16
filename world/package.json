@@ -1,6 +1,6 @@
 {
   "name": "cortico-world-soft-voice",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "type": "module",
   "description": "轻核语音 · Qwen3-TTS 超轻量高速语音引擎 · Asryto：离线合成、核显/独显可选、流式播放、气泡同步与低功耗休眠。RTX 4050 实测专用显存约 1 GiB；无需语音 API key，模型需另行部署。",
   "license": "MIT",
@@ -20,18 +20,22 @@
   "files": [
     "src",
     "dist",
+    "describe.json",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "describe": "node scripts/describe.mjs"
   },
   "cortico": {
     "kind": "world",
-    "api": 5,
+    "api": 6,
     "displayName": "轻核语音 · Qwen3-TTS 超轻量高速语音引擎",
-    "consoleClient": "dist/console-0.4.9.js",
-    "consoleStyle": "dist/console-0.4.8.css"
+    "describe": "describe.json",
+    "webUiClient": "dist/webui-0.4.10.js",
+    "webUiStyle": "dist/webui-0.4.10.css"
   },
   "repository": {
     "type": "git",

@@ -5,8 +5,8 @@ const path=require('node:path');
 const assert=require('node:assert/strict');
 (async()=>{
   const meta=JSON.parse(fs.readFileSync('world/package.json','utf8'));
-  const source=fs.readFileSync(path.join('world',meta.cortico.consoleClient),'utf8');
-  const css=fs.readFileSync(path.join('world',meta.cortico.consoleStyle),'utf8');
+  const source=fs.readFileSync(path.join('world',meta.cortico.webUiClient),'utf8');
+  const css=fs.readFileSync(path.join('world',meta.cortico.webUiStyle),'utf8');
   const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'msedge'});
   try {
     const page=await browser.newPage({viewport:{width:1120,height:950}}),errors=[];
