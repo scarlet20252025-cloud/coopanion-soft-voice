@@ -84,6 +84,31 @@ def check(root,extensions=None):
          releaseUrl=f'https://github.com/{REPO}/releases/tag/v{release["version"]}')
     return release
 
+PATCH_SCRIPT_FILES=('activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','collect_diagnostics.py','report_issue.py','issue_reporting.py','gpu_memory.py')
+
+# An update patch is unpacked by the engine that is *already installed*, so its
+# member list must stay inside what the oldest supported engine accepts; adding
+# a name here only helps copies that already carry this file. Requirement files
+# of this shape must therefore never travel in a patch - they reach installed
+# copies through npm.
+LEGACY_WORLD_ROOT=('world/package.json','world/README.md','world/LICENSE')
+
+
+def legacy_permitted(name,release_version):
+    """What an engine at update-release.json minimumVersion accepts. Frozen: do not extend."""
+    p=PurePosixPath(name)
+    if p.is_absolute() or '\\' in name or ':' in name or any(x in ('..','.') for x in p.parts):return False
+    if name.startswith('python/coopanion_soft_voice/'):
+        return p.suffix in ('.py','.json','.wav','.txt') and '__pycache__' not in p.parts
+    if name.startswith(f'python/coopanion_soft_voice-{release_version}.dist-info/'):
+        return p.name in ('METADATA','WHEEL','RECORD','top_level.txt','entry_points.txt','LICENSE')
+    if name.startswith('world/'):
+        return name in LEGACY_WORLD_ROOT or (len(p.parts)>2 and p.parts[1] in ('src','dist') and p.suffix in ('.js','.css','.md','.py'))
+    if name.startswith('scripts/'):
+        return len(p.parts)==2 and p.name in PATCH_SCRIPT_FILES
+    return name in ('README.md','collect-diagnostics.cmd') or (len(p.parts)==2 and p.parts[0]=='docs' and p.suffix=='.md')
+
+
 def permitted(name,release_version):
     p=PurePosixPath(name)
     if p.is_absolute() or '\\' in name or ':' in name or any(x in ('..','.') for x in p.parts):return False
@@ -94,7 +119,7 @@ def permitted(name,release_version):
     if name.startswith('world/'):
         return name in ('world/package.json','world/README.md','world/LICENSE','world/describe.json','world/CHANGELOG.md') or (len(p.parts)>2 and p.parts[1] in ('src','dist') and p.suffix in ('.js','.css','.md','.py'))
     if name.startswith('scripts/'):
-        return len(p.parts)==2 and p.name in ('activate_portable.py','verify_deployment.py','install_world.py','install_bubble_bridge.py','install-portable.ps1','find-coopanion.ps1','collect-diagnostics.ps1','collect_diagnostics.py','report_issue.py','issue_reporting.py','gpu_memory.py')
+        return len(p.parts)==2 and p.name in PATCH_SCRIPT_FILES
     return name in ('README.md','collect-diagnostics.cmd') or (len(p.parts)==2 and p.parts[0]=='docs' and p.suffix=='.md')
 
 def unpack(archive,release):
@@ -112,7 +137,9 @@ def unpack(archive,release):
         files={}
         for name,digest in hashes.items():
             info=z.getinfo(name)
-            if not permitted(name,release['version']) or ((info.external_attr>>16)&0o170000)==0o120000:raise ValueError('Unsafe update member: '+name)
+            if not permitted(name,release['version']) or ((info.external_attr>>16)&0o170000)==0o120000:
+                raise ValueError('This engine ('+__version__+') cannot install update member '+name+
+                                 '; install the complete package from the release page instead')
             data=z.read(name)
             if hashlib.sha256(data).hexdigest()!=digest:raise ValueError('Patch file checksum mismatch: '+name)
             if name.endswith('.py'):compile(data,name,'exec')

@@ -9,7 +9,7 @@ def build(wheel,profile,output,world_package=None):
     from coopanion_soft_voice import __version__
     config=json.loads((Path(profile)/'native-runtime.json').read_text(encoding='utf-8'))
     world=json.loads((ROOT/'world/package.json').read_text(encoding='utf-8'))
-    from coopanion_soft_voice.updates import permitted
+    from coopanion_soft_voice.updates import permitted, legacy_permitted
     files={}
     with zipfile.ZipFile(wheel) as z:
         for name in z.namelist():
@@ -17,6 +17,12 @@ def build(wheel,profile,output,world_package=None):
     from coopanion_soft_voice.world_package import pack
     _,world_files=pack(ROOT/'world',Path(output)/'packages',world_package)
     files.update({'world/'+name:data for name,data in world_files.items()})
+    # Market-facing metadata (self-description, release notes) reaches installed
+    # copies through npm. A patch is unpacked by the engine already on the
+    # machine, so shipping a newly added name here would be rejected outright.
+    for name in ('world/describe.json','world/CHANGELOG.md'):
+        if files.pop(name,None) is not None:
+            print(json.dumps({'notInPatch':name,'reason':'market metadata travels through npm'}))
     for folder in ('docs',):
         for file in (ROOT/folder).rglob('*'):
             if file.is_file() and '__pycache__' not in file.parts and 'test' not in file.parts and permitted(file.relative_to(ROOT).as_posix(),__version__):files[file.relative_to(ROOT).as_posix()]=file.read_bytes()
@@ -30,6 +36,10 @@ def build(wheel,profile,output,world_package=None):
     meta={'format':1,'version':__version__,'worldVersion':world['version'],
           'runtimeHashes':{'dll':config['dllSha256'],**config['speechOnly']['hashes']},
           'files':{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}}
+    rejected=sorted(name for name in files if not legacy_permitted(name,__version__) or not permitted(name,__version__))
+    if rejected:
+        raise ValueError('Patch members an engine at the declared minimumVersion would reject: '+', '.join(rejected)+
+                         '; raise minimumVersion in update-release.json to an engine that accepts them, and tell older installs to use the complete package')
     folder=Path(output);folder.mkdir(parents=True,exist_ok=True)
     archive=folder/f'coopanion-voice-update-{__version__}.zip'
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
