@@ -40,7 +40,35 @@ $log=Join-Path $bundleRoot 'installation.log'
 # Windows PowerShell 5.1 wraps native stderr as non-terminating errors.
 # Native libraries write ordinary diagnostics there; the exit code is authoritative.
 $ErrorActionPreference='Continue'
-Write-Host '[1/3] Checking bundled model and selecting the integrated GPU...'
+# Machines without an integrated GPU cannot use the automatic default, and a
+# discrete GPU is never chosen implicitly. Ask before binding instead of
+# failing later with an empty integrated-device list.
+Write-Host '[1/3] Checking bundled model and selecting the GPU...'
+if (-not $DeviceName) {
+    $inventory=(& $voicePython (Join-Path $PSScriptRoot 'activate_portable.py') --list-devices 2>>$log | Out-String).Trim()|ConvertFrom-Json
+    $gpus=@($inventory.devices)
+    if (-not $gpus.Count) { throw 'No Vulkan GPU was detected. Install the vendor graphics driver, then run install.cmd again.' }
+    if (@($inventory.integrated).Count -ne 1) {
+        Write-Host ''
+        Write-Host 'This machine does not have exactly one integrated GPU, so the automatic default cannot be used.'
+        Write-Host 'Choose the device that should run speech:'
+        for ($i=0;$i -lt $gpus.Count;$i++) {
+            $kind=if ($gpus[$i].kind -eq 'discrete') { 'discrete; shares VRAM with games' } else { 'integrated' }
+            Write-Host ('  [{0}] {1}  ({2})' -f ($i+1),$gpus[$i].name,$kind)
+        }
+        if ([Console]::IsInputRedirected) {
+            throw ('No integrated GPU is available, so -DeviceName is required. Re-run with: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-portable.ps1 -DeviceName "'+$gpus[0].name+'"')
+        }
+        $answer=Read-Host ('Press Enter to use 1, or type the number to use (1-'+$gpus.Count+')')
+        $pick=1
+        if (-not [string]::IsNullOrWhiteSpace($answer)) {
+            if (-not [int]::TryParse($answer.Trim(),[ref]$pick)) { throw 'That was not a number; nothing was changed.' }
+        }
+        if ($pick -lt 1 -or $pick -gt $gpus.Count) { throw 'That number is not in the list; nothing was changed.' }
+        $DeviceName=$gpus[$pick-1].name
+        Write-Host ('Selected device: '+$DeviceName)
+    }
+}
 $bindArgs=@('--root',$bundleRoot);if ($DeviceName) { $bindArgs+=@('--device-name',$DeviceName) }
 $bound=& $voicePython (Join-Path $PSScriptRoot 'activate_portable.py') @bindArgs 2>>$log
 if ($LASTEXITCODE -ne 0) { throw "Runtime verification failed. See $log" }

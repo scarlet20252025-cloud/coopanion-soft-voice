@@ -5,6 +5,10 @@ import { StringDecoder } from 'node:string_decoder';
 import { voicePath, BUILTIN } from './voices.js';
 import { pythonJson } from './helpers.js';
 
+// Shown to end users, not to repository maintainers: the portable installer and
+// the in-app one-click deployment are the only supported setup paths.
+export const DEPLOY_HINT='尚未完成语音部署：请在“模型部署检测”里点击“一键部署”。如果这台电脑没有核显，部署页会列出显卡，请选择独显后再次点击部署按钮。';
+
 // Model/runtime installation belongs to this repository's setup-native script.
 // This extension never imports or executes another World extension.
 export class SoftVoiceRuntime {
@@ -18,7 +22,7 @@ export class SoftVoiceRuntime {
   }
   profile() {
     const file = join(this.root, 'runtime-profile.json');
-    if (!existsSync(file)) throw new Error('请先运行仓库 scripts/install_world.py 配置独立语音环境');
+    if (!existsSync(file)) throw new Error(DEPLOY_HINT);
     const p = JSON.parse(readFileSync(file, 'utf8'));
     if (!p.python || !p.runtime || p.mode !== 'igpu') throw new Error('无效的核显运行配置');
     return { ...p, python: resolve(this.root, p.python), runtime: resolve(this.root, p.runtime) };
@@ -87,7 +91,7 @@ export class SoftVoiceRuntime {
     } catch { /* Logging must not interrupt playback. */ }
   }
   async devices() {const p=this.profile();const result=await pythonJson(p,'coopanion_soft_voice.cli',['--runtime',p.runtime,'devices']);this.deviceInventory=result.devices;return result;}
-  async prepare() { if (!this.hasLocalFiles()) throw new Error('运行环境未安装，请运行 setup-native.ps1 和 install_world.py'); }
+  async prepare() { if (!this.hasLocalFiles()) throw new Error(DEPLOY_HINT); }
   async ensure() {
     if (this.stopPromise) await this.stopPromise;
     if (this.readyPromise) return this.readyPromise;
