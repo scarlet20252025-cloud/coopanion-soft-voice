@@ -1,6 +1,6 @@
 # 轻核语音 · Qwen3-TTS 超轻量高速语音引擎：不依赖扩展市场的安装教程
 
-作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于语音引擎 0.5.5 / World 0.4.9。完整包与扩展市场版本一致，两边可以互相覆盖更新。
+作者：**Asryto**。本教程使用 GitHub 完整安装包，适用于语音引擎 0.5.6 / World 0.4.10。完整包与扩展市场内嵌同一个 World（0.4.10，同样的字节），两边可以互相覆盖更新。
 
 **下载完整 ZIP → 解压 → 双击 `install.cmd` → 在桌宠中试听。** 安装器会同时安装语音扩展、模型和运行环境，不需要扩展市场、npm 账号，也不用单独安装 Python、Git、Node、PyTorch、CUDA 或编译工具。
 
@@ -19,7 +19,7 @@
 
 直接下载：
 
-**[coopanion-local-voice-0.5.5-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.5/coopanion-local-voice-0.5.5-windows-x64.zip)**
+**[coopanion-local-voice-0.5.6-windows-x64.zip（约 1.17 GB）](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.6/coopanion-local-voice-0.5.6-windows-x64.zip)**
 
 也可以打开 [GitHub 发布页](https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/latest)，在 Assets 中选择同名文件。
 
