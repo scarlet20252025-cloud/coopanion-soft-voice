@@ -1,9 +1,9 @@
 {
-  "file": "coopanion-local-voice-0.5.5-windows-x64.zip",
-  "bytes": 1169708754,
-  "sha256": "ac1f662ba726dbeeae0eb4798629b631331aa46b15fff8dd549ea6eae6ff459a",
+  "file": "coopanion-local-voice-0.5.6-windows-x64.zip",
+  "bytes": 1169752663,
+  "sha256": "0acfdee500a0f7402aff832962c8fa609aa93e94f3a0fdd3a22b336733c13835",
   "author": "Asryto",
-  "version": "0.5.5",
-  "worldVersion": "0.4.9",
-  "url": "https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.5/coopanion-local-voice-0.5.5-windows-x64.zip"
+  "version": "0.5.6",
+  "worldVersion": "0.4.10",
+  "url": "https://github.com/scarlet20252025-cloud/coopanion-soft-voice/releases/download/v0.5.6/coopanion-local-voice-0.5.6-windows-x64.zip"
 }

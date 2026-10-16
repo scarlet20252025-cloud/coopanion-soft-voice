@@ -14,7 +14,7 @@ include LICENSE THIRD_PARTY_NOTICES.md
 include AGENTS.md
 include portable-release.json
 include world/src/.npmignore
-recursive-include world *.js *.py *.css *.json *.md LICENSE
+recursive-include world *.js *.mjs *.py *.css *.json *.md LICENSE
 
 include CHANGELOG.md
 include collect-diagnostics.cmd
