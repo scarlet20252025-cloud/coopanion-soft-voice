@@ -2,6 +2,15 @@
 
 作者：Asryto。引擎与 World 分别标版本；旧包保留供回退。
 
+## World 0.4.10 · 迁移到 world 契约 6
+
+- Coopanion 0.2.1 的扩展页对本包给出警告：包按 world 契约 v5 编写，框架已是 v6，靠过渡层 `src/extensions/previous-contract.ts` 加载，下个大版本起不再加载。按官方 `docs/upgrading.md` 完成迁移。
+- `cortico.api` 5 → 6；`console()` → `webUi()`；清单字段 `consoleClient`/`consoleStyle` → `webUiClient`/`webUiStyle`；面板产物更名为 `dist/webui-0.4.10.js`/`.css`。
+- 新增自描述 `describe.json`（工具、事件、envPrompt 模板原文），由 `world/scripts/describe.mjs` 生成，对齐官方 `describe-export.ts` 的导出形状；`WorldDefinition` 也带上 `describe`。
+- 新增包级 `world/CHANGELOG.md`，供市场按版本显示更新说明。
+- 新增 `world/test/contract.test.js`，在 CI 里做官方 `pnpm check:extension` 的等价检查（api 必须为 6、旧字段不得存在、清单指向的文件必须存在、定义不得带 `console`、describe.json 与代码及模板逐字节一致、客户端面板必须已在 World 声明）。
+- 未改动模型、音色、采样参数、内存保护线；**完整安装包内嵌的 World 仍是 0.4.9**，重新打包并上传 1.17 GB 与本次迁移分开处理。
+
 ## 0.5.5 / World 0.4.9 · 纯独显机器可部署
 
 - 修复没有核显的机器（Intel F 后缀 CPU、BIOS 关闭核显、无核显台式机）两条安装路径都走不通的问题：一键部署不再静默停在设备选择，安装器会在绑定前列出全部显卡并要求确认。独显仍然只能由用户显式指定，不做自动回退。
