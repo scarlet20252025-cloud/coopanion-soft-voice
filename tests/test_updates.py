@@ -4,6 +4,31 @@ from unittest.mock import patch
 from coopanion_soft_voice import updates
 
 class UpdateTests(unittest.TestCase):
+    def test_patch_members_stay_inside_what_the_oldest_engine_accepts(self):
+        # A patch is unpacked by the engine already on the machine, so a member
+        # added after minimumVersion is rejected by every older copy. The frozen
+        # policy is what build_update.py gates on.
+        for name in ('python/coopanion_soft_voice/updates.py', 'world/package.json',
+                     'world/src/definition.js', 'world/dist/webui-0.4.10.js',
+                     'scripts/install-portable.ps1', 'docs/PROJECT_STATUS.md',
+                     'README.md', 'collect-diagnostics.cmd'):
+            self.assertTrue(updates.legacy_permitted(name, '0.5.7'), name)
+        for name in ('world/describe.json', 'world/CHANGELOG.md', 'world/scripts/describe.mjs',
+                     'native/libqwen.dll', 'python/python.exe', '../outside.py', '/abs.py'):
+            self.assertFalse(updates.legacy_permitted(name, '0.5.7'), name)
+
+    def test_market_metadata_is_supported_but_never_shipped_in_a_patch(self):
+        # This engine accepts the file, but copies older than it do not - which
+        # is exactly why build_update.py must keep it out of a patch.
+        self.assertTrue(updates.permitted('world/describe.json', '0.5.7'))
+        self.assertFalse(updates.legacy_permitted('world/describe.json', '0.5.7'))
+        self.assertFalse(updates.permitted('native/libqwen.dll', '0.5.7'))
+        with tempfile.TemporaryDirectory() as folder,patch.object(updates,'emit'):
+            root=Path(folder);site,archive,release=self.fixture(root,{'native/libqwen.dll':b'payload'})
+            with self.assertRaisesRegex(ValueError,'complete package'):
+                updates.install_archive(root,archive,release,verify=lambda:None)
+            self.assertFalse((root/'native/libqwen.dll').exists())
+
     def test_update_descriptor_accepts_own_technical_release_only(self):
         with tempfile.TemporaryDirectory() as folder:
             _,_,release=self.fixture(Path(folder))

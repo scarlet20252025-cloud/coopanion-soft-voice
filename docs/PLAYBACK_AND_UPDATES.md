@@ -46,6 +46,16 @@ NVIDIA 独显使用设备本地显存分配（`GGML_VK_DISABLE_HOST_VISIBLE_VIDM
 
 0.4.11 没有更新按钮，第一次升级仍需下载当前完整包并运行 `install.cmd`。从 0.5.0 起，匹配同一模型/原生布局的小版本可用新按钮更新。
 
+### 更新包为什么不能携带新文件
+
+代码更新包由**本机已安装的引擎**解压并校验，而成员白名单写在那个引擎里。更新包里只要出现旧引擎不认识的文件名，整包就会被拒——而且这个拒绝发生在用户点完“下载并热更新”、下载了几百 KB 之后。
+
+0.4.11–0.5.5 的白名单只认 `world/package.json`、`world/README.md`、`world/LICENSE`，以及 `world/src`、`world/dist` 下的 `.js`/`.css`/`.md`/`.py`。World 0.4.10 新增的 `world/describe.json` 与 `world/CHANGELOG.md` 落在白名单外，于是这些版本更新到 0.5.6 时失败，报 `Unsafe update member: world/describe.json`。
+
+因此定下规则：**面向市场的元数据（`describe.json`、`CHANGELOG.md`）只走 npm，代码更新包永不携带**——运行时用的是代码里的 `describe`，市场与官方索引读的是 npm 包里的那份文件，两条渠道各自完整。`scripts/build_update.py` 会剔除这两个文件，并在打包时用冻结的历史白名单（`updates.legacy_permitted`）核对每一个成员；出现旧引擎会拒绝的成员就直接拒绝构建，而不是留到用户安装时才失败。0.5.7 起，更新器遇到自己不认识的成员会提示改用完整安装包，不再只抛出成员名。
+
+确实需要随代码更新携带新文件名时（例如新的资源类型），必须提高 `update-release.json` 的 `minimumVersion`，让更旧的安装改用完整包；这个字段描述的是“能解压这个包的最旧引擎”，不是提示。
+
 ## 发布资产约定
 
 `releases/latest` 的正式发行页只提供完整安装 ZIP 与 SHA256，扩展和模型一次安装。npm TGZ 来自同一份构建结果，不作为第二个安装包在该入口展示。程序内代码更新 ZIP 放在 `updates-v版本` 的预发行资源页，不会成为 latest；`update-release.json` 固定该资源的 URL、大小与 SHA256。历史版本仍留在历史发行页。GitHub 自动生成的源码下载项由平台提供，不属于可安装发行包。
