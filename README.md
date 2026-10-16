@@ -42,6 +42,8 @@ Windows Coopanion 的独立 Vulkan 语音扩展。保留已确认的 `soft-child
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1
 ```
 
+接手开发或运维的 AI 与开发者先读 [工程交接与接管说明](docs/HANDOFF.md)：两条发布渠道的规则、本机环境、踩过的坑和未完成项都在那一页。
+
 可指定 `-CoopanionRoot '你的桌宠目录'`、`-Runtime '英文安装路径'`、`-BotId 'Bot目录名'`；`-RuntimeOnly` 仅验证语音，`-NoLaunch` 安装后不打开桌宠。包内安装器也支持这些操作。多块显卡或独显用 `-DeviceName 'Vulkan设备名称'`。
 
 [源码重建](docs/DEPLOY_NATIVE.md) 是开发者备用路线，入口 `scripts/deploy-source.ps1`。不再作为普通用户默认安装步骤。模型、源码、补丁及固定下载校验公开；不依赖作者电脑的虚拟环境、模型路径或 DLL。单个 Python wheel 包含代码和音色，但不包含全部模型；**完整离线部署请使用 Release ZIP**。
